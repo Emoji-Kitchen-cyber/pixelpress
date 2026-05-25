@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Header -->
     <header>
         <div class="container header-inner">
             <div class="logo">PixelPress</div>
@@ -20,56 +19,53 @@
         </div>
     </header>
 
-    <!-- ========== HOME PAGE ========== -->
+    <!-- HOME -->
     <div id="homePage" class="page active">
         <section class="hero">
             <div class="container">
                 <h1>All‑in‑One Image Toolkit</h1>
-                <p>Compress, resize, crop and convert your images — right in your browser. Fast, free and private.</p>
+                <p>Compress, resize, crop and convert your images — right in your browser.</p>
                 <button class="btn btn-primary" id="heroCta">🚀 Start Compressing</button>
             </div>
         </section>
-
         <section class="tools-section">
             <div class="container">
                 <h2 class="section-title">Our Tools</h2>
                 <div class="tools-grid">
                     <div class="tool-card" data-tool="compress">
                         <div class="tool-icon">🗜️</div>
-                        <h3>Compress Images</h3>
+                        <h3>Compress</h3>
                         <p>Reduce file size with quality control</p>
                     </div>
                     <div class="tool-card" data-tool="resize">
                         <div class="tool-icon">📏</div>
-                        <h3>Resize Images</h3>
+                        <h3>Resize</h3>
                         <p>Change dimensions for any platform</p>
-                    </div>
-                    <div class="tool-card" data-tool="convert">
-                        <div class="tool-icon">🔄</div>
-                        <h3>Convert Format</h3>
-                        <p>JPEG, PNG, WebP & more</p>
                     </div>
                     <div class="tool-card" data-tool="crop">
                         <div class="tool-icon">✂️</div>
-                        <h3>Crop Images</h3>
-                        <p>Coming soon</p>
+                        <h3>Crop</h3>
+                        <p>Cut and frame your image perfectly</p>
+                    </div>
+                    <div class="tool-card" data-tool="convert">
+                        <div class="tool-icon">🔄</div>
+                        <h3>Convert</h3>
+                        <p>JPEG, PNG, WebP & more</p>
                     </div>
                 </div>
             </div>
         </section>
-
         <footer>
             <p>© 2025 PixelPress — All processing happens locally. Your images never leave your device.</p>
         </footer>
     </div>
 
-    <!-- ========== COMPRESSOR PAGE ========== -->
+    <!-- COMPRESSOR PAGE -->
     <div id="compressorPage" class="page">
         <div class="container">
             <button class="back-btn back-to-home">← Back to Home</button>
             <h2>Image Compressor</h2>
             <p class="subtitle">Drag & drop or click to upload multiple images</p>
-
             <div class="upload-box" id="dropZoneCompress">
                 <div class="upload-content">
                     <span class="upload-icon">📁</span>
@@ -77,7 +73,6 @@
                     <input type="file" id="fileInputCompress" multiple accept="image/*" hidden>
                 </div>
             </div>
-
             <div class="controls">
                 <div class="control-group">
                     <label for="qualitySlider">Quality: <span id="qualityValue">70</span>%</label>
@@ -92,19 +87,17 @@
                     </select>
                 </div>
             </div>
-
             <button class="btn btn-primary compress-all" id="compressBtn">Compress All Images</button>
             <div class="preview-grid" id="previewGridCompress"></div>
         </div>
     </div>
 
-    <!-- ========== RESIZE PAGE ========== -->
+    <!-- RESIZE PAGE -->
     <div id="resizePage" class="page">
         <div class="container">
             <button class="back-btn back-to-home">← Back to Home</button>
             <h2>Resize Image</h2>
             <p class="subtitle">Upload an image and set new dimensions</p>
-
             <div class="upload-box" id="dropZoneResize">
                 <div class="upload-content">
                     <span class="upload-icon">📁</span>
@@ -112,7 +105,6 @@
                     <input type="file" id="fileInputResize" accept="image/*" hidden>
                 </div>
             </div>
-
             <div class="resize-controls">
                 <div class="control-group">
                     <label for="resizeWidth">Width (px):</label>
@@ -129,18 +121,39 @@
                 </div>
                 <button class="btn btn-primary" id="resizeBtn">Resize & Download</button>
             </div>
-
             <div class="preview-single" id="resizePreview"></div>
         </div>
     </div>
 
-    <!-- ========== CONVERT PAGE ========== -->
+    <!-- CROP PAGE -->
+    <div id="cropPage" class="page">
+        <div class="container">
+            <button class="back-btn back-to-home">← Back to Home</button>
+            <h2>Crop Image</h2>
+            <p class="subtitle">Drag to select area, then crop & download</p>
+            <div class="upload-box" id="dropZoneCrop">
+                <div class="upload-content">
+                    <span class="upload-icon">📁</span>
+                    <p>Drop image here or <span class="browse">browse</span></p>
+                    <input type="file" id="fileInputCrop" accept="image/*" hidden>
+                </div>
+            </div>
+            <div class="crop-container" id="cropContainer">
+                <canvas id="cropCanvas"></canvas>
+                <div id="cropBox" class="crop-box"></div>
+            </div>
+            <div class="crop-controls">
+                <button class="btn btn-primary" id="cropBtn">Crop & Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONVERT PAGE -->
     <div id="convertPage" class="page">
         <div class="container">
             <button class="back-btn back-to-home">← Back to Home</button>
             <h2>Convert Format</h2>
             <p class="subtitle">Change image format instantly</p>
-
             <div class="upload-box" id="dropZoneConvert">
                 <div class="upload-content">
                     <span class="upload-icon">📁</span>
@@ -148,7 +161,6 @@
                     <input type="file" id="fileInputConvert" multiple accept="image/*" hidden>
                 </div>
             </div>
-
             <div class="controls">
                 <div class="control-group">
                     <label for="formatSelectConvert">Convert to:</label>
@@ -159,13 +171,12 @@
                     </select>
                 </div>
             </div>
-
             <button class="btn btn-primary compress-all" id="convertBtn">Convert All Images</button>
             <div class="preview-grid" id="previewGridConvert"></div>
         </div>
     </div>
 
-    <!-- ========== LOGIN MODAL ========== -->
+    <!-- LOGIN MODAL -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>

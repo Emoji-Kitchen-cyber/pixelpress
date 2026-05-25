@@ -1,172 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PixelPress - Free Image Compressor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelPress - Advanced Image Compressor</title>
 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:Arial, sans-serif;
-    }
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+}
 
-    body{
-      background:#0f172a;
-      color:white;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      padding:20px;
-    }
+.container{
+max-width:600px;
+margin:auto;
+padding:20px;
+}
 
-    .container{
-      width:100%;
-      max-width:500px;
-      background:#1e293b;
-      padding:30px;
-      border-radius:20px;
-      box-shadow:0 0 20px rgba(0,0,0,0.4);
-    }
+.box{
+border:2px dashed #64748b;
+padding:30px;
+border-radius:15px;
+cursor:pointer;
+transition:0.3s;
+}
 
-    h1{
-      text-align:center;
-      margin-bottom:10px;
-      font-size:40px;
-    }
+.box:hover{
+background:#1e293b;
+}
 
-    p{
-      text-align:center;
-      color:#cbd5e1;
-      margin-bottom:25px;
-    }
+input{display:none;}
 
-    .upload-box{
-      border:2px dashed #475569;
-      padding:30px;
-      border-radius:15px;
-      text-align:center;
-      cursor:pointer;
-      transition:0.3s;
-    }
+img{
+max-width:100%;
+margin-top:15px;
+border-radius:10px;
+}
 
-    .upload-box:hover{
-      border-color:#38bdf8;
-      background:#0f172a;
-    }
+.controls{
+margin-top:15px;
+}
 
-    input{
-      display:none;
-    }
+button{
+padding:12px;
+margin-top:10px;
+width:100%;
+border:none;
+border-radius:10px;
+background:#38bdf8;
+cursor:pointer;
+font-size:16px;
+}
 
-    img{
-      width:100%;
-      margin-top:20px;
-      border-radius:10px;
-      display:none;
-    }
+button:hover{
+background:#0ea5e9;
+}
 
-    .controls{
-      margin-top:20px;
-      display:none;
-    }
+.dark{
+background:#0b0f1a;
+}
 
-    label{
-      display:block;
-      margin-bottom:10px;
-    }
-
-    .quality-value{
-      text-align:center;
-      margin-top:10px;
-      font-size:18px;
-    }
-
-    button{
-      width:100%;
-      padding:15px;
-      border:none;
-      border-radius:12px;
-      background:#38bdf8;
-      color:white;
-      font-size:18px;
-      cursor:pointer;
-      margin-top:20px;
-      transition:0.3s;
-    }
-
-    button:hover{
-      background:#0ea5e9;
-    }
-
-    .result{
-      margin-top:20px;
-      background:#0f172a;
-      padding:15px;
-      border-radius:12px;
-      display:none;
-    }
-
-    .download-btn{
-      text-decoration:none;
-    }
-
-    footer{
-      margin-top:25px;
-      text-align:center;
-      color:#94a3b8;
-      font-size:14px;
-    }
-
-    @media(max-width:500px){
-      h1{
-        font-size:32px;
-      }
-    }
-  </style>
+.toggle{
+margin:10px;
+cursor:pointer;
+color:#38bdf8;
+}
+</style>
 </head>
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h1>PixelPress</h1>
-    <p>Free Online Image Compressor</p>
+<h1>PixelPress Pro</h1>
+<p>Advanced Free Image Compressor</p>
 
-    <label class="upload-box" for="fileInput">
-      Click To Upload Image
-    </label>
+<div class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</div>
 
-    <input type="file" id="fileInput" accept="image/*">
+<label class="box" for="file">
+Drop or Click Images
+</label>
+<input type="file" id="file" multiple accept="image/*">
 
-    <img id="preview">
+<div class="controls">
+<label>Quality: <span id="qv">70</span>%</label>
+<input type="range" id="quality" min="10" max="100" value="70">
+</div>
 
-    <div class="controls" id="controls">
-      <label>Compression Quality</label>
-      <input type="range" id="quality" min="10" max="100" value="70">
+<button onclick="compressAll()">Compress Images</button>
 
-      <div class="quality-value">
-        Quality: <span id="qualityText">70</span>%
-      </div>
+<div id="output"></div>
 
-      <button id="compressBtn">Compress Image</button>
-    </div>
-
-    <div class="result" id="result">
-      <p id="sizes"></p>
-
-      <a id="downloadLink" class="download-btn">
-        <button>Download Compressed Image</button>
-      </a>
-    </div>
-
-    <footer>
-      © 2026 PixelPress — Free Image Compressor
-    </footer>
-
-  </div>
+</div>
 
 <script src="script.js"></script>
 </body>

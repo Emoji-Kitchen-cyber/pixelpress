@@ -1,100 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelPress - Advanced Image Compressor</title>
-
-<style>
-body{
-margin:0;
-font-family:Arial;
-background:#0f172a;
-color:white;
-text-align:center;
-}
-
-.container{
-max-width:600px;
-margin:auto;
-padding:20px;
-}
-
-.box{
-border:2px dashed #64748b;
-padding:30px;
-border-radius:15px;
-cursor:pointer;
-transition:0.3s;
-}
-
-.box:hover{
-background:#1e293b;
-}
-
-input{display:none;}
-
-img{
-max-width:100%;
-margin-top:15px;
-border-radius:10px;
-}
-
-.controls{
-margin-top:15px;
-}
-
-button{
-padding:12px;
-margin-top:10px;
-width:100%;
-border:none;
-border-radius:10px;
-background:#38bdf8;
-cursor:pointer;
-font-size:16px;
-}
-
-button:hover{
-background:#0ea5e9;
-}
-
-.dark{
-background:#0b0f1a;
-}
-
-.toggle{
-margin:10px;
-cursor:pointer;
-color:#38bdf8;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelPress Pro – Advanced Image Tools</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Header -->
+    <header>
+        <div class="container header-inner">
+            <div class="logo">PixelPress</div>
+            <nav class="nav-links">
+                <a href="#" class="nav-home">Home</a>
+                <a href="#" class="nav-tools">Tools</a>
+                <button class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+            </nav>
+        </div>
+    </header>
 
-<div class="container">
+    <!-- ========== HOME PAGE ========== -->
+    <div id="homePage" class="page active">
+        <section class="hero">
+            <div class="container">
+                <h1>All‑in‑One Image Toolkit</h1>
+                <p>Compress, resize, crop and convert your images — right in your browser. Fast, free and private.</p>
+                <button class="btn btn-primary" id="heroCta">🚀 Start Compressing</button>
+            </div>
+        </section>
 
-<h1>PixelPress Pro</h1>
-<p>Advanced Free Image Compressor</p>
+        <section class="tools-section">
+            <div class="container">
+                <h2 class="section-title">Our Tools</h2>
+                <div class="tools-grid">
+                    <div class="tool-card" data-tool="compress">
+                        <div class="tool-icon">🗜️</div>
+                        <h3>Compress Images</h3>
+                        <p>Reduce file size without losing quality</p>
+                    </div>
+                    <div class="tool-card" data-tool="resize">
+                        <div class="tool-icon">📏</div>
+                        <h3>Resize Images</h3>
+                        <p>Change dimensions for any platform</p>
+                    </div>
+                    <div class="tool-card" data-tool="crop">
+                        <div class="tool-icon">✂️</div>
+                        <h3>Crop Images</h3>
+                        <p>Cut and focus on what matters</p>
+                    </div>
+                    <div class="tool-card" data-tool="convert">
+                        <div class="tool-icon">🔄</div>
+                        <h3>Convert Format</h3>
+                        <p>Switch between JPG, PNG, WebP</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-<div class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</div>
+        <footer>
+            <p>© 2025 PixelPress — All processing happens locally. Your images stay private.</p>
+        </footer>
+    </div>
 
-<label class="box" for="file">
-Drop or Click Images
-</label>
-<input type="file" id="file" multiple accept="image/*">
+    <!-- ========== COMPRESSOR PAGE ========== -->
+    <div id="compressorPage" class="page">
+        <div class="container">
+            <button class="back-btn" id="backToHome">← Back to Home</button>
+            <h2>Image Compressor</h2>
+            <p class="subtitle">Drag & drop or click to upload multiple images</p>
 
-<div class="controls">
-<label>Quality: <span id="qv">70</span>%</label>
-<input type="range" id="quality" min="10" max="100" value="70">
-</div>
+            <div class="upload-box" id="dropZone">
+                <div class="upload-content">
+                    <span class="upload-icon">📁</span>
+                    <p>Drop images here or <span class="browse">browse</span></p>
+                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                </div>
+            </div>
 
-<button onclick="compressAll()">Compress Images</button>
+            <div class="controls">
+                <label for="qualitySlider">Quality: <span id="qualityValue">70</span>%</label>
+                <input type="range" id="qualitySlider" min="10" max="100" value="70">
+            </div>
 
-<div id="output"></div>
+            <button class="btn btn-primary compress-all" id="compressBtn">Compress All Images</button>
 
-</div>
+            <div class="preview-grid" id="previewGrid"></div>
+        </div>
+    </div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

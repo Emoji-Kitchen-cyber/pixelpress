@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelPress Pro – Advanced Image Tools</title>
+    <title>PixelPress Pro – Advanced Image Toolkit</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,6 +15,7 @@
                 <a href="#" class="nav-home">Home</a>
                 <a href="#" class="nav-tools">Tools</a>
                 <button class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+                <span id="userArea"></span>
             </nav>
         </div>
     </header>
@@ -36,55 +37,153 @@
                     <div class="tool-card" data-tool="compress">
                         <div class="tool-icon">🗜️</div>
                         <h3>Compress Images</h3>
-                        <p>Reduce file size without losing quality</p>
+                        <p>Reduce file size with quality control</p>
                     </div>
                     <div class="tool-card" data-tool="resize">
                         <div class="tool-icon">📏</div>
                         <h3>Resize Images</h3>
                         <p>Change dimensions for any platform</p>
                     </div>
-                    <div class="tool-card" data-tool="crop">
-                        <div class="tool-icon">✂️</div>
-                        <h3>Crop Images</h3>
-                        <p>Cut and focus on what matters</p>
-                    </div>
                     <div class="tool-card" data-tool="convert">
                         <div class="tool-icon">🔄</div>
                         <h3>Convert Format</h3>
-                        <p>Switch between JPG, PNG, WebP</p>
+                        <p>JPEG, PNG, WebP & more</p>
+                    </div>
+                    <div class="tool-card" data-tool="crop">
+                        <div class="tool-icon">✂️</div>
+                        <h3>Crop Images</h3>
+                        <p>Coming soon</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <footer>
-            <p>© 2025 PixelPress — All processing happens locally. Your images stay private.</p>
+            <p>© 2025 PixelPress — All processing happens locally. Your images never leave your device.</p>
         </footer>
     </div>
 
     <!-- ========== COMPRESSOR PAGE ========== -->
     <div id="compressorPage" class="page">
         <div class="container">
-            <button class="back-btn" id="backToHome">← Back to Home</button>
+            <button class="back-btn back-to-home">← Back to Home</button>
             <h2>Image Compressor</h2>
             <p class="subtitle">Drag & drop or click to upload multiple images</p>
 
-            <div class="upload-box" id="dropZone">
+            <div class="upload-box" id="dropZoneCompress">
                 <div class="upload-content">
                     <span class="upload-icon">📁</span>
                     <p>Drop images here or <span class="browse">browse</span></p>
-                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                    <input type="file" id="fileInputCompress" multiple accept="image/*" hidden>
                 </div>
             </div>
 
             <div class="controls">
-                <label for="qualitySlider">Quality: <span id="qualityValue">70</span>%</label>
-                <input type="range" id="qualitySlider" min="10" max="100" value="70">
+                <div class="control-group">
+                    <label for="qualitySlider">Quality: <span id="qualityValue">70</span>%</label>
+                    <input type="range" id="qualitySlider" min="10" max="100" value="70">
+                </div>
+                <div class="control-group">
+                    <label for="formatSelectCompress">Output Format:</label>
+                    <select id="formatSelectCompress">
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/png">PNG</option>
+                        <option value="image/webp">WebP</option>
+                    </select>
+                </div>
             </div>
 
             <button class="btn btn-primary compress-all" id="compressBtn">Compress All Images</button>
+            <div class="preview-grid" id="previewGridCompress"></div>
+        </div>
+    </div>
 
-            <div class="preview-grid" id="previewGrid"></div>
+    <!-- ========== RESIZE PAGE ========== -->
+    <div id="resizePage" class="page">
+        <div class="container">
+            <button class="back-btn back-to-home">← Back to Home</button>
+            <h2>Resize Image</h2>
+            <p class="subtitle">Upload an image and set new dimensions</p>
+
+            <div class="upload-box" id="dropZoneResize">
+                <div class="upload-content">
+                    <span class="upload-icon">📁</span>
+                    <p>Drop image here or <span class="browse">browse</span></p>
+                    <input type="file" id="fileInputResize" accept="image/*" hidden>
+                </div>
+            </div>
+
+            <div class="resize-controls">
+                <div class="control-group">
+                    <label for="resizeWidth">Width (px):</label>
+                    <input type="number" id="resizeWidth" min="1" value="800">
+                </div>
+                <div class="control-group">
+                    <label for="resizeHeight">Height (px):</label>
+                    <input type="number" id="resizeHeight" min="1" value="600">
+                </div>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="keepAspect" checked> Lock aspect ratio
+                    </label>
+                </div>
+                <button class="btn btn-primary" id="resizeBtn">Resize & Download</button>
+            </div>
+
+            <div class="preview-single" id="resizePreview"></div>
+        </div>
+    </div>
+
+    <!-- ========== CONVERT PAGE ========== -->
+    <div id="convertPage" class="page">
+        <div class="container">
+            <button class="back-btn back-to-home">← Back to Home</button>
+            <h2>Convert Format</h2>
+            <p class="subtitle">Change image format instantly</p>
+
+            <div class="upload-box" id="dropZoneConvert">
+                <div class="upload-content">
+                    <span class="upload-icon">📁</span>
+                    <p>Drop images here or <span class="browse">browse</span></p>
+                    <input type="file" id="fileInputConvert" multiple accept="image/*" hidden>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="formatSelectConvert">Convert to:</label>
+                    <select id="formatSelectConvert">
+                        <option value="image/jpeg">JPEG</option>
+                        <option value="image/png">PNG</option>
+                        <option value="image/webp">WebP</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary compress-all" id="convertBtn">Convert All Images</button>
+            <div class="preview-grid" id="previewGridConvert"></div>
+        </div>
+    </div>
+
+    <!-- ========== LOGIN MODAL ========== -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="loginForm">
+                <h3>Login</h3>
+                <input type="text" id="loginUsername" placeholder="Username">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <button class="btn btn-primary" id="loginBtn">Login</button>
+                <p>Don't have an account? <a href="#" id="showRegister">Register here</a></p>
+            </div>
+            <div id="registerForm" style="display:none;">
+                <h3>Register</h3>
+                <input type="text" id="regUsername" placeholder="Username">
+                <input type="password" id="regPassword" placeholder="Password">
+                <input type="password" id="regConfirmPassword" placeholder="Confirm Password">
+                <button class="btn btn-primary" id="registerBtn">Register</button>
+                <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+            </div>
         </div>
     </div>
 

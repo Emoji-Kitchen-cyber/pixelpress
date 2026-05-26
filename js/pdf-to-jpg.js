@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
+    // Force pdf.js to use standard inline script compilation (Fixes the stuck error)
+    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = ''; 
+    }
+
     dropZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
         if (e.target.files) processPDFStrict(e.target.files);
@@ -33,23 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
         fileReader.onload = function () {
             const typedarray = new Uint8Array(this.result);
 
-            // Accessing the standard library scope directly
-            const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-            
-            if (!pdfjsLib) {
-                statusMessage.innerText = "Library loading error. Please refresh.";
-                return;
-            }
-
-            // Using pure inline sync reader mode
-            pdfjsLib.getDocument(typedarray).promise.then((pdf) => {
+            // Directly parsing binary streams
+            pdfjsLib.getDocument({ data: typedarray }).promise.then((pdf) => {
                 pdfDoc = pdf;
                 const totalPages = pdf.numPages;
                 pageImages = {}; 
                 
                 statusMessage.innerText = `Found ${totalPages} pages. Rendering previews...`;
                 
-                // Safe line-by-line render queue to avoid browser freezing
+                // Controlled queue rendering to avoid browser crash
                 let sequence = Promise.resolve();
                 for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
                     sequence = sequence.then(() => renderPageEngine(pageNum));
@@ -64,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             }).catch((err) => {
                 statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Failed to open PDF file structure.";
+                statusMessage.innerText = "Failed to parse PDF file structure.";
                 console.error(err);
             });
         };

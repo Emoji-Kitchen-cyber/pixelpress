@@ -1,348 +1,392 @@
-const dropZone = document.getElementById("dropZone");
-const fileInput = document.getElementById("fileInput");
+const dropZone =
+document.getElementById("dropZone");
 
-const uploadSection = document.getElementById("uploadSection");
-const editorSection = document.getElementById("editorSection");
+const fileInput =
+document.getElementById("fileInput");
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const uploadSection =
+document.getElementById("uploadSection");
 
-const brightness = document.getElementById("brightness");
-const contrast = document.getElementById("contrast");
-const saturation = document.getElementById("saturation");
+const editorSection =
+document.getElementById("editorSection");
 
-const rotateLeft = document.getElementById("rotateLeft");
-const rotateRight = document.getElementById("rotateRight");
+const canvas =
+document.getElementById("canvas");
 
-const flipH = document.getElementById("flipH");
-const flipV = document.getElementById("flipV");
+const ctx =
+canvas.getContext("2d");
 
-const resetBtn = document.getElementById("resetBtn");
-const downloadBtn = document.getElementById("downloadBtn");
+const brightness =
+document.getElementById("brightness");
+
+const contrast =
+document.getElementById("contrast");
+
+const saturation =
+document.getElementById("saturation");
+
+const rotateLeft =
+document.getElementById("rotateLeft");
+
+const rotateRight =
+document.getElementById("rotateRight");
+
+const flipH =
+document.getElementById("flipH");
+
+const flipV =
+document.getElementById("flipV");
+
+const grayscaleBtn =
+document.getElementById("grayscaleBtn");
+
+const sepiaBtn =
+document.getElementById("sepiaBtn");
+
+const blurBtn =
+document.getElementById("blurBtn");
+
+const zoomInBtn =
+document.getElementById("zoomInBtn");
+
+const zoomOutBtn =
+document.getElementById("zoomOutBtn");
+
+const resetBtn =
+document.getElementById("resetBtn");
+
+const downloadBtn =
+document.getElementById("downloadBtn");
 
 let originalImage = null;
 
 const state = {
 
-brightness:100,
-contrast:100,
-saturation:100,
+  brightness:100,
+  contrast:100,
+  saturation:100,
 
-blur:0,
-grayscale:0,
-sepia:0,
+  grayscale:0,
+  sepia:0,
+  blur:0,
 
-rotation:0,
+  rotation:0,
 
-flipX:1,
-flipY:1,
+  flipX:1,
+  flipY:1,
 
-zoom:1
+  zoom:1
 
 };
 
-let history = [];
-
 dropZone.addEventListener("click",()=>{
 
-fileInput.click();
+  fileInput.click();
 
 });
 
 dropZone.addEventListener("dragover",(e)=>{
 
-e.preventDefault();
+  e.preventDefault();
 
-dropZone.style.borderColor = "#ec4899";
+  dropZone.style.borderColor =
+  "#ec4899";
 
 });
 
 dropZone.addEventListener("dragleave",()=>{
 
-dropZone.style.borderColor = "#94a3b8";
+  dropZone.style.borderColor =
+  "#94a3b8";
 
 });
 
 dropZone.addEventListener("drop",(e)=>{
 
-e.preventDefault();
+  e.preventDefault();
 
-dropZone.style.borderColor = "#94a3b8";
+  dropZone.style.borderColor =
+  "#94a3b8";
 
-const file = e.dataTransfer.files[0];
+  const file =
+  e.dataTransfer.files[0];
 
-if(file){
-loadImage(file);
-}
+  if(file){
+
+    loadImage(file);
+
+  }
 
 });
 
 fileInput.addEventListener("change",(e)=>{
 
-const file = e.target.files[0];
+  const file =
+  e.target.files[0];
 
-if(file){
-loadImage(file);
-}
+  if(file){
+
+    loadImage(file);
+
+  }
 
 });
 
 function loadImage(file){
 
-const reader = new FileReader();
+  const reader =
+  new FileReader();
 
-reader.onload = function(event){
+  reader.onload = function(event){
 
-const img = new Image();
+    const img =
+    new Image();
 
-img.onload = function(){
+    img.onload = function(){
 
-  originalImage = img;
+      originalImage = img;
 
-  const maxWidth = 1200;
+      let width =
+      img.width;
 
-  let width = img.width;
-  let height = img.height;
+      let height =
+      img.height;
 
-  if(width > maxWidth){
+      const maxWidth = 1200;
 
-    height *= maxWidth / width;
+      if(width > maxWidth){
 
-    width = maxWidth;
+        height *=
+        maxWidth / width;
 
-  }
+        width = maxWidth;
 
-  canvas.width = width;
-  canvas.height = height;
+      }
 
-  uploadSection.style.display = "none";
+      canvas.width = width;
+      canvas.height = height;
 
-  editorSection.style.display = "block";
+      uploadSection.style.display =
+      "none";
 
-  renderCanvas();
+      editorSection.style.display =
+      "block";
 
-};
+      renderCanvas();
 
-img.src = event.target.result;
+    };
 
-};
+    img.src =
+    event.target.result;
 
-reader.readAsDataURL(file);
+  };
+
+  reader.readAsDataURL(file);
 
 }
 
 function renderCanvas(){
 
-if(!originalImage) return;
+  if(!originalImage) return;
 
-ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
-ctx.save();
+  ctx.save();
 
-ctx.translate(canvas.width/2,canvas.height/2);
+  ctx.translate(
+    canvas.width / 2,
+    canvas.height / 2
+  );
 
-ctx.rotate(state.rotation * Math.PI / 180);
+  ctx.rotate(
+    state.rotation *
+    Math.PI / 180
+  );
 
-ctx.scale(state.flipX,state.flipY);
+  ctx.scale(
+    state.flipX,
+    state.flipY
+  );
 
-ctx.filter = "brightness(${state.brightness}%) contrast(${state.contrast}%) saturate(${state.saturation}%) blur(${state.blur}px) grayscale(${state.grayscale}%) sepia(${state.sepia}%)";
+  ctx.filter = `
+    brightness(${state.brightness}%)
+    contrast(${state.contrast}%)
+    saturate(${state.saturation}%)
+    grayscale(${state.grayscale}%)
+    sepia(${state.sepia}%)
+    blur(${state.blur}px)
+  `;
 
-const drawWidth = canvas.width * state.zoom;
+  const drawWidth =
+  canvas.width * state.zoom;
 
-const drawHeight = canvas.height * state.zoom;
+  const drawHeight =
+  canvas.height * state.zoom;
 
-ctx.drawImage(
-originalImage,
--drawWidth/2,
--drawHeight/2,
-drawWidth,
-drawHeight
-);
+  ctx.drawImage(
+    originalImage,
+    -drawWidth / 2,
+    -drawHeight / 2,
+    drawWidth,
+    drawHeight
+  );
 
-ctx.restore();
-
-saveHistory();
-
-}
-
-function saveHistory(){
-
-if(history.length > 15){
-
-history.shift();
-
-}
-
-history.push(canvas.toDataURL());
+  ctx.restore();
 
 }
 
 brightness.addEventListener("input",()=>{
 
-state.brightness = brightness.value;
+  state.brightness =
+  brightness.value;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 contrast.addEventListener("input",()=>{
 
-state.contrast = contrast.value;
+  state.contrast =
+  contrast.value;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 saturation.addEventListener("input",()=>{
 
-state.saturation = saturation.value;
+  state.saturation =
+  saturation.value;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 rotateLeft.addEventListener("click",()=>{
 
-state.rotation -= 90;
+  state.rotation -= 90;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 rotateRight.addEventListener("click",()=>{
 
-state.rotation += 90;
+  state.rotation += 90;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 flipH.addEventListener("click",()=>{
 
-state.flipX *= -1;
+  state.flipX *= -1;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 flipV.addEventListener("click",()=>{
 
-state.flipY *= -1;
+  state.flipY *= -1;
 
-renderCanvas();
+  renderCanvas();
+
+});
+
+grayscaleBtn.addEventListener("click",()=>{
+
+  state.grayscale =
+  state.grayscale ? 0 : 100;
+
+  renderCanvas();
+
+});
+
+sepiaBtn.addEventListener("click",()=>{
+
+  state.sepia =
+  state.sepia ? 0 : 100;
+
+  renderCanvas();
+
+});
+
+blurBtn.addEventListener("click",()=>{
+
+  state.blur =
+  state.blur ? 0 : 3;
+
+  renderCanvas();
+
+});
+
+zoomInBtn.addEventListener("click",()=>{
+
+  state.zoom += 0.1;
+
+  renderCanvas();
+
+});
+
+zoomOutBtn.addEventListener("click",()=>{
+
+  state.zoom -= 0.1;
+
+  if(state.zoom < 0.2){
+
+    state.zoom = 0.2;
+
+  }
+
+  renderCanvas();
 
 });
 
 resetBtn.addEventListener("click",()=>{
 
-state.brightness = 100;
-state.contrast = 100;
-state.saturation = 100;
+  state.brightness = 100;
+  state.contrast = 100;
+  state.saturation = 100;
 
-state.blur = 0;
-state.grayscale = 0;
-state.sepia = 0;
+  state.grayscale = 0;
+  state.sepia = 0;
+  state.blur = 0;
 
-state.rotation = 0;
+  state.rotation = 0;
 
-state.flipX = 1;
-state.flipY = 1;
+  state.flipX = 1;
+  state.flipY = 1;
 
-state.zoom = 1;
+  state.zoom = 1;
 
-brightness.value = 100;
-contrast.value = 100;
-saturation.value = 100;
+  brightness.value = 100;
+  contrast.value = 100;
+  saturation.value = 100;
 
-renderCanvas();
+  renderCanvas();
 
 });
 
 downloadBtn.addEventListener("click",()=>{
 
-const link = document.createElement("a");
+  const link =
+  document.createElement("a");
 
-link.download = "pixelpress-image.webp";
+  link.download =
+  "pixelpress-image.webp";
 
-link.href = canvas.toDataURL(
-"image/webp",
-0.95
-);
+  link.href =
+  canvas.toDataURL(
+    "image/webp",
+    0.95
+  );
 
-link.click();
+  link.click();
 
 });
-
-function addEffect(type){
-
-if(type === "grayscale"){
-
-state.grayscale =
-  state.grayscale ? 0 : 100;
-
-}
-
-if(type === "sepia"){
-
-state.sepia =
-  state.sepia ? 0 : 100;
-
-}
-
-if(type === "blur"){
-
-state.blur =
-  state.blur ? 0 : 3;
-
-}
-
-renderCanvas();
-
-}
-
-function zoomIn(){
-
-state.zoom += 0.1;
-
-renderCanvas();
-
-}
-
-function zoomOut(){
-
-state.zoom -= 0.1;
-
-if(state.zoom < 0.2){
-
-state.zoom = 0.2;
-
-}
-
-renderCanvas();
-
-}
-
-function undoEdit(){
-
-if(history.length < 2) return;
-
-history.pop();
-
-const img = new Image();
-
-img.onload = ()=>{
-
-ctx.clearRect(
-  0,
-  0,
-  canvas.width,
-  canvas.height
-);
-
-ctx.drawImage(img,0,0);
-
-};
-
-img.src = history[history.length - 1];
-
-}

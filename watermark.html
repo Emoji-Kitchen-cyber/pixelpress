@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Watermark – PixelPress</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="main-header">
+    <a href="/" class="logo">🎨 PixelPress</a>
+    <nav><a href="/" class="btn-outline">← All Tools</a></nav>
+  </header>
+  <div class="tool-page">
+    <h1>💧 Add Watermark</h1>
+    <div class="workflow-step" id="upload-step">
+      <h2>1. Upload Image</h2>
+      <div class="upload-zone" id="watermarkUploadZone">
+        <div class="icon">📁</div>
+        <p>Drop image here</p>
+      </div>
+      <input type="file" id="watermarkFileInput" accept="image/*" hidden>
+    </div>
+    <div class="workflow-step" id="settings-step" style="display:none">
+      <h2>2. Watermark Settings</h2>
+      <div class="settings-grid">
+        <div class="form-group">
+          <label>Text</label>
+          <input type="text" id="watermarkText" value="© PixelPress">
+        </div>
+        <div class="form-group">
+          <label>Opacity</label>
+          <input type="range" id="opacitySlider" min="10" max="100" value="50">
+        </div>
+        <button id="applyWatermarkBtn" class="btn-primary">Apply Watermark</button>
+      </div>
+    </div>
+    <div class="workflow-step" id="result-step" style="display:none">
+      <h2>3. Watermarked Image</h2>
+      <div class="preview-container">
+        <div class="preview-box"><p>Original</p><img id="originalPreview"></div>
+        <div class="preview-box"><p>Watermarked</p><img id="watermarkedPreview"></div>
+      </div>
+      <div class="download-section">
+        <button id="downloadBtn" class="btn-primary">📥 Download Watermarked Image</button>
+      </div>
+    </div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script src="/js/watermark.js"></script>
+</body>
+</html>

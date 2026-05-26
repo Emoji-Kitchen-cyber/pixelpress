@@ -57,6 +57,9 @@
       padding:30px;
       box-shadow:0 8px 30px rgba(0,0,0,0.08);
       transition:0.3s;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
     }
 
     .card:hover{
@@ -65,13 +68,14 @@
 
     .card h2{
       margin-bottom:15px;
-      font-size:28px;
+      font-size:24px;
     }
 
     .card p{
       color:#475569;
       margin-bottom:20px;
       line-height:1.6;
+      flex-grow:1;
     }
 
     .btn{
@@ -83,6 +87,7 @@
       border-radius:12px;
       font-weight:600;
       transition:0.3s;
+      text-align:center;
     }
 
     .btn:hover{
@@ -97,15 +102,12 @@
     }
 
     @media(max-width:600px){
-
       .hero h1{
         font-size:34px;
       }
-
       .hero{
         padding:50px 20px;
       }
-
     }
   </style>
 </head>
@@ -120,28 +122,81 @@
 
     <section class="tools">
 
+      <!-- 1. Photo Editor -->
       <div class="card">
-        <h2>✨ Photo Editor</h2>
-        <p>
-          Edit photos directly in browser with filters,
-          brightness, contrast, rotation and download support.
-        </p>
-
+        <div>
+          <h2>✨ Photo Editor</h2>
+          <p>
+            Edit photos directly in browser with filters, brightness, contrast, rotation and download support.
+          </p>
+        </div>
         <a href="./photo-editor.html" class="btn">
           Open Editor →
         </a>
       </div>
 
+      <!-- 2. Watermark Image -->
       <div class="card">
-        <h2>📦 Compress Image</h2>
+        <div>
+          <h2>💧 Watermark Image</h2>
+          <p>
+            Protect your images by adding custom text or image watermarks easily.
+          </p>
+        </div>
+        <a href="./watermark.html" class="btn">
+          Open Watermark →
+        </a>
+      </div>
 
-        <p>
-          Compress JPG, PNG and WEBP images
-          without losing quality.
-        </p>
-
+      <!-- 3. Compress Image -->
+      <div class="card">
+        <div>
+          <h2>📦 Compress Image</h2>
+          <p>
+            Compress JPG, PNG and WEBP images without losing quality.
+          </p>
+        </div>
         <a href="./compress.html" class="btn">
           Open Compressor →
+        </a>
+      </div>
+
+      <!-- 4. Resize Image -->
+      <div class="card">
+        <div>
+          <h2>📐 Resize Image</h2>
+          <p>
+            Change image dimensions by adjusting width and height instantly.
+          </p>
+        </div>
+        <a href="./resize.html" class="btn">
+          Open Resizer →
+        </a>
+      </div>
+
+      <!-- 5. Crop Image -->
+      <div class="card">
+        <div>
+          <h2>✂️ Crop Image</h2>
+          <p>
+            Crop and trim unnecessary parts of your images precisely.
+          </p>
+        </div>
+        <a href="./crop.html" class="btn">
+          Open Cropper →
+        </a>
+      </div>
+
+      <!-- 6. Convert Format -->
+      <div class="card">
+        <div>
+          <h2>🔄 Convert Image</h2>
+          <p>
+            Convert image formats between JPG, PNG, WEBP, and more.
+          </p>
+        </div>
+        <a href="./convert.html" class="btn">
+          Open Converter →
         </a>
       </div>
 
@@ -152,6 +207,17 @@
     </footer>
 
   </div>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered!'))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
 
 </body>
 </html>

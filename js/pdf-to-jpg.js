@@ -12,10 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
-    // Force pdf.js to use standard inline script compilation (Fixes the stuck error)
+    // TARGETING THE RIGHT CORE SCOPE BINDING
     const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    
+    // Crucial: Turning off the external worker to force local sync rendering pass
     if (pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = ''; 
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '';
     }
 
     dropZone.addEventListener('click', () => fileInput.click());
@@ -33,28 +35,33 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.style.display = 'none';
         workSection.style.display = 'block';
         previewGrid.innerHTML = '';
-        statusMessage.innerText = "Extracting pages... Please wait.";
+        statusMessage.innerText = "Extracting document channels... Please wait.";
 
         const fileReader = new FileReader();
         fileReader.onload = function () {
             const typedarray = new Uint8Array(this.result);
 
-            // Directly parsing binary streams
+            if (!pdfjsLib) {
+                statusMessage.innerText = "Engine loading error. Please refresh the page.";
+                return;
+            }
+
+            // Standard fallback sync document task stream
             pdfjsLib.getDocument({ data: typedarray }).promise.then((pdf) => {
                 pdfDoc = pdf;
                 const totalPages = pdf.numPages;
                 pageImages = {}; 
                 
-                statusMessage.innerText = `Found ${totalPages} pages. Rendering previews...`;
+                statusMessage.innerText = `Found ${totalPages} pages. Generating image templates...`;
                 
-                // Controlled queue rendering to avoid browser crash
-                let sequence = Promise.resolve();
+                // Safe sequential loop to block main thread overhead crashes
+                let executionQueue = Promise.resolve();
                 for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                    sequence = sequence.then(() => renderPageEngine(pageNum));
+                    executionQueue = executionQueue.then(() => renderPageEngine(pageNum));
                 }
                 
-                sequence.then(() => {
-                    statusMessage.innerText = "⚡ All pages extracted successfully!";
+                executionQueue.then(() => {
+                    statusMessage.innerText = "⚡ Success! All pages extracted.";
                     if (typeof JSZip !== 'undefined') {
                         downloadAllBtn.style.display = 'inline-block';
                     }
@@ -62,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             }).catch((err) => {
                 statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Failed to parse PDF file structure.";
+                statusMessage.innerText = "Failed to parse document data stream.";
                 console.error(err);
             });
         };
@@ -71,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPageEngine(num) {
         return pdfDoc.getPage(num).then((page) => {
-            const viewport = page.getViewport({ scale: 1.0 });
+            const viewport = page.getViewport({ scale: 1.0 }); // Smooth baseline quality multiplier
             
             const card = document.createElement('div');
             card.className = 'page-card';
@@ -111,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     downloadAllBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        downloadAllBtn.innerText = "Zipping Instantly...";
+        downloadAllBtn.innerText = "Creating Bundle...";
         const zip = new JSZip();
         
         for (const [num, data] of Object.entries(pageImages)) {
@@ -127,5 +134,3 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadAllBtn.innerText = "📥 Download All Pages (ZIP)";
     });
 });
-
-

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Image – PixelPress</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    #cropCanvas { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; cursor: crosshair; touch-action: none; }
+    .crop-container { position: relative; display: inline-block; }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <a href="/" class="logo">🎨 PixelPress</a>
+    <nav><a href="/" class="btn-outline">← All Tools</a></nav>
+  </header>
+  <div class="tool-page">
+    <h1>✂️ Crop Image</h1>
+    <div class="workflow-step" id="upload-step">
+      <h2>1. Upload Image</h2>
+      <div class="upload-zone" id="cropUploadZone">
+        <div class="icon">📁</div>
+        <p>Drop image here</p>
+      </div>
+      <input type="file" id="cropFileInput" accept="image/*" hidden>
+    </div>
+    <div class="workflow-step" id="crop-step" style="display:none">
+      <h2>2. Select Area</h2>
+      <p style="margin-bottom:12px;">Drag on the image to select crop area.</p>
+      <div class="crop-container">
+        <canvas id="cropCanvas"></canvas>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:12px;">
+        <button id="cropApplyBtn" class="btn-primary">✂️ Crop</button>
+        <button id="cropResetBtn" class="btn-outline">🔄 Reset</button>
+      </div>
+    </div>
+    <div class="workflow-step" id="result-step" style="display:none">
+      <h2>3. Cropped Image</h2>
+      <div class="preview-container">
+        <div class="preview-box">
+          <img id="croppedPreview">
+        </div>
+      </div>
+      <div class="download-section">
+        <button id="downloadBtn" class="btn-primary">📥 Download Cropped Image</button>
+      </div>
+    </div>
+  </div>
+  <script src="/js/common.js"></script>
+  <script src="/js/crop.js"></script>
+</body>
+</html>

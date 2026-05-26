@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/watermark", "destination": "/watermark.html" },
     { "source": "/compress", "destination": "/compress.html" },
@@ -7,8 +9,6 @@
     { "source": "/convert", "destination": "/convert.html" },
     { "source": "/photo-editor", "destination": "/photo-editor.html" },
     { "source": "/editor", "destination": "/photo-editor.html" },
-    { "source": "/crop", "destination": "/photo-editor.html" },
-
-    { "source": "/:path*", "destination": "/index.html" }
+    { "source": "/crop", "destination": "/photo-editor.html" }
   ]
 }

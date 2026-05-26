@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JPG to PDF — PixelPress</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#f1f5f9; font-family:system-ui,-apple-system,sans-serif; color:#0f172a; padding:15px; }
+    .container { max-width:900px; margin:auto; background:white; border-radius:24px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.12); }
+    .header { background:linear-gradient(135deg,#ec4899,#7e22ce); color:white; text-align:center; padding:40px 20px; }
+    .header h1 { font-size:36px; margin-bottom:10px; }
+    .top-back { display:inline-block; margin-top:15px; text-decoration:none; color:white; background:rgba(255,255,255,0.15); padding:8px 16px; border-radius:12px; font-weight:600; }
+    .upload-area { margin:30px; border:4px dashed #94a3b8; border-radius:20px; padding:60px 20px; text-align:center; cursor:pointer; transition:0.3s; }
+    .upload-area:hover, .upload-area.dragover { border-color:#ec4899; background:#fdf4ff; }
+    .work-area { display:none; padding:30px; }
+    .btn { border:none; padding:12px 24px; border-radius:12px; cursor:pointer; font-weight:600; background:#ec4899; color:white; transition:0.3s; text-decoration:none; display:inline-block; }
+    .btn:hover { background:#db2777; }
+    .preview-container { display:flex; flex-wrap:wrap; gap:15px; margin:25px 0; background:#f8fafc; padding:20px; border-radius:16px; min-height:100px; }
+    .thumb-wrapper { width:100px; position:relative; text-align:center; }
+    .thumb-wrapper img { width:100px; height:100px; object-fit:cover; border-radius:10px; border:2px solid #e2e8f0; }
+    .thumb-wrapper span { font-size:11px; color:#64748b; display:block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🖼️ JPG to PDF Converter</h1>
+    <p>Convert multiple JPG, PNG, or WEBP images into a single PDF document</p>
+    <a href="./index.html" class="top-back">← Back Home</a>
+  </div>
+
+  <div>
+    <div class="upload-area" id="dropZone">
+      <h2>Select Images</h2>
+      <p>Click or Drag & Drop Multiple Images (JPG, PNG, WEBP)</p>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+  </div>
+
+  <div class="work-area" id="workSection">
+    <h3>Images to Convert:</h3>
+    <div class="preview-container" id="previewContainer"></div>
+    <button id="generatePdfBtn" class="btn">⚡ Generate PDF Document</button>
+  </div>
+</div>
+
+<script src="./js/common.js"></script>
+<script src="./js/jpg-to-pdf.js"></script>
+</body>
+</html>

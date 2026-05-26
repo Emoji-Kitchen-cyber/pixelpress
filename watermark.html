@@ -6,47 +6,95 @@
   <title>Add Watermark – PixelPress</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .watermark-position {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .position-btn {
+      padding: 8px 16px;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .position-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+  </style>
 </head>
 <body>
   <header class="main-header">
     <a href="/" class="logo">🎨 PixelPress</a>
     <nav><a href="/" class="btn-outline">← All Tools</a></nav>
   </header>
+
   <div class="tool-page">
     <h1>💧 Add Watermark</h1>
+
+    <!-- Step 1: Upload -->
     <div class="workflow-step" id="upload-step">
       <h2>1. Upload Image</h2>
       <div class="upload-zone" id="watermarkUploadZone">
         <div class="icon">📁</div>
-        <p>Drop image here</p>
+        <p>Drop image here or click to browse</p>
       </div>
       <input type="file" id="watermarkFileInput" accept="image/*" hidden>
     </div>
+
+    <!-- Step 2: Settings -->
     <div class="workflow-step" id="settings-step" style="display:none">
       <h2>2. Watermark Settings</h2>
       <div class="settings-grid">
         <div class="form-group">
-          <label>Text</label>
-          <input type="text" id="watermarkText" value="© PixelPress">
+          <label for="watermarkText">Watermark Text</label>
+          <input type="text" id="watermarkText" value="© PixelPress" placeholder="Your text here">
         </div>
         <div class="form-group">
-          <label>Opacity</label>
+          <label for="opacitySlider">Opacity</label>
           <input type="range" id="opacitySlider" min="10" max="100" value="50">
+          <span id="opacityValue">50%</span>
         </div>
-        <button id="applyWatermarkBtn" class="btn-primary">Apply Watermark</button>
       </div>
+      <div class="watermark-position">
+        <label style="font-weight:500; margin-right:8px;">Position:</label>
+        <button class="position-btn active" data-position="top-left">Top Left</button>
+        <button class="position-btn" data-position="center">Center</button>
+        <button class="position-btn" data-position="bottom-right">Bottom Right</button>
+      </div>
+      <button id="applyWatermarkBtn" class="btn-primary">Apply Watermark</button>
     </div>
+
+    <!-- Step 3: Processing (optional) -->
+    <div class="workflow-step" id="processing-step" style="display:none">
+      <h2>Processing...</h2>
+      <div class="processing-bar"><div class="spinner"></div><p>Adding watermark...</p></div>
+    </div>
+
+    <!-- Step 4: Result -->
     <div class="workflow-step" id="result-step" style="display:none">
       <h2>3. Watermarked Image</h2>
       <div class="preview-container">
-        <div class="preview-box"><p>Original</p><img id="originalPreview"></div>
-        <div class="preview-box"><p>Watermarked</p><img id="watermarkedPreview"></div>
+        <div class="preview-box">
+          <p>Original</p>
+          <img id="originalPreview">
+        </div>
+        <div class="preview-box">
+          <p>Watermarked</p>
+          <img id="watermarkedPreview">
+        </div>
       </div>
       <div class="download-section">
         <button id="downloadBtn" class="btn-primary">📥 Download Watermarked Image</button>
       </div>
     </div>
   </div>
+
   <script src="/js/common.js"></script>
   <script src="/js/watermark.js"></script>
 </body>

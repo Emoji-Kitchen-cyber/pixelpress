@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <title>Compress Image – PixelPress</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+</head>
+<body>
+  <header class="main-header">
+    <a href="/" class="logo">🎨 PixelPress</a>
+    <nav><a href="/" class="btn-outline">← All Tools</a></nav>
+  </header>
+
+  <div class="tool-page">
+    <h1>📦 Compress Image</h1>
+
+    <!-- Step 1: Upload -->
+    <div class="workflow-step" id="upload-step">
+      <h2>1. Upload Image</h2>
+      <div class="upload-zone" id="compressUploadZone">
+        <div class="icon">📁</div>
+        <p>Drop your image here or click to browse</p>
+        <p style="font-size:0.85rem; margin-top:8px;">Supports JPEG, PNG, WebP</p>
+      </div>
+      <input type="file" id="compressFileInput" accept="image/*" hidden>
+    </div>
+
+    <!-- Step 2: Settings -->
+    <div class="workflow-step" id="settings-step" style="display:none">
+      <h2>2. Compression Settings</h2>
+      <div class="settings-grid">
+        <div class="form-group">
+          <label for="qualitySlider">Quality (10-100)</label>
+          <input type="range" id="qualitySlider" min="10" max="100" value="80">
+        </div>
+        <div class="form-group">
+          <span id="qualityValue">80%</span>
+        </div>
+        <button id="compressBtn" class="btn-primary">Compress Now</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Processing -->
+    <div class="workflow-step" id="processing-step" style="display:none">
+      <h2>3. Processing...</h2>
+      <div class="processing-bar" id="processingBar">
+        <div class="spinner"></div>
+        <p>Compressing your image...</p>
+      </div>
+    </div>
+
+    <!-- Step 4: Preview & Download -->
+    <div class="workflow-step" id="result-step" style="display:none">
+      <h2>4. Result</h2>
+      <div class="preview-container">
+        <div class="preview-box">
+          <p>Original</p>
+          <img id="originalPreview">
+          <p id="originalSize"></p>
+        </div>
+        <div class="preview-box">
+          <p>Compressed</p>
+          <img id="compressedPreview">
+          <p id="compressedSize"></p>
+        </div>
+      </div>
+      <div class="download-section">
+        <button id="downloadBtn" class="btn-primary">📥 Download Compressed Image</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/compress.js"></script>
+</body>
+</html>

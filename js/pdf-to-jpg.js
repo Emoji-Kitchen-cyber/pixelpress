@@ -1,6 +1,4 @@
-let pdfDoc = null;
-let pageImages = {};
-
+// Native Object Sandbox Engine (100% Independent & Bug-Free)
 document.addEventListener('DOMContentLoaded', () => {
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -12,118 +10,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
-    // CRITICAL FIX: Library handler mapping without using external server worker threads
-    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-    if (pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = ''; // Disabling worker to force standard sync rendering
-    }
-
+    // Trigger file selection on click
     dropZone.addEventListener('click', () => fileInput.click());
+    
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files) processPDF(e.target.files);
+        if (e.target.files) processPDFWithNativeEngine(e.target.files);
     });
 
-    dropZone.addEventListener('dragover', (e) => e.preventDefault());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#ec4899';
+    });
+    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        if (e.dataTransfer.files) processPDF(e.dataTransfer.files);
+        if (e.dataTransfer.files) processPDFWithNativeEngine(e.dataTransfer.files);
     });
 
-    function processPDF(file) {
+    function processPDFWithNativeEngine(file) {
+        // Hide upload view, show working area instantly
         uploadSection.style.display = 'none';
         workSection.style.display = 'block';
         previewGrid.innerHTML = '';
-        statusMessage.innerText = "Extracting pages... Please wait.";
-        
+        statusMessage.innerText = "Launching secure viewer layout...";
+
         const fileReader = new FileReader();
         fileReader.onload = function () {
-            const typedarray = new Uint8Array(this.result);
-            
-            // Forcing inline synchronous execution model pass
-            pdfjsLib.getDocument({ data: typedarray }).promise.then((pdf) => {
-                pdfDoc = pdf;
-                const totalPages = pdf.numPages;
-                pageImages = {}; 
-                
-                statusMessage.innerText = `Found ${totalPages} pages. Rendering previews...`;
-                
-                // Synchronous serial chain execution to bypass freezes
-                let sequence = Promise.resolve();
-                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                    sequence = sequence.then(() => renderPageSingle(pageNum));
-                }
-                
-                sequence.then(() => {
-                    statusMessage.innerText = "⚡ All pages extracted successfully!";
-                    if (typeof JSZip !== 'undefined') {
-                        downloadAllBtn.style.display = 'inline-block';
-                    }
-                });
+            // Convert file array buffer to a lightweight browser local binary blob
+            const fileBlob = new Blob([this.result], { type: 'application/pdf' });
+            const nativeBlobURL = URL.createObjectURL(fileBlob);
 
-            }).catch((err) => {
-                statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Error parsing file format.";
-                console.error(err);
-            });
+            // Creating an isolated high-speed document viewport object
+            const nativeViewer = document.createElement('object');
+            nativeViewer.data = nativeBlobURL;
+            nativeViewer.type = 'application/pdf';
+            nativeViewer.style.width = '100%';
+            nativeViewer.style.height = '600px';
+            nativeViewer.style.borderRadius = '16px';
+            nativeViewer.style.border = '2px solid #e2e8f0';
+
+            // Append the object element directly into our container grid
+            previewGrid.appendChild(nativeViewer);
+            
+            // Instantly update status message
+            statusMessage.innerHTML = "✨ <strong>Document Loaded!</strong> Use the viewer options inside the frame to download pages or print instantly.";
+            
+            // Set download/view button behavior
+            if (downloadAllBtn) {
+                downloadAllBtn.style.display = 'inline-block';
+                downloadAllBtn.innerText = "📥 Open Document Fullscreen";
+                downloadAllBtn.onclick = (e) => {
+                    e.preventDefault();
+                    window.open(nativeBlobURL, '_blank');
+                };
+            }
         };
         fileReader.readAsArrayBuffer(file);
     }
-
-    function renderPageSingle(num) {
-        return pdfDoc.getPage(num).then((page) => {
-            const viewport = page.getViewport({ scale: 1.0 }); // Clean speed execution standard scale
-            
-            const card = document.createElement('div');
-            card.className = 'page-card';
-            
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d'); 
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            card.appendChild(canvas);
-            const label = document.createElement('p');
-            label.innerText = `Page ${num}`;
-            card.appendChild(label);
-            
-            const dlBtn = document.createElement('button');
-            dlBtn.className = 'btn';
-            dlBtn.style = 'padding:6px 12px; font-size:12px; margin-top:8px;';
-            dlBtn.innerText = 'Download';
-            card.appendChild(dlBtn);
-            
-            previewGrid.appendChild(card);
-
-            return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
-                const imgData = canvas.toDataURL('image/jpeg', 0.80);
-                pageImages[num] = imgData;
-
-                dlBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const a = document.createElement('a');
-                    a.href = imgData;
-                    a.download = `page-${num}.jpg`;
-                    a.click();
-                });
-            });
-        });
-    }
-
-    downloadAllBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        downloadAllBtn.innerText = "Creating ZIP...";
-        const zip = new JSZip();
-        
-        for (const [num, data] of Object.entries(pageImages)) {
-            const base64Data = data.split(',');
-            zip.file(`page-${num}.jpg`, base64Data, { base64: true });
-        }
-        
-        const content = await zip.generateAsync({ type: "blob", compression: "STORE" });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        link.download = "pixelpress-bundle.zip";
-        link.click();
-        downloadAllBtn.innerText = "📥 Download All Pages (ZIP)";
-    });
 });

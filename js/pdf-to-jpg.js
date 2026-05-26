@@ -1,4 +1,3 @@
-// High-Speed Parallel PDF to JPG Engine
 let pdfDoc = null;
 const pageImages = {}; 
 
@@ -33,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.style.display = 'none';
         workSection.style.display = 'block';
         previewGrid.innerHTML = '';
-        statusMessage.innerText = "Loading PDF securely...";
+        statusMessage.innerText = "Processing document arrays...";
         
         const fileReader = new FileReader();
         fileReader.onload = async function () {
@@ -41,23 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const loadingTask = pdfjs.getDocument({ data: typedarray });
                 pdfDoc = await loadingTask.promise;
-                statusMessage.innerText = `Converting ${pdfDoc.numPages} pages in parallel threads...`;
+                statusMessage.innerText = `Converting ${pdfDoc.numPages} pages...`;
                 
-                // Create a list of parallel promises to boost rendering speed
-                const renderPromises = [];
+                // Pure linear loop with fast rendering scale
                 for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                    renderPromises.push(renderPage(pageNum));
+                    await renderPage(pageNum);
                 }
                 
-                // Execute all pages together at once
-                await Promise.all(renderPromises);
-                
-                statusMessage.innerText = "Finished instantly!";
+                statusMessage.innerText = "Done!";
                 if (typeof JSZip !== 'undefined') {
                     downloadAllBtn.style.display = 'inline-block';
                 }
             } catch (err) {
-                statusMessage.innerText = "Error parsing file.";
+                statusMessage.innerText = "Conversion error.";
                 console.error(err);
             }
         };
@@ -66,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: 1.2 }); // Balanced scale for ultra-fast conversion
+        const viewport = page.getViewport({ scale: 1.0 }); // Balanced scale for maximum execution speed
         
         const card = document.createElement('div');
         card.className = 'page-card';
@@ -83,17 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const dlBtn = document.createElement('button');
         dlBtn.className = 'btn';
-        dlBtn.style = 'padding:6px 12px; font-size:12px; margin-top:8px;';
+        dlBtn.style = 'padding:5px 10px; font-size:12px; margin-top:5px;';
         dlBtn.innerText = 'Download';
         card.appendChild(dlBtn);
         
         previewGrid.appendChild(card);
 
-        // Render to canvas asynchronously
         await page.render({ canvasContext: ctx, viewport: viewport }).promise;
         
-        // Optimize image quality ratio for speed
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
         pageImages[num] = imgData;
 
         dlBtn.addEventListener('click', (e) => {
@@ -107,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     downloadAllBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        downloadAllBtn.innerText = "Zipping files...";
         const zip = new JSZip();
         for (const [num, data] of Object.entries(pageImages)) {
             const base64Data = data.replace(/^data:image\/jpeg;base64,/, "");
@@ -116,9 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "pixelpress-images.zip";
+        link.download = "pixelpress-pdf-images.zip";
         link.click();
-        downloadAllBtn.innerText = "📥 Download All Pages (ZIP)";
     });
 });
 

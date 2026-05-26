@@ -1,9 +1,8 @@
-// PDF to JPG Converter Logic
+// Self-Contained WebWorker Bridge for PDF parsing
 let pdfDoc = null;
 const pageImages = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Standard elements fetch without using helper symbols ($)
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const uploadSection = document.getElementById('uploadSection');
@@ -14,11 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
-    // Explicit config setup for pdfjs library integration
-    if (window['pdfjs-dist/build/pdf']) {
-        window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+    // Secure fallback loader block
+    const pdfjs = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjs) {
+        pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     }
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     dropZone.addEventListener('click', () => fileInput.click());
     
@@ -41,9 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         dropZone.style.borderColor = '#94a3b8';
         dropZone.style.background = 'transparent';
-        if (e.dataTransfer.files && e.dataTransfer.files.type === "application/pdf") {
-            processPDF(e.dataTransfer.files);
-        }
+        if (e.dataTransfer.files) processPDF(e.dataTransfer.files);
     });
 
     async function processPDF(file) {
@@ -55,19 +52,22 @@ document.addEventListener('DOMContentLoaded', () => {
         fileReader.onload = async function () {
             const typedarray = new Uint8Array(this.result);
             try {
-                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
+                const loadingTask = pdfjs.getDocument({ data: typedarray });
                 pdfDoc = await loadingTask.promise;
-                statusMessage.innerText = `Found ${pdfDoc.numPages} pages. Converting...`;
+                statusMessage.innerText = `Document Loaded! Rendering ${pdfDoc.numPages} pages...`;
                 
                 for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
                     await renderPage(pageNum);
                 }
                 
-                statusMessage.innerText = "All pages converted successfully!";
-                downloadAllBtn.style.display = 'inline-block';
+                statusMessage.innerText = "Conversion Finished Successfully!";
+                // Fallback direct check if JSZip exists
+                if (typeof JSZip !== 'undefined') {
+                    downloadAllBtn.style.display = 'inline-block';
+                }
             } catch (err) {
                 statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Error parsing PDF. Make sure it's not password protected.";
+                statusMessage.innerText = "Error reading PDF file structure.";
                 console.error(err);
             }
         };
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: 1.5 }); // High Quality rendering scale
+        const viewport = page.getViewport({ scale: 1.5 });
         
         const card = document.createElement('div');
         card.className = 'page-card';
@@ -96,13 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
         dlBtn.style.padding = '6px 12px';
         dlBtn.style.fontSize = '12px';
         dlBtn.style.marginTop = '8px';
-        dlBtn.innerText = 'Download JPG';
+        dlBtn.innerText = 'Download Image';
         card.appendChild(dlBtn);
         
         previewGrid.appendChild(card);
 
-        const renderContext = { canvasContext: ctx, viewport: viewport };
-        await page.render(renderContext).promise;
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
         
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         pageImages[num] = imgData;
@@ -111,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const a = document.createElement('a');
             a.href = imgData;
-            a.download = `page-${num}.jpg`;
+            a.download = `pixelpress-page-${num}.jpg`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -120,10 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     downloadAllBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        if (typeof JSZip === 'undefined') {
-            alert('ZIP library loading, please click again in a second.');
-            return;
-        }
         const zip = new JSZip();
         for (const [num, data] of Object.entries(pageImages)) {
             const base64Data = data.replace(/^data:image\/jpeg;base64,/, "");
@@ -132,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "pixelpress-pdf-images.zip";
+        link.download = "pixelpress-all-pages.zip";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

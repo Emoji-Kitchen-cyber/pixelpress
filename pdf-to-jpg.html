@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to JPG — PixelPress</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#f1f5f9; font-family:system-ui,-apple-system,sans-serif; color:#0f172a; padding:15px; }
+    .container { max-width:900px; margin:auto; background:white; border-radius:24px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.12); }
+    .header { background:linear-gradient(135deg,#ec4899,#7e22ce); color:white; text-align:center; padding:40px 20px; }
+    .header h1 { font-size:36px; margin-bottom:10px; }
+    .top-back { display:inline-block; margin-top:15px; text-decoration:none; color:white; background:rgba(255,255,255,0.15); padding:8px 16px; border-radius:12px; font-weight:600; }
+    .upload-area { margin:30px; border:4px dashed #94a3b8; border-radius:20px; padding:60px 20px; text-align:center; cursor:pointer; transition:0.3s; }
+    .upload-area:hover, .upload-area.dragover { border-color:#ec4899; background:#fdf4ff; }
+    .work-area { display:none; padding:30px; }
+    .btn { border:none; padding:12px 24px; border-radius:12px; cursor:pointer; font-weight:600; background:#ec4899; color:white; transition:0.3s; text-decoration:none; display:inline-block; }
+    .btn:hover { background:#db2777; }
+    .preview-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:20px; margin:25px 0; }
+    .page-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px; text-align:center; }
+    .page-card canvas { width:100%; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.05); background:white; }
+    .page-card p { margin-top:8px; font-size:14px; font-weight:600; color:#475569; }
+    .status-msg { margin-bottom:20px; font-weight:600; color:#2563eb; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📄 PDF to JPG Converter</h1>
+    <p>Extract pages from PDF document into high-quality JPG images</p>
+    <a href="./index.html" class="top-back">← Back Home</a>
+  </div>
+
+  <div id="uploadSection">
+    <div class="upload-area" id="dropZone">
+      <h2>Select PDF File</h2>
+      <p>Click or Drag & Drop PDF here</p>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" hidden>
+  </div>
+
+  <div class="work-area" id="workSection">
+    <div class="status-msg" id="statusMessage">Processing PDF, please wait...</div>
+    <div class="preview-grid" id="previewGrid"></div>
+    <button id="downloadAllBtn" class="btn" style="display:none;">📥 Download All Pages (ZIP)</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="./js/common.js"></script>
+<script src="./js/pdf-to-jpg.js"></script>
+</body>
+</html>

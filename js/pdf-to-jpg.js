@@ -1,16 +1,24 @@
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
+// PDF to JPG Converter Logic
 let pdfDoc = null;
-const pageImages = {}; // Stores base64 data strings for ZIP output
+const pageImages = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    const dropZone = $('dropZone');
-    const fileInput = $('fileInput');
-    const uploadSection = $('uploadSection');
-    const workSection = $('workSection');
-    const previewGrid = $('previewGrid');
-    const statusMessage = $('statusMessage');
-    const downloadAllBtn = $('downloadAllBtn');
+    // Standard elements fetch without using helper symbols ($)
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadSection = document.getElementById('uploadSection');
+    const workSection = document.getElementById('workSection');
+    const previewGrid = document.getElementById('previewGrid');
+    const statusMessage = document.getElementById('statusMessage');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    if (!dropZone || !fileInput) return;
+
+    // Explicit config setup for pdfjs library integration
+    if (window['pdfjs-dist/build/pdf']) {
+        window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     dropZone.addEventListener('click', () => fileInput.click());
     
@@ -18,12 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.files) processPDF(e.target.files);
     });
 
-    // Simple Drag & Drop implementation
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('dragover', (e) => { 
+        e.preventDefault(); 
+        dropZone.style.borderColor = '#ec4899';
+        dropZone.style.background = '#fdf4ff';
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#94a3b8';
+        dropZone.style.background = 'transparent';
+    });
+    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropZone.classList.remove('dragover');
+        dropZone.style.borderColor = '#94a3b8';
+        dropZone.style.background = 'transparent';
         if (e.dataTransfer.files && e.dataTransfer.files.type === "application/pdf") {
             processPDF(e.dataTransfer.files);
         }
@@ -38,8 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fileReader.onload = async function () {
             const typedarray = new Uint8Array(this.result);
             try {
-                pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
-                statusMessage.innerText = `Found ${pdfDoc.numPages} pages. Rendering previews...`;
+                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
+                pdfDoc = await loadingTask.promise;
+                statusMessage.innerText = `Found ${pdfDoc.numPages} pages. Converting...`;
                 
                 for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
                     await renderPage(pageNum);
@@ -49,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 downloadAllBtn.style.display = 'inline-block';
             } catch (err) {
                 statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Error loading PDF file.";
+                statusMessage.innerText = "Error parsing PDF. Make sure it's not password protected.";
                 console.error(err);
             }
         };
@@ -58,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: 1.5 }); // High definition scale
+        const viewport = page.getViewport({ scale: 1.5 }); // High Quality rendering scale
         
         const card = document.createElement('div');
         card.className = 'page-card';
@@ -73,13 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
         label.innerText = `Page ${num}`;
         card.appendChild(label);
         
-        // Single page individual download action button
         const dlBtn = document.createElement('button');
         dlBtn.className = 'btn';
         dlBtn.style.padding = '6px 12px';
         dlBtn.style.fontSize = '12px';
         dlBtn.style.marginTop = '8px';
-        dlBtn.innerText = 'Download';
+        dlBtn.innerText = 'Download JPG';
         card.appendChild(dlBtn);
         
         previewGrid.appendChild(card);
@@ -87,26 +104,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderContext = { canvasContext: ctx, viewport: viewport };
         await page.render(renderContext).promise;
         
-        // Save base64 standard string format
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         pageImages[num] = imgData;
 
-        dlBtn.addEventListener('click', () => {
+        dlBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             const a = document.createElement('a');
             a.href = imgData;
             a.download = `page-${num}.jpg`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
         });
     }
 
-    // Creates batch collection down as ZIP archive
-    downloadAllBtn.addEventListener('click', async () => {
+    downloadAllBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (typeof JSZip === 'undefined') {
+            alert('ZIP library loading, please click again in a second.');
+            return;
+        }
         const zip = new JSZip();
         for (const [num, data] of Object.entries(pageImages)) {
             const base64Data = data.replace(/^data:image\/jpeg;base64,/, "");
             zip.file(`page-${num}.jpg`, base64Data, { base64: true });
         }
         const content = await zip.generateAsync({ type: "blob" });
-        downloadBlob(content, "pixelpress-pdf-pages.zip");
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "pixelpress-pdf-images.zip";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     });
 });
+

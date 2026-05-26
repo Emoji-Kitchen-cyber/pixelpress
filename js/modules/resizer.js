@@ -81,7 +81,8 @@ export function initResizer(container) {
     const w = parseInt(widthInput.value) || originalWidth;
     const h = parseInt(heightInput.value) || originalHeight;
     showSpinner();
-    const worker = new Worker('../utils/imageWorker.js');
+    // ✅ Fixed: Worker path relative to index.html
+    const worker = new Worker('js/utils/imageWorker.js');
     createImageBitmap(originalImage).then(bitmap => {
       worker.postMessage({
         imageBitmap: bitmap,

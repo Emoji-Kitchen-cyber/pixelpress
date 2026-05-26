@@ -102,13 +102,12 @@ export function initCompressor(container, fileQueue, historyPanel) {
 
     let completed = 0;
     selectedFiles.forEach((file, index) => {
-      // Use Web Worker for heavy processing
-      const worker = new Worker('../utils/imageWorker.js');
+      // ✅ Fixed: Worker path relative to index.html
+      const worker = new Worker('js/utils/imageWorker.js');
       const reader = new FileReader();
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          // Transfer image bitmap to worker if supported
           createImageBitmap(img).then(bitmap => {
             worker.postMessage({
               imageBitmap: bitmap,

@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<!DOCTYPE html><html lang="en">
+<head>  <meta charset="UTF-8" /><meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+/>
 
-  <title>Photo Editor — PixelPress</title>
-
-  <style>
+  <title>Photo Editor — PixelPress</title>  <style>
 
     *{
       margin:0;
@@ -128,77 +126,137 @@
       border-radius:12px;
     }
 
-  </style>
-</head>
-<body>
+  </style></head>
+<body><div class="container">  <div class="header"><h1>✨ Photo Editor</h1>
 
-<div class="container">
+<p>
+  Advanced browser based image editor
+</p>
 
-  <div class="header">
-    <h1>✨ Photo Editor</h1>
-    <p>Edit your photos directly in browser</p>
+<a href="./index.html" class="top-back">
+  ← Back Home
+</a>
 
-    <a href="./index.html" class="top-back">
-      ← Back Home
-    </a>
+  </div>  <div id="uploadSection"><div class="upload-area" id="dropZone">
+
+  <h2>📸 Upload Photo</h2>
+
+  <p>
+    Click or Drag & Drop image here
+  </p>
+
+  <small>
+    JPG, PNG, WEBP Supported
+  </small>
+
+</div>
+
+<input
+  type="file"
+  id="fileInput"
+  accept="image/*"
+  hidden
+>
+
+  </div>  <div class="editor" id="editorSection"><div class="controls">
+
+  <div class="control-box">
+    <label>Brightness</label>
+
+    <input
+      type="range"
+      id="brightness"
+      min="50"
+      max="200"
+      value="100"
+    >
   </div>
 
-  <div id="uploadSection">
+  <div class="control-box">
 
-    <div class="upload-area" id="dropZone">
-      <h2>📸 Upload Photo</h2>
-      <p>Click here to choose image</p>
-      <small>JPG, PNG, WEBP Supported</small>
-    </div>
+    <label>Contrast</label>
 
-    <input type="file" id="fileInput" accept="image/*" hidden>
+    <input
+      type="range"
+      id="contrast"
+      min="50"
+      max="200"
+      value="100"
+    >
 
   </div>
 
-  <div class="editor" id="editorSection">
+  <div class="control-box">
 
-    <div class="controls">
+    <label>Saturation</label>
 
-      <div class="control-box">
-        <label>Brightness</label>
-        <input type="range" id="brightness" min="50" max="200" value="100">
-      </div>
-
-      <div class="control-box">
-        <label>Contrast</label>
-        <input type="range" id="contrast" min="50" max="200" value="100">
-      </div>
-
-      <div class="control-box">
-        <label>Saturation</label>
-        <input type="range" id="saturation" min="0" max="200" value="100">
-      </div>
-
-    </div>
-
-    <div class="buttons">
-
-      <button id="rotateLeft">↩ Rotate Left</button>
-      <button id="rotateRight">↪ Rotate Right</button>
-
-      <button id="flipH">↔ Flip H</button>
-      <button id="flipV">↕ Flip V</button>
-
-      <button id="resetBtn">🔄 Reset</button>
-
-      <button id="downloadBtn">📥 Download</button>
-
-    </div>
-
-    <div class="canvas-wrapper">
-      <canvas id="canvas"></canvas>
-    </div>
+    <input
+      type="range"
+      id="saturation"
+      min="0"
+      max="200"
+      value="100"
+    >
 
   </div>
 
 </div>
 
-<script src="./js/photo-editor.js"></script>
+<div class="buttons">
 
-</body>
+  <button id="rotateLeft">
+    ↩ Rotate Left
+  </button>
+
+  <button id="rotateRight">
+    ↪ Rotate Right
+  </button>
+
+  <button id="flipH">
+    ↔ Flip H
+  </button>
+
+  <button id="flipV">
+    ↕ Flip V
+  </button>
+
+  <button onclick="addEffect('grayscale')">
+    ⚫ Grayscale
+  </button>
+
+  <button onclick="addEffect('sepia')">
+    🟤 Sepia
+  </button>
+
+  <button onclick="addEffect('blur')">
+    🌫 Blur
+  </button>
+
+  <button onclick="zoomIn()">
+    ➕ Zoom
+  </button>
+
+  <button onclick="zoomOut()">
+    ➖ Zoom
+  </button>
+
+  <button onclick="undoEdit()">
+    ↩ Undo
+  </button>
+
+  <button id="resetBtn">
+    🔄 Reset
+  </button>
+
+  <button id="downloadBtn">
+    📥 Download
+  </button>
+
+</div>
+
+<div class="canvas-wrapper">
+  <canvas id="canvas"></canvas>
+</div>
+
+  </div></div><script src="./js/photo-editor.js"></script></body>
 </html>

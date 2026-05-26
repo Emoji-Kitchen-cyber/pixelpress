@@ -1,54 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Convert Image – PixelPress</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Image – PixelPress</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {font-family:'Segoe UI',sans-serif; background:#f9fafb; margin:0; padding:20px;}
+        .container {max-width:1100px; margin:auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1);}
+        .header {background:linear-gradient(135deg, #14b8a6, #0f766e); color:white; padding:25px; text-align:center;}
+        .step {display:none; padding:30px;}
+        .step.active {display:block;}
+        .upload-zone {border:4px dashed #cbd5e1; border-radius:16px; padding:80px 20px; text-align:center; cursor:pointer;}
+    </style>
 </head>
 <body>
-  <header class="main-header">
-    <a href="/" class="logo">🎨 PixelPress</a>
-    <nav><a href="/" class="btn-outline">← All Tools</a></nav>
-  </header>
-  <div class="tool-page">
-    <h1>🔄 Convert Image Format</h1>
-    <div class="workflow-step" id="upload-step">
-      <h2>1. Upload Image</h2>
-      <div class="upload-zone" id="convertUploadZone">
-        <div class="icon">📁</div>
-        <p>Drop image here</p>
-      </div>
-      <input type="file" id="convertFileInput" accept="image/*" hidden>
-    </div>
-    <div class="workflow-step" id="settings-step" style="display:none">
-      <h2>2. Choose Output Format</h2>
-      <div class="settings-grid">
-        <div class="form-group">
-          <label>Convert to</label>
-          <select id="formatSelect">
-            <option value="png">PNG</option>
-            <option value="jpeg">JPEG</option>
-            <option value="webp">WebP</option>
-            <option value="bmp">BMP</option>
-          </select>
+    <div class="container">
+        <div class="header"><h1>🔄 Convert Image Format</h1></div>
+
+        <div id="upload-step" class="step active">
+            <h2 style="text-align:center;">Upload Image</h2>
+            <div id="convertUploadZone" class="upload-zone">Drop or Click</div>
+            <input type="file" id="convertFileInput" accept="image/*" style="display:none;">
         </div>
-        <button id="convertBtn" class="btn-primary">Convert Now</button>
-      </div>
+
+        <div id="settings-step" class="step">
+            <h2>Choose Output Format</h2>
+            <select id="formatSelect" style="width:100%; padding:14px; font-size:18px; border-radius:10px;">
+                <option value="image/png">PNG</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/webp">WEBP</option>
+            </select><br><br>
+            <button id="convertBtn" style="width:100%; padding:16px; background:#14b8a6; color:white; border:none; border-radius:12px; font-size:18px;">Convert Now</button>
+        </div>
+
+        <div id="processing-step" class="step"><h2 style="text-align:center;">⏳ Converting...</h2></div>
+
+        <div id="result-step" class="step">
+            <h2 style="text-align:center; color:#10b981;">✅ Conversion Complete!</h2>
+            <img id="convertedPreview" style="max-width:100%; border-radius:12px;">
+            <div style="text-align:center; margin-top:25px;">
+                <button id="downloadConvertBtn" style="background:#10b981; color:white; padding:16px 40px; border:none; border-radius:12px;">Download Converted Image</button>
+            </div>
+        </div>
     </div>
-    <div class="workflow-step" id="result-step" style="display:none">
-      <h2>3. Converted Image</h2>
-      <div class="preview-container">
-        <div class="preview-box"><img id="originalPreview"></div>
-        <div class="preview-box"><img id="convertedPreview"></div>
-      </div>
-      <div class="download-section">
-        <button id="downloadBtn" class="btn-primary">📥 Download Converted Image</button>
-      </div>
-    </div>
-  </div>
-  <script src="/js/common.js"></script>
-  <script src="/js/convert.js"></script>
+
+    <script src="../js/convert.js"></script>
 </body>
 </html>

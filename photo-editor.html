@@ -8,126 +8,105 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #f1f5f9;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
             padding: 15px;
         }
-        .editor-container {
-            max-width: 1250px;
+        .main-container {
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
         .header {
             background: linear-gradient(135deg, #ec4899, #7e22ce);
             color: white;
-            padding: 25px;
+            padding: 30px;
             text-align: center;
         }
-        .step { display: none; padding: 25px; }
-        .step.active { display: block; }
-        .upload-zone {
+        .upload-area {
+            padding: 80px 20px;
+            text-align: center;
             border: 4px dashed #94a3b8;
+            margin: 20px;
             border-radius: 20px;
-            padding: 90px 20px;
-            text-align: center;
             cursor: pointer;
-            transition: 0.3s;
-        }
-        .upload-zone:hover {
-            border-color: #ec4899;
-            background: #fdf4ff;
         }
         canvas {
             max-width: 100%;
-            max-height: 520px;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-        button {
-            padding: 12px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="editor-container">
+    <div class="main-container">
         <div class="header">
             <h1>✨ Photo Editor</h1>
-            <p>Edit • Crop • Enhance • Add Text</p>
+            <p>Powerful browser-based photo editor</p>
         </div>
 
-        <!-- Upload Step -->
-        <div id="upload-step" class="step active">
-            <h2 style="text-align:center; margin-bottom:20px;">Upload Photo to Start Editing</h2>
-            <div id="editorUploadZone" class="upload-zone">
-                <h3>📸 Drop your photo here</h3>
-                <p>or click to browse from gallery</p>
-                <small>Supports JPG, PNG, WEBP</small>
+        <!-- Upload -->
+        <div id="upload-screen">
+            <div class="upload-area" id="uploadZone">
+                <h2>📸 Drop your photo here</h2>
+                <p>or click to upload</p>
             </div>
-            <input type="file" id="editorFileInput" accept="image/*" style="display:none;">
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
         </div>
 
-        <!-- Main Editor -->
-        <div id="editor-step" class="step">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2>Editing Photo</h2>
-                <button onclick="resetEditor()" style="background:#64748b; color:white;">Reset</button>
+        <!-- Editor -->
+        <div id="editor-screen" style="display:none; padding:20px;">
+            <canvas id="canvas" style="display:block; margin:0 auto;"></canvas>
+            
+            <div style="margin-top:20px; text-align:center;">
+                <button onclick="downloadImage()" style="padding:15px 30px; font-size:18px; background:#ec4899; color:white; border:none; border-radius:12px;">
+                    Download Edited Photo
+                </button>
             </div>
-
-            <div style="text-align:center; background:#f8fafc; padding:15px; border-radius:12px;">
-                <canvas id="mainCanvas"></canvas>
-            </div>
-
-            <div style="margin-top:20px; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:15px;">
-                <!-- Controls -->
-                <div>
-                    <h3>Crop</h3>
-                    <button onclick="applyCrop(0.9)">90% Crop</button>
-                    <button onclick="applyCrop(0.7)">70% Crop</button>
-                    <button onclick="applyCrop(0.5)">50% Crop</button>
-                </div>
-
-                <div>
-                    <h3>Adjustments</h3>
-                    <label>Brightness <span id="brightVal">100</span>%</label><br>
-                    <input type="range" id="brightness" min="50" max="150" value="100" oninput="updatePreview()">
-
-                    <label>Contrast <span id="contrastVal">100</span>%</label><br>
-                    <input type="range" id="contrast" min="50" max="150" value="100" oninput="updatePreview()">
-
-                    <label>Saturation <span id="satVal">100</span>%</label><br>
-                    <input type="range" id="saturation" min="0" max="200" value="100" oninput="updatePreview()">
-                </div>
-
-                <div>
-                    <h3>Transform</h3>
-                    <button onclick="rotateImage(-90)">↩ Rotate Left</button>
-                    <button onclick="rotateImage(90)">↪ Rotate Right</button>
-                    <button onclick="flipImage('h')">Flip Horizontal</button>
-                    <button onclick="flipImage('v')">Flip Vertical</button>
-                </div>
-
-                <div>
-                    <h3>Add Text</h3>
-                    <input type="text" id="textInput" placeholder="Type text here" style="width:100%; padding:10px; margin-bottom:8px;">
-                    <input type="color" id="textColor" value="#ffffff">
-                    <button onclick="addTextToCanvas()" style="background:#ec4899; color:white;">Add Text</button>
-                </div>
-            </div>
-
-            <button onclick="downloadEditedImage()" style="width:100%; margin-top:25px; padding:18px; background:#ec4899; color:white; font-size:18px; border-radius:12px;">
-                📥 Download Final Photo
-            </button>
         </div>
     </div>
 
-    <script src="../js/photo-editor.js"></script>
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadScreen = document.getElementById('upload-screen');
+        const editorScreen = document.getElementById('editor-screen');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let currentImage = null;
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) loadImage(e.target.files[0]);
+        });
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    uploadScreen.style.display = 'none';
+                    editorScreen.style.display = 'block';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'edited-photo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
 </body>
 </html>

@@ -1,14 +1,18 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
-    { "source": "/watermark", "destination": "/watermark.html" },
+    { "source": "/photo-editor", "destination": "/photo-editor.html" },
     { "source": "/compress", "destination": "/compress.html" },
     { "source": "/resize", "destination": "/resize.html" },
+    { "source": "/crop", "destination": "/photo-editor.html" },
     { "source": "/convert", "destination": "/convert.html" },
-    { "source": "/photo-editor", "destination": "/photo-editor.html" },
-    { "source": "/editor", "destination": "/photo-editor.html" },
-    { "source": "/crop", "destination": "/photo-editor.html" }
+    { "source": "/watermark", "destination": "/watermark.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+    }
   ]
 }

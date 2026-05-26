@@ -1,60 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resize Image – PixelPress</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resize Image – PixelPress</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {font-family: 'Segoe UI', sans-serif; background: #f9fafb; margin:0; padding:20px;}
+        .container {max-width: 1100px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1); overflow:hidden;}
+        .header {background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:white; padding:25px; text-align:center;}
+        .step {display:none; padding:30px;}
+        .step.active {display:block;}
+        .upload-zone {border:4px dashed #cbd5e1; border-radius:16px; padding:80px 20px; text-align:center; cursor:pointer;}
+        .upload-zone:hover {border-color:#8b5cf6; background:#f3e8ff;}
+        .preview-img {max-width:100%; max-height:450px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.15);}
+    </style>
 </head>
 <body>
-  <header class="main-header">
-    <a href="/" class="logo">🎨 PixelPress</a>
-    <nav><a href="/" class="btn-outline">← All Tools</a></nav>
-  </header>
-  <div class="tool-page">
-    <h1>📐 Resize Image</h1>
-    <div class="workflow-step" id="upload-step">
-      <h2>1. Upload Image</h2>
-      <div class="upload-zone" id="resizeUploadZone">
-        <div class="icon">📁</div>
-        <p>Drop image here</p>
-      </div>
-      <input type="file" id="resizeFileInput" accept="image/*" hidden>
-    </div>
-    <div class="workflow-step" id="settings-step" style="display:none">
-      <h2>2. New Dimensions</h2>
-      <div class="settings-grid">
-        <div class="form-group">
-          <label>Width (px)</label>
-          <input type="number" id="resizeWidth" value="800" min="1">
+    <div class="container">
+        <div class="header"><h1>📏 Resize Image</h1></div>
+
+        <!-- Upload -->
+        <div id="upload-step" class="step active">
+            <h2 style="text-align:center;">Upload Image</h2>
+            <div id="resizeUploadZone" class="upload-zone">
+                <h3>Drop Image Here</h3>
+                <p>or click to browse</p>
+            </div>
+            <input type="file" id="resizeFileInput" accept="image/*" style="display:none;">
         </div>
-        <div class="form-group">
-          <label>Height (px)</label>
-          <input type="number" id="resizeHeight" value="600" min="1">
+
+        <!-- Settings -->
+        <div id="settings-step" class="step">
+            <h2>Resize Settings</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:20px 0;">
+                <div>
+                    <label>Width (px)</label>
+                    <input type="number" id="widthInput" style="width:100%; padding:12px; border-radius:8px;">
+                </div>
+                <div>
+                    <label>Height (px)</label>
+                    <input type="number" id="heightInput" style="width:100%; padding:12px; border-radius:8px;">
+                </div>
+            </div>
+            <label><input type="checkbox" id="aspectLock" checked> Maintain Aspect Ratio</label><br><br>
+            <button id="resizeBtn" style="width:100%; padding:16px; background:#8b5cf6; color:white; border:none; border-radius:12px; font-size:18px;">Resize Image</button>
         </div>
-        <div class="form-group">
-          <label><input type="checkbox" id="lockAspect" checked> Lock aspect ratio</label>
+
+        <!-- Processing -->
+        <div id="processing-step" class="step"><h2 style="text-align:center;">⏳ Resizing...</h2></div>
+
+        <!-- Result -->
+        <div id="result-step" class="step">
+            <h2 style="text-align:center; color:#10b981;">✅ Resized Successfully!</h2>
+            <img id="resizedPreview" class="preview-img">
+            <div style="text-align:center; margin-top:25px;">
+                <button id="downloadResizeBtn" style="background:#10b981; color:white; padding:16px 40px; border:none; border-radius:12px; font-size:18px;">Download Image</button>
+                <button onclick="location.reload()" style="margin-left:10px; background:#6b7280; color:white; padding:16px 30px; border:none; border-radius:12px;">New Image</button>
+            </div>
         </div>
-        <button id="resizeBtn" class="btn-primary">Resize</button>
-      </div>
     </div>
-    <div class="workflow-step" id="processing-step" style="display:none">
-      <h2>Processing...</h2>
-      <div class="processing-bar"><div class="spinner"></div><p>Resizing...</p></div>
-    </div>
-    <div class="workflow-step" id="result-step" style="display:none">
-      <h2>Result</h2>
-      <div class="preview-container">
-        <div class="preview-box"><p>Original</p><img id="originalPreview"></div>
-        <div class="preview-box"><p>Resized</p><img id="resizedPreview"></div>
-      </div>
-      <div class="download-section">
-        <button id="downloadBtn" class="btn-primary">📥 Download Resized Image</button>
-      </div>
-    </div>
-  </div>
-  <script src="/js/common.js"></script>
-  <script src="/js/resize.js"></script>
+
+    <script src="../js/resize.js"></script>
 </body>
 </html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Photo Editor — PixelPress</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      background:#f1f5f9;
+      font-family:system-ui,-apple-system,sans-serif;
+      color:#0f172a;
+      padding:15px;
+    }
+
+    .container{
+      max-width:1200px;
+      margin:auto;
+      background:white;
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 15px 40px rgba(0,0,0,0.12);
+    }
+
+    .header{
+      background:linear-gradient(135deg,#ec4899,#7e22ce);
+      color:white;
+      text-align:center;
+      padding:40px 20px;
+    }
+
+    .header h1{
+      font-size:40px;
+      margin-bottom:10px;
+    }
+
+    .upload-area{
+      margin:30px;
+      border:4px dashed #94a3b8;
+      border-radius:20px;
+      padding:90px 20px;
+      text-align:center;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    .upload-area:hover{
+      border-color:#ec4899;
+      background:#fdf4ff;
+    }
+
+    .editor{
+      display:none;
+      padding:20px;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:15px;
+      margin-bottom:20px;
+    }
+
+    .control-box{
+      background:#f8fafc;
+      padding:15px;
+      border-radius:16px;
+    }
+
+    .control-box label{
+      display:block;
+      margin-bottom:10px;
+      font-weight:600;
+    }
+
+    input[type="range"]{
+      width:100%;
+    }
+
+    .buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    button{
+      border:none;
+      padding:12px 18px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      background:#ec4899;
+      color:white;
+    }
+
+    button:hover{
+      background:#db2777;
+    }
+
+    .canvas-wrapper{
+      overflow:auto;
+      text-align:center;
+      margin-top:25px;
+    }
+
+    canvas{
+      max-width:100%;
+      border-radius:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    .top-back{
+      display:inline-block;
+      margin-top:20px;
+      text-decoration:none;
+      color:white;
+      background:rgba(255,255,255,0.15);
+      padding:10px 18px;
+      border-radius:12px;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>✨ Photo Editor</h1>
+    <p>Edit your photos directly in browser</p>
+
+    <a href="./index.html" class="top-back">
+      ← Back Home
+    </a>
+  </div>
+
+  <div id="uploadSection">
+
+    <div class="upload-area" id="dropZone">
+      <h2>📸 Upload Photo</h2>
+      <p>Click here to choose image</p>
+      <small>JPG, PNG, WEBP Supported</small>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" hidden>
+
+  </div>
+
+  <div class="editor" id="editorSection">
+
+    <div class="controls">
+
+      <div class="control-box">
+        <label>Brightness</label>
+        <input type="range" id="brightness" min="50" max="200" value="100">
+      </div>
+
+      <div class="control-box">
+        <label>Contrast</label>
+        <input type="range" id="contrast" min="50" max="200" value="100">
+      </div>
+
+      <div class="control-box">
+        <label>Saturation</label>
+        <input type="range" id="saturation" min="0" max="200" value="100">
+      </div>
+
+    </div>
+
+    <div class="buttons">
+
+      <button id="rotateLeft">↩ Rotate Left</button>
+      <button id="rotateRight">↪ Rotate Right</button>
+
+      <button id="flipH">↔ Flip H</button>
+      <button id="flipV">↕ Flip V</button>
+
+      <button id="resetBtn">🔄 Reset</button>
+
+      <button id="downloadBtn">📥 Download</button>
+
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="canvas"></canvas>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="./photo-editor.js"></script>
+
+</body>
+</html>

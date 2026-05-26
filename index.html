@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Free online image tools – compress, resize, crop, convert, watermark. All in your browser.">
+  <title>PixelPress – Free Online Image Toolkit</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background: #f5f7fa; }
+    .dashboard { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+    .dashboard h1 { text-align: center; margin-bottom: 10px; color: #1a1a2e; font-size: 2.2rem; }
+    .dashboard .subtitle { text-align: center; color: #666; margin-bottom: 40px; font-size: 1.1rem; }
+    .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .tool-card { background: #fff; border-radius: 16px; padding: 32px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; color: inherit; display: block; }
+    .tool-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .tool-card .icon { font-size: 3rem; margin-bottom: 16px; }
+    .tool-card h2 { font-size: 1.4rem; margin-bottom: 8px; color: #1a1a2e; }
+    .tool-card p { color: #666; font-size: 0.95rem; line-height: 1.5; }
+    @media (max-width: 600px) {
+      .dashboard h1 { font-size: 1.8rem; }
+      .tool-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <a href="/" class="logo">🎨 PixelPress</a>
+    <nav>
+      <button id="loginBtn" class="btn-outline">Login</button>
+    </nav>
+  </header>
+
+  <div class="dashboard">
+    <h1>Free Online Image Tools</h1>
+    <p class="subtitle">Compress, resize, crop, convert, and watermark images – all in your browser. No uploads to any server.</p>
+    <div class="tool-grid">
+      <a href="/compress" class="tool-card">
+        <div class="icon">📦</div>
+        <h2>Compress Image</h2>
+        <p>Reduce file size while keeping quality. Supports JPEG, PNG, WebP.</p>
+      </a>
+      <a href="/resize" class="tool-card">
+        <div class="icon">📐</div>
+        <h2>Resize Image</h2>
+        <p>Change dimensions with precise pixel control or percentage scaling.</p>
+      </a>
+      <a href="/crop" class="tool-card">
+        <div class="icon">✂️</div>
+        <h2>Crop Image</h2>
+        <p>Cut out exactly the part you need. Free‑form or preset aspect ratios.</p>
+      </a>
+      <a href="/convert" class="tool-card">
+        <div class="icon">🔄</div>
+        <h2>Convert Format</h2>
+        <p>Transform between PNG, JPEG, WebP, and BMP instantly.</p>
+      </a>
+      <a href="/watermark" class="tool-card">
+        <div class="icon">💧</div>
+        <h2>Add Watermark</h2>
+        <p>Protect your images with text or logo watermarks. Customizable opacity and position.</p>
+      </a>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="/js/firebase-config.js"></script>
+  <script>
+    if (typeof firebase !== 'undefined') {
+      firebase.auth().onAuthStateChanged(user => {
+        const btn = document.getElementById('loginBtn');
+        if (btn) btn.textContent = user ? 'Logout' : 'Login';
+      });
+      document.getElementById('loginBtn').addEventListener('click', () => {
+        const user = firebase.auth().currentUser;
+        user ? firebase.auth().signOut() : firebase.auth().signInAnonymously();
+      });
+    }
+  </script>
+</body>
+</html>

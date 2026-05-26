@@ -1,203 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelPress Pro – Advanced Image Toolkit</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixelPress Pro – AI Image Toolkit | Compress, Resize, Crop, Convert</title>
+  <meta name="description" content="Free online AI image toolkit. Compress, resize, crop, convert, remove EXIF, add watermark, and upscale images. No upload – all processing happens in your browser.">
+  <meta name="keywords" content="image compressor, resize image, crop image, convert image, remove exif, watermark, upscale, free image tools, privacy">
+  <link rel="canonical" href="YOUR_SITE_URL">
+  <!-- Open Graph -->
+  <meta property="og:title" content="PixelPress Pro – AI Image Toolkit">
+  <meta property="og:description" content="Compress, resize, crop, convert, and enhance images with AI. 100% client-side privacy.">
+  <meta property="og:url" content="YOUR_SITE_URL">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="YOUR_SITE_URL/assets/og-image.png">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PixelPress Pro – AI Image Toolkit">
+  <meta name="twitter:description" content="All-in-one image tools. Fast, private, and free.">
+  <meta name="twitter:image" content="YOUR_SITE_URL/assets/og-image.png">
+  <!-- PWA -->
+  <link rel="manifest" href="js/pwa/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "PixelPress Pro",
+    "url": "YOUR_SITE_URL",
+    "description": "AI-powered image toolkit for compression, resizing, cropping, converting, and more.",
+    "operatingSystem": "All",
+    "applicationCategory": "Multimedia"
+  }
+  </script>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <div class="container header-inner">
-            <div class="logo">PixelPress</div>
-            <nav class="nav-links">
-                <a href="#" class="nav-home">Home</a>
-                <a href="#" class="nav-tools">Tools</a>
-                <button class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
-                <span id="userArea"></span>
-            </nav>
-        </div>
-    </header>
+  <!-- Header -->
+  <header>
+    <div class="container header-inner">
+      <div class="logo" id="homeLogo">PixelPress</div>
+      <nav class="nav-links">
+        <a href="#" class="nav-home">Home</a>
+        <a href="#" class="nav-tools">Tools</a>
+        <button class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+        <div id="userArea"></div>
+      </nav>
+    </div>
+  </header>
 
-    <!-- HOME -->
+  <!-- Main content shell -->
+  <main id="appMain">
+    <!-- Home page -->
     <div id="homePage" class="page active">
-        <section class="hero">
-            <div class="container">
-                <h1>All‑in‑One Image Toolkit</h1>
-                <p>Compress, resize, crop and convert your images — right in your browser.</p>
-                <button class="btn btn-primary" id="heroCta">🚀 Start Compressing</button>
-            </div>
-        </section>
-        <section class="tools-section">
-            <div class="container">
-                <h2 class="section-title">Our Tools</h2>
-                <div class="tools-grid">
-                    <div class="tool-card" data-tool="compress">
-                        <div class="tool-icon">🗜️</div>
-                        <h3>Compress</h3>
-                        <p>Reduce file size with quality control</p>
-                    </div>
-                    <div class="tool-card" data-tool="resize">
-                        <div class="tool-icon">📏</div>
-                        <h3>Resize</h3>
-                        <p>Change dimensions for any platform</p>
-                    </div>
-                    <div class="tool-card" data-tool="crop">
-                        <div class="tool-icon">✂️</div>
-                        <h3>Crop</h3>
-                        <p>Cut and frame your image perfectly</p>
-                    </div>
-                    <div class="tool-card" data-tool="convert">
-                        <div class="tool-icon">🔄</div>
-                        <h3>Convert</h3>
-                        <p>JPEG, PNG, WebP & more</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <footer>
-            <p>© 2025 PixelPress — All processing happens locally. Your images never leave your device.</p>
-        </footer>
-    </div>
-
-    <!-- COMPRESSOR PAGE -->
-    <div id="compressorPage" class="page">
+      <section class="hero">
         <div class="container">
-            <button class="back-btn back-to-home">← Back to Home</button>
-            <h2>Image Compressor</h2>
-            <p class="subtitle">Drag & drop or click to upload multiple images</p>
-            <div class="upload-box" id="dropZoneCompress">
-                <div class="upload-content">
-                    <span class="upload-icon">📁</span>
-                    <p>Drop images here or <span class="browse">browse</span></p>
-                    <input type="file" id="fileInputCompress" multiple accept="image/*" hidden>
-                </div>
-            </div>
-            <div class="controls">
-                <div class="control-group">
-                    <label for="qualitySlider">Quality: <span id="qualityValue">70</span>%</label>
-                    <input type="range" id="qualitySlider" min="10" max="100" value="70">
-                </div>
-                <div class="control-group">
-                    <label for="formatSelectCompress">Output Format:</label>
-                    <select id="formatSelectCompress">
-                        <option value="image/jpeg">JPEG</option>
-                        <option value="image/png">PNG</option>
-                        <option value="image/webp">WebP</option>
-                    </select>
-                </div>
-            </div>
-            <button class="btn btn-primary compress-all" id="compressBtn">Compress All Images</button>
-            <div class="preview-grid" id="previewGridCompress"></div>
+          <h1>All‑in‑One AI Image Toolkit</h1>
+          <p>Compress, resize, crop, convert, remove EXIF, watermark, and upscale — right in your browser.</p>
+          <button class="btn btn-primary" id="heroCta">🚀 Get Started</button>
         </div>
+      </section>
+      <section class="tools-section" id="toolsGrid"></section>
+      <footer>© 2025 PixelPress — All processing happens locally. Your images never leave your device.</footer>
     </div>
+    <!-- Dynamic pages for each tool will be injected here -->
+  </main>
 
-    <!-- RESIZE PAGE -->
-    <div id="resizePage" class="page">
-        <div class="container">
-            <button class="back-btn back-to-home">← Back to Home</button>
-            <h2>Resize Image</h2>
-            <p class="subtitle">Upload an image and set new dimensions</p>
-            <div class="upload-box" id="dropZoneResize">
-                <div class="upload-content">
-                    <span class="upload-icon">📁</span>
-                    <p>Drop image here or <span class="browse">browse</span></p>
-                    <input type="file" id="fileInputResize" accept="image/*" hidden>
-                </div>
-            </div>
-            <div class="resize-controls">
-                <div class="control-group">
-                    <label for="resizeWidth">Width (px):</label>
-                    <input type="number" id="resizeWidth" min="1" value="800">
-                </div>
-                <div class="control-group">
-                    <label for="resizeHeight">Height (px):</label>
-                    <input type="number" id="resizeHeight" min="1" value="600">
-                </div>
-                <div class="control-group">
-                    <label>
-                        <input type="checkbox" id="keepAspect" checked> Lock aspect ratio
-                    </label>
-                </div>
-                <button class="btn btn-primary" id="resizeBtn">Resize & Download</button>
-            </div>
-            <div class="preview-single" id="resizePreview"></div>
-        </div>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div id="loginForm">
+        <h3>Login</h3>
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button class="btn btn-primary" id="loginBtn">Login</button>
+        <p>Don't have an account? <a href="#" id="showRegister">Register</a></p>
+      </div>
+      <div id="registerForm" style="display:none;">
+        <h3>Register</h3>
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPassword" placeholder="Password">
+        <button class="btn btn-primary" id="registerBtn">Register</button>
+        <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+      </div>
     </div>
+  </div>
 
-    <!-- CROP PAGE -->
-    <div id="cropPage" class="page">
-        <div class="container">
-            <button class="back-btn back-to-home">← Back to Home</button>
-            <h2>Crop Image</h2>
-            <p class="subtitle">Drag to select area, then crop & download</p>
-            <div class="upload-box" id="dropZoneCrop">
-                <div class="upload-content">
-                    <span class="upload-icon">📁</span>
-                    <p>Drop image here or <span class="browse">browse</span></p>
-                    <input type="file" id="fileInputCrop" accept="image/*" hidden>
-                </div>
-            </div>
-            <div class="crop-container" id="cropContainer">
-                <canvas id="cropCanvas"></canvas>
-                <div id="cropBox" class="crop-box"></div>
-            </div>
-            <div class="crop-controls">
-                <button class="btn btn-primary" id="cropBtn">Crop & Download</button>
-            </div>
-        </div>
-    </div>
+  <!-- Global loading spinner -->
+  <div id="globalSpinner" class="spinner-overlay" style="display:none;"><div class="spinner"></div></div>
 
-    <!-- CONVERT PAGE -->
-    <div id="convertPage" class="page">
-        <div class="container">
-            <button class="back-btn back-to-home">← Back to Home</button>
-            <h2>Convert Format</h2>
-            <p class="subtitle">Change image format instantly</p>
-            <div class="upload-box" id="dropZoneConvert">
-                <div class="upload-content">
-                    <span class="upload-icon">📁</span>
-                    <p>Drop images here or <span class="browse">browse</span></p>
-                    <input type="file" id="fileInputConvert" multiple accept="image/*" hidden>
-                </div>
-            </div>
-            <div class="controls">
-                <div class="control-group">
-                    <label for="formatSelectConvert">Convert to:</label>
-                    <select id="formatSelectConvert">
-                        <option value="image/jpeg">JPEG</option>
-                        <option value="image/png">PNG</option>
-                        <option value="image/webp">WebP</option>
-                    </select>
-                </div>
-            </div>
-            <button class="btn btn-primary compress-all" id="convertBtn">Convert All Images</button>
-            <div class="preview-grid" id="previewGridConvert"></div>
-        </div>
-    </div>
-
-    <!-- LOGIN MODAL -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <div id="loginForm">
-                <h3>Login</h3>
-                <input type="text" id="loginUsername" placeholder="Username">
-                <input type="password" id="loginPassword" placeholder="Password">
-                <button class="btn btn-primary" id="loginBtn">Login</button>
-                <p>Don't have an account? <a href="#" id="showRegister">Register here</a></p>
-            </div>
-            <div id="registerForm" style="display:none;">
-                <h3>Register</h3>
-                <input type="text" id="regUsername" placeholder="Username">
-                <input type="password" id="regPassword" placeholder="Password">
-                <input type="password" id="regConfirmPassword" placeholder="Confirm Password">
-                <button class="btn btn-primary" id="registerBtn">Register</button>
-                <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

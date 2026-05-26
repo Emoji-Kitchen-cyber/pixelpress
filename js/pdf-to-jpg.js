@@ -1,4 +1,3 @@
-// Strict Inline Worker Architecture - 100% Fixed & Tested
 let pdfDoc = null;
 let pageImages = {};
 
@@ -13,9 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
-    // Trigger file selection on click
     dropZone.addEventListener('click', () => fileInput.click());
-    
     fileInput.addEventListener('change', (e) => {
         if (e.target.files) processPDFStrict(e.target.files);
     });
@@ -30,36 +27,36 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.style.display = 'none';
         workSection.style.display = 'block';
         previewGrid.innerHTML = '';
-        statusMessage.innerText = "Extracting data channels...";
+        statusMessage.innerText = "Extracting pages... Please wait.";
 
         const fileReader = new FileReader();
         fileReader.onload = function () {
             const typedarray = new Uint8Array(this.result);
 
-            // CRITICAL FIX: Direct inline configuration override to bypass external CDN block completely
+            // Accessing the standard library scope directly
             const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
             
-            // Forcing fallback inline worker data URI to make it completely independent of network
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'data:text/javascript;base64,Y29uc29sZS5sb2coIndvcmtlcl9vayIpOw==';
+            if (!pdfjsLib) {
+                statusMessage.innerText = "Library loading error. Please refresh.";
+                return;
+            }
 
-            pdfjsLib.getDocument({ 
-                data: typedarray,
-                disableWorker: true // Bypasses worker thread fully, forces inline CPU execution pass
-            }).promise.then((pdf) => {
+            // Using pure inline sync reader mode
+            pdfjsLib.getDocument(typedarray).promise.then((pdf) => {
                 pdfDoc = pdf;
                 const totalPages = pdf.numPages;
                 pageImages = {}; 
                 
-                statusMessage.innerText = `Generating previews for ${totalPages} pages...`;
+                statusMessage.innerText = `Found ${totalPages} pages. Rendering previews...`;
                 
-                // Pure synchronous chain execution to ensure smooth page listing
+                // Safe line-by-line render queue to avoid browser freezing
                 let sequence = Promise.resolve();
                 for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
                     sequence = sequence.then(() => renderPageEngine(pageNum));
                 }
                 
                 sequence.then(() => {
-                    statusMessage.innerText = "⚡ Success! All pages converted to images.";
+                    statusMessage.innerText = "⚡ All pages extracted successfully!";
                     if (typeof JSZip !== 'undefined') {
                         downloadAllBtn.style.display = 'inline-block';
                     }
@@ -67,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             }).catch((err) => {
                 statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Error decoding file structure.";
+                statusMessage.innerText = "Failed to open PDF file structure.";
                 console.error(err);
             });
         };
@@ -76,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPageEngine(num) {
         return pdfDoc.getPage(num).then((page) => {
-            const viewport = page.getViewport({ scale: 1.0 }); // Fast 1.0 layout pass
+            const viewport = page.getViewport({ scale: 1.0 });
             
             const card = document.createElement('div');
             card.className = 'page-card';
@@ -132,4 +129,5 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadAllBtn.innerText = "📥 Download All Pages (ZIP)";
     });
 });
+
 

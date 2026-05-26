@@ -1,20 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
-  <title>
-    PixelPress — Free Online Image Toolkit
-  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixelPress — Free Online Image Toolkit</title>
 
   <style>
-
     *{
       margin:0;
       padding:0;
@@ -22,8 +13,8 @@
     }
 
     body{
-      background:#f1f5f9;
       font-family:system-ui,-apple-system,sans-serif;
+      background:#f1f5f9;
       color:#0f172a;
     }
 
@@ -35,275 +26,132 @@
     }
 
     .hero{
-
-      background:
-      linear-gradient(
-        135deg,
-        #ec4899,
-        #7e22ce
-      );
-
+      background:linear-gradient(135deg,#ec4899,#7e22ce);
       color:white;
-
       padding:70px 25px;
-
       border-radius:24px;
-
       text-align:center;
-
       margin-bottom:30px;
-
-      box-shadow:
-      0 15px 40px
-      rgba(0,0,0,0.15);
-
+      box-shadow:0 15px 40px rgba(0,0,0,0.15);
     }
 
     .hero h1{
-
-      font-size:52px;
-
+      font-size:48px;
       margin-bottom:15px;
-
     }
 
     .hero p{
-
       font-size:18px;
-
       opacity:0.95;
-
     }
 
     .tools{
-
       display:grid;
-
-      grid-template-columns:
-      repeat(
-        auto-fit,
-        minmax(280px,1fr)
-      );
-
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
       gap:20px;
-
     }
 
     .card{
-
       background:white;
-
       border-radius:22px;
-
       padding:30px;
-
-      box-shadow:
-      0 8px 30px
-      rgba(0,0,0,0.08);
-
+      box-shadow:0 8px 30px rgba(0,0,0,0.08);
       transition:0.3s;
-
     }
 
     .card:hover{
-
       transform:translateY(-6px);
-
     }
 
     .card h2{
-
       margin-bottom:15px;
-
       font-size:28px;
-
     }
 
     .card p{
-
       color:#475569;
-
-      line-height:1.6;
-
       margin-bottom:20px;
-
+      line-height:1.6;
     }
 
     .btn{
-
       display:inline-block;
-
       text-decoration:none;
-
       background:#ec4899;
-
       color:white;
-
       padding:14px 24px;
-
       border-radius:12px;
-
       font-weight:600;
-
       transition:0.3s;
-
     }
 
     .btn:hover{
-
       background:#db2777;
-
     }
 
     footer{
-
       text-align:center;
-
       margin-top:40px;
-
       padding:20px;
-
       color:#64748b;
-
     }
 
     @media(max-width:600px){
 
-      .hero{
-
-        padding:50px 20px;
-
+      .hero h1{
+        font-size:34px;
       }
 
-      .hero h1{
-
-        font-size:38px;
-
+      .hero{
+        padding:50px 20px;
       }
 
     }
-
   </style>
-
 </head>
 <body>
 
-<div class="container">
+  <div class="container">
 
-  <section class="hero">
+    <section class="hero">
+      <h1>🎨 PixelPress</h1>
+      <p>Free Online Image Editing Toolkit</p>
+    </section>
 
-    <h1>
-      🎨 PixelPress
-    </h1>
+    <section class="tools">
 
-    <p>
-      Free Online Image Editing Toolkit
-    </p>
+      <div class="card">
+        <h2>✨ Photo Editor</h2>
+        <p>
+          Edit photos directly in browser with filters,
+          brightness, contrast, rotation and download support.
+        </p>
 
-  </section>
+        <a href="./photo-editor.html" class="btn">
+          Open Editor →
+        </a>
+      </div>
 
-  <section class="tools">
+      <div class="card">
+        <h2>📦 Compress Image</h2>
 
-    <!-- PHOTO EDITOR -->
+        <p>
+          Compress JPG, PNG and WEBP images
+          without losing quality.
+        </p>
 
-    <div class="card">
+        <a href="./compress.html" class="btn">
+          Open Compressor →
+        </a>
+      </div>
 
-      <h2>
-        ✨ Photo Editor
-      </h2>
+    </section>
 
-      <p>
-        Advanced browser based
-        photo editor with filters,
-        zoom, blur, rotate,
-        flip and download.
-      </p>
+    <footer>
+      © 2026 PixelPress — All Rights Reserved
+    </footer>
 
-      <a
-        href="./photo-editor.html"
-        class="btn"
-      >
-        Open Editor →
-      </a>
-
-    </div>
-
-    <!-- COMPRESS TOOL -->
-
-    <div class="card">
-
-      <h2>
-        📦 Compress Image
-      </h2>
-
-      <p>
-        Reduce image size online
-        while keeping quality.
-      </p>
-
-      <a
-        href="./compress.html"
-        class="btn"
-      >
-        Open Tool →
-      </a>
-
-    </div>
-
-    <!-- RESIZE TOOL -->
-
-    <div class="card">
-
-      <h2>
-        📐 Resize Image
-      </h2>
-
-      <p>
-        Resize JPG, PNG and WEBP
-        images quickly online.
-      </p>
-
-      <a
-        href="./resize.html"
-        class="btn"
-      >
-        Open Tool →
-      </a>
-
-    </div>
-
-    <!-- CONVERT TOOL -->
-
-    <div class="card">
-
-      <h2>
-        🔄 Convert Image
-      </h2>
-
-      <p>
-        Convert images between
-        JPG, PNG and WEBP formats.
-      </p>
-
-      <a
-        href="./convert.html"
-        class="btn"
-      >
-        Open Tool →
-      </a>
-
-    </div>
-
-  </section>
-
-  <footer>
-
-    © 2026 PixelPress
-    — All Rights Reserved
-
-  </footer>
-
-</div>
+  </div>
 
 </body>
 </html>

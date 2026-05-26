@@ -2,167 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PixelPress Pro – AI Image Toolkit | Compress, Resize, Crop, Convert</title>
-
-  <meta name="description" content="Free online AI image toolkit. Compress, resize, crop, convert, remove EXIF, add watermark, and upscale images. No upload – all processing happens in your browser.">
-
-  <meta name="keywords" content="image compressor, resize image, crop image, convert image, remove exif, watermark, upscale, free image tools, privacy">
-
-  <!-- Open Graph / SEO -->
-  <meta property="og:title" content="PixelPress Pro – AI Image Toolkit">
-  <meta property="og:description" content="Compress, resize, crop, convert, and enhance images with AI. 100% client-side privacy.">
-  <meta property="og:type" content="website">
-
-  <meta property="og:image" content="/assets/icons/icon-512.png">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PixelPress Pro – AI Image Toolkit">
-  <meta name="twitter:description" content="All-in-one image tools. Fast, private, and free.">
-
-  <meta name="twitter:image" content="/assets/icons/icon-512.png">
-
-  <!-- PWA -->
-  <link rel="manifest" href="/js/pwa/manifest.json">
-
-  <meta name="theme-color" content="#2563eb">
-
-  <link rel="icon" href="/assets/icons/icon-192.png">
-
-  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-
-  <!-- Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "PixelPress Pro",
-    "url": "https://pixelpress-smoky.vercel.app",
-    "description": "AI-powered image toolkit for compression, resizing, cropping, converting, and more.",
-    "operatingSystem": "All",
-    "applicationCategory": "Multimedia"
-  }
-  </script>
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="/css/style.css">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="PixelPress - Create stunning pixel art and digital designs">
+  
+  <title>PixelPress - Digital Art Studio</title>
+  
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/style.css">
+  
+  <style>
+    /* Critical inline styles to prevent FOUC */
+    body { margin:0; padding:0; background:#000; color:#fff; font-family:system-ui, sans-serif; }
+    .loading-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .loading-spinner { width:48px; height:48px; border:4px solid #333; border-top:4px solid #fff; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .app-hidden { display:none; }
+  </style>
 </head>
-
 <body>
-
-  <!-- Header -->
-  <header>
-    <div class="container header-inner">
-      <div class="logo" id="homeLogo">PixelPress</div>
-
-      <nav class="nav-links">
-        <a href="#" class="nav-home">Home</a>
-        <a href="#" class="nav-tools">Tools</a>
-
-        <button class="theme-toggle" aria-label="Toggle dark mode">
-          🌙
-        </button>
-
-        <div id="userArea"></div>
+  <div id="loading" class="loading-screen">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <div id="app" class="app-hidden">
+    <header id="header">
+      <h1>PixelPress</h1>
+      <nav id="nav">
+        <button data-page="editor">Editor</button>
+        <button data-page="gallery">Gallery</button>
+        <button data-page="settings">Settings</button>
+        <button id="loginBtn">Login</button>
       </nav>
-    </div>
-  </header>
-
-  <!-- Main content -->
-  <main id="appMain">
-
-    <div id="homePage" class="page active">
-
-      <section class="hero">
-        <div class="container">
-
-          <h1>All-in-One AI Image Toolkit</h1>
-
-          <p>
-            Compress, resize, crop, convert, remove EXIF,
-            watermark, and upscale — right in your browser.
-          </p>
-
-          <button class="btn btn-primary" id="heroCta">
-            🚀 Get Started
-          </button>
-
+    </header>
+    
+    <main id="main-content">
+      <div id="editor-page" class="page active">
+        <canvas id="pixelCanvas"></canvas>
+        <div id="tools">
+          <button id="toolPencil">✏️</button>
+          <button id="toolEraser">🧹</button>
+          <button id="toolFill">🪣</button>
+          <input type="color" id="colorPicker" value="#ffffff">
+          <input type="range" id="brushSize" min="1" max="50" value="10">
         </div>
-      </section>
-
-      <section class="tools-section" id="toolsGrid"></section>
-
-      <footer>
-        © 2025 PixelPress — All processing happens locally.
-        Your images never leave your device.
-      </footer>
-
-    </div>
-
-  </main>
-
-  <!-- Login Modal -->
-  <div id="loginModal" class="modal">
-
-    <div class="modal-content">
-
-      <span class="close-modal">&times;</span>
-
-      <div id="loginForm">
-
-        <h3>Login</h3>
-
-        <input type="email" id="loginEmail" placeholder="Email">
-
-        <input type="password" id="loginPassword" placeholder="Password">
-
-        <button class="btn btn-primary" id="loginBtn">
-          Login
-        </button>
-
-        <p>
-          Don't have an account?
-          <a href="#" id="showRegister">Register</a>
-        </p>
-
       </div>
-
-      <div id="registerForm" style="display:none;">
-
-        <h3>Register</h3>
-
-        <input type="email" id="regEmail" placeholder="Email">
-
-        <input type="password" id="regPassword" placeholder="Password">
-
-        <button class="btn btn-primary" id="registerBtn">
-          Register
-        </button>
-
-        <p>
-          Already have an account?
-          <a href="#" id="showLogin">Login</a>
-        </p>
-
+      
+      <div id="gallery-page" class="page">
+        <div id="galleryGrid"></div>
       </div>
-
-    </div>
-
+      
+      <div id="settings-page" class="page">
+        <h2>Settings</h2>
+        <button id="saveToCloud">Save to Cloud</button>
+        <button id="exportPNG">Export PNG</button>
+        <button id="clearCanvas">Clear Canvas</button>
+      </div>
+    </main>
+    
+    <footer>
+      <p>PixelPress © 2025</p>
+    </footer>
   </div>
 
-  <!-- Spinner -->
-  <div id="globalSpinner" class="spinner-overlay" style="display:none;">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Firebase -->
+  <!-- Load Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-  <!-- Main JS -->
-  <script type="module" src="/js/app.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <!-- Firebase Config -->
+  <script src="/firebase-config.js"></script>
+  
+  <!-- Main App Script - NOT module to avoid Vercel issues -->
+  <script src="/app.js"></script>
+  
+  <script>
+    // Hide loading screen when app is ready
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app').classList.remove('app-hidden');
+      }, 500);
+    });
+  </script>
 </body>
 </html>

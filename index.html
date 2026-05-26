@@ -3,88 +3,173 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#000000">
-  <meta name="description" content="PixelPress - Create stunning pixel art and digital designs">
-  
-  <title>PixelPress - Digital Art Studio</title>
-  
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="PixelPress - Free online image editor. Compress, crop, resize, apply filters, draw pixel art. No upload needed, works offline.">
+  <title>PixelPress – Image Editor & Pixel Art Studio</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/style.css">
-  
   <style>
-    /* Critical inline styles to prevent FOUC */
-    body { margin:0; padding:0; background:#000; color:#fff; font-family:system-ui, sans-serif; }
-    .loading-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; z-index:9999; }
-    .loading-spinner { width:48px; height:48px; border:4px solid #333; border-top:4px solid #fff; border-radius:50%; animation:spin 1s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .app-hidden { display:none; }
+    body{margin:0;padding:0;background:#0f0f1a;color:#e0e0e0;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+    .loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0f0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+    .loading-spinner{width:48px;height:48px;border:4px solid #2a2a4a;border-top:4px solid #ff5e7a;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{margin-top:16px;color:#a0a0b0}
+    .app-hidden{display:none!important}
   </style>
 </head>
 <body>
   <div id="loading" class="loading-screen">
     <div class="loading-spinner"></div>
+    <p class="loading-text">Loading PixelPress...</p>
   </div>
-  
+
   <div id="app" class="app-hidden">
     <header id="header">
-      <h1>PixelPress</h1>
+      <h1>🎨 PixelPress</h1>
       <nav id="nav">
-        <button data-page="editor">Editor</button>
-        <button data-page="gallery">Gallery</button>
-        <button data-page="settings">Settings</button>
-        <button id="loginBtn">Login</button>
+        <button data-tool="compress" class="nav-btn active">📦 Compress</button>
+        <button data-tool="crop" class="nav-btn">✂️ Crop</button>
+        <button data-tool="resize" class="nav-btn">📐 Resize</button>
+        <button data-tool="filters" class="nav-btn">🎛️ Filters</button>
+        <button data-tool="pixelart" class="nav-btn">👾 Pixel Art</button>
       </nav>
     </header>
-    
+
     <main id="main-content">
-      <div id="editor-page" class="page active">
-        <canvas id="pixelCanvas"></canvas>
-        <div id="tools">
-          <button id="toolPencil">✏️</button>
-          <button id="toolEraser">🧹</button>
-          <button id="toolFill">🪣</button>
-          <input type="color" id="colorPicker" value="#ffffff">
-          <input type="range" id="brushSize" min="1" max="50" value="10">
+      <!-- ========== COMPRESS TOOL ========== -->
+      <div id="tool-compress" class="tool-panel active">
+        <h2>📦 Image Compressor</h2>
+        <p>Reduce image file size without losing quality. All processing happens in your browser.</p>
+        <div class="upload-zone" id="compressUploadZone">
+          <p>📁 Drop image here or click to upload</p>
+          <input type="file" id="compressFileInput" accept="image/*" hidden>
+        </div>
+        <div class="preview-area" id="compressPreview" style="display:none">
+          <div class="preview-images">
+            <div><p>Original</p><img id="compressOriginalImg"></div>
+            <div><p>Compressed</p><img id="compressResultImg"></div>
+          </div>
+          <div class="compress-info">
+            <p>Original: <span id="compressOriginalSize">-</span></p>
+            <p>Compressed: <span id="compressResultSize">-</span></p>
+            <p>Saved: <span id="compressSaved">-</span></p>
+          </div>
+          <div class="compress-controls">
+            <label>Quality: <input type="range" id="compressQuality" min="10" max="100" value="80"> <span id="compressQualityVal">80%</span></label>
+            <button id="compressBtn" class="btn-primary">🔧 Compress</button>
+            <button id="compressDownloadBtn" class="btn-secondary" disabled>📥 Download</button>
+          </div>
         </div>
       </div>
-      
-      <div id="gallery-page" class="page">
-        <div id="galleryGrid"></div>
+
+      <!-- ========== CROP TOOL ========== -->
+      <div id="tool-crop" class="tool-panel">
+        <h2>✂️ Image Cropper</h2>
+        <p>Select an area and crop your image. Drag the handles to adjust.</p>
+        <div class="upload-zone" id="cropUploadZone">
+          <p>📁 Drop image here or click to upload</p>
+          <input type="file" id="cropFileInput" accept="image/*" hidden>
+        </div>
+        <div id="cropEditor" style="display:none">
+          <div class="crop-container">
+            <canvas id="cropCanvas"></canvas>
+          </div>
+          <div class="crop-controls">
+            <button id="cropApplyBtn" class="btn-primary">✂️ Crop</button>
+            <button id="cropDownloadBtn" class="btn-secondary">📥 Download</button>
+            <button id="cropResetBtn" class="btn-secondary">🔄 Reset</button>
+          </div>
+        </div>
       </div>
-      
-      <div id="settings-page" class="page">
-        <h2>Settings</h2>
-        <button id="saveToCloud">Save to Cloud</button>
-        <button id="exportPNG">Export PNG</button>
-        <button id="clearCanvas">Clear Canvas</button>
+
+      <!-- ========== RESIZE TOOL ========== -->
+      <div id="tool-resize" class="tool-panel">
+        <h2>📐 Image Resizer</h2>
+        <p>Resize your image to exact dimensions. Aspect ratio lock keeps proportions.</p>
+        <div class="upload-zone" id="resizeUploadZone">
+          <p>📁 Drop image here or click to upload</p>
+          <input type="file" id="resizeFileInput" accept="image/*" hidden>
+        </div>
+        <div id="resizeEditor" style="display:none">
+          <div class="preview-area">
+            <img id="resizePreviewImg">
+          </div>
+          <div class="resize-controls">
+            <div class="resize-inputs">
+              <label>Width: <input type="number" id="resizeWidth" min="1" max="5000"></label>
+              <label>Height: <input type="number" id="resizeHeight" min="1" max="5000"></label>
+              <label><input type="checkbox" id="resizeLockAspect" checked> Lock aspect ratio</label>
+            </div>
+            <button id="resizeApplyBtn" class="btn-primary">📐 Resize</button>
+            <button id="resizeDownloadBtn" class="btn-secondary">📥 Download</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== FILTERS TOOL ========== -->
+      <div id="tool-filters" class="tool-panel">
+        <h2>🎛️ Image Filters</h2>
+        <p>Apply beautiful filters to your image instantly.</p>
+        <div class="upload-zone" id="filtersUploadZone">
+          <p>📁 Drop image here or click to upload</p>
+          <input type="file" id="filtersFileInput" accept="image/*" hidden>
+        </div>
+        <div id="filtersEditor" style="display:none">
+          <div class="preview-area">
+            <canvas id="filtersCanvas"></canvas>
+          </div>
+          <div class="filter-buttons">
+            <button data-filter="normal" class="filter-btn active">Normal</button>
+            <button data-filter="grayscale" class="filter-btn">B&W</button>
+            <button data-filter="sepia" class="filter-btn">Sepia</button>
+            <button data-filter="invert" class="filter-btn">Invert</button>
+            <button data-filter="brightness" class="filter-btn">Bright</button>
+            <button data-filter="contrast" class="filter-btn">Contrast</button>
+            <button data-filter="blur" class="filter-btn">Blur</button>
+            <button data-filter="sharpen" class="filter-btn">Sharpen</button>
+            <button data-filter="vintage" class="filter-btn">Vintage</button>
+            <button data-filter="cool" class="filter-btn">Cool</button>
+            <button data-filter="warm" class="filter-btn">Warm</button>
+          </div>
+          <button id="filtersDownloadBtn" class="btn-primary">📥 Download</button>
+        </div>
+      </div>
+
+      <!-- ========== PIXEL ART TOOL ========== -->
+      <div id="tool-pixelart" class="tool-panel">
+        <h2>👾 Pixel Art Studio</h2>
+        <p>Create pixel art with a customizable grid. Draw, erase, and export your artwork.</p>
+        <div class="pixel-controls-top">
+          <label>Grid Size: <input type="range" id="pixelGridSize" min="8" max="64" value="32"> <span id="pixelGridSizeVal">32×32</span></label>
+          <button id="pixelClearBtn" class="btn-secondary">🗑️ Clear</button>
+        </div>
+        <div class="pixel-canvas-wrap">
+          <canvas id="pixelCanvas"></canvas>
+        </div>
+        <div class="pixel-tools">
+          <button id="pixelPencil" class="tool-btn active">✏️ Draw</button>
+          <button id="pixelEraser" class="tool-btn">🧹 Erase</button>
+          <button id="pixelFill" class="tool-btn">🪣 Fill</button>
+          <input type="color" id="pixelColor" value="#ffffff">
+          <button id="pixelExportBtn" class="btn-primary">📥 Export PNG</button>
+        </div>
       </div>
     </main>
-    
+
     <footer>
-      <p>PixelPress © 2025</p>
+      <p>PixelPress © 2025 · All processing done in your browser · No uploads to server</p>
     </footer>
   </div>
 
-  <!-- Load Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  
-  <!-- Firebase Config -->
-  <script src="/firebase-config.js"></script>
-  
-  <!-- Main App Script - NOT module to avoid Vercel issues -->
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
   <script src="/app.js"></script>
-  
   <script>
-    // Hide loading screen when app is ready
     window.addEventListener('load', () => {
       setTimeout(() => {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('app').classList.remove('app-hidden');
-      }, 500);
+      }, 600);
     });
   </script>
 </body>

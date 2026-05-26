@@ -50,7 +50,8 @@ export function initUpscale(container) {
     if (!originalImage) return alert('Upload an image.');
     const scale = parseInt(scaleSelect.value);
     showSpinner();
-    const worker = new Worker('../utils/imageWorker.js');
+    // ✅ Fixed: Worker path relative to index.html
+    const worker = new Worker('js/utils/imageWorker.js');
     createImageBitmap(originalImage).then(bitmap => {
       worker.postMessage({
         imageBitmap: bitmap,

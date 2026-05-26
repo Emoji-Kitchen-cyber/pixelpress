@@ -1,4 +1,4 @@
-// JPG to PDF Converter Logic
+// Native JPG to PDF Converter Engine (No External Libraries)
 let selectedImages = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -79,31 +79,34 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (selectedImages.length === 0) return;
 
-        const { jsPDF } = window.jspdf;
-        // Initialization configuration
-        const pdf = new jsPDF('p', 'px', 'a4');
-        const pdfW = pdf.internal.pageSize.getWidth();
-        const pdfH = pdf.internal.pageSize.getHeight();
-
-        selectedImages.forEach((imgData, index) => {
-            if (index > 0) pdf.addPage();
-            
-            let ratio = imgData.width / imgData.height;
-            let finalW = pdfW - 40; 
-            let finalH = finalW / ratio;
-
-            if (finalH > (pdfH - 40)) {
-                finalH = pdfH - 40;
-                finalW = finalH * ratio;
-            }
-
-            const xCentering = (pdfW - finalW) / 2;
-            const yCentering = (pdfH - finalH) / 2;
-
-            pdf.addImage(imgData.src, 'JPEG', xCentering, yCentering, finalW, finalH);
-        });
-
-        pdf.save('pixelpress-images-document.pdf');
+        // Create a standalone printing window to bypass complex library blocks
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>PixelPress PDF Document</title>
+                <style>
+                    body { margin: 0; padding: 0; background: white; text-align: center; }
+                    .page { page-break-after: always; display: flex; align-items: center; justify-content: center; height: 100vh; box-sizing: border-box; padding: 20px; }
+                    img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                    @page { size: auto; margin: 0mm; }
+                    @media print { body { -webkit-print-color-adjust: exact; } }
+                </style>
+            </head>
+            <body>
+                ${selectedImages.map(img => `<div class="page"><img src="${img.src}"></div>`).join('')}
+                <script>
+                    window.onload = function() {
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
     });
 });
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pixelpress-v6'; // Updated version for 5+ tools integration
+const CACHE_NAME = 'pixelpress-v7'; // Updated version for PDF tools integration
 
 const ASSETS = [
   '/',
@@ -6,30 +6,30 @@ const ASSETS = [
   '/photo-editor.html',
   '/compress.html',
   '/resize.html',
-  '/crop.html',
   '/convert.html',
   '/watermark.html',
+  '/pdf-to-jpg.html',
+  '/jpg-to-pdf.html',
   '/css/style.css',
   '/js/common.js',
   '/js/compress.js',
   '/js/resize.js',
-  '/js/crop.js',
   '/js/convert.js',
   '/js/watermark.js',
+  '/js/pdf-to-jpg.js',
+  '/js/jpg-to-pdf.js',
   '/manifest.json'
 ];
 
-// Install Event - Caching Assets
 self.addEventListener('install', e => {
   self.skipWaiting(); 
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS).catch(err => console.log("Cache addAll info: single asset update skip"));
+      return cache.addAll(ASSETS).catch(err => console.log("Cache listing safe update"));
     })
   );
 });
 
-// Activate Event - Clean up old caches (Long-term Solution)
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(cacheNames => {
@@ -45,7 +45,6 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch Event - Network First falling back to Cache (Ensures updates are live)
 self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(e.request)
@@ -61,3 +60,4 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request).then(r => r)) 
   );
 });
+

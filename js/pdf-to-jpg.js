@@ -1,4 +1,3 @@
-// Hardware Accelerated Sequential Queue PDF to JPG Engine
 let pdfDoc = null;
 let pageImages = {};
 
@@ -13,10 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
-    // Standard script hook fallback setup
-    const pdfjs = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-    if (pdfjs) {
-        pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    // Direct configuration check for standard fallback integration
+    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 
     dropZone.addEventListener('click', () => fileInput.click());
@@ -34,29 +33,24 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.style.display = 'none';
         workSection.style.display = 'block';
         previewGrid.innerHTML = '';
-        statusMessage.innerText = "Reading file streams securely...";
+        statusMessage.innerText = "Reading file streams...";
         
         const fileReader = new FileReader();
         fileReader.onload = async function () {
             const typedarray = new Uint8Array(this.result);
             try {
-                const loadingTask = pdfjs.getDocument({ 
-                    data: typedarray,
-                    stopAtErrors: false,
-                    isEvalSupported: false 
-                });
-                
+                // Instantly parsing using core dynamic parameters
+                const loadingTask = pdfjsLib.getDocument({ data: typedarray });
                 pdfDoc = await loadingTask.promise;
-                const totalPages = pdfDoc.numPages;
-                pageImages = {}; // Reset container data
                 
-                // Processing single queue logic to avoid main thread crashes
+                const totalPages = pdfDoc.numPages;
+                pageImages = {}; 
+                
+                statusMessage.innerText = `Converting document pages...`;
+                
+                // Fast execution sequence loop
                 for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                    statusMessage.innerText = `Converting page ${pageNum} of ${totalPages}...`;
                     await renderPageControlled(pageNum);
-                    
-                    // Crucial: 1ms hardware yielding break to refresh browser CPU
-                    await new Promise(resolve => setTimeout(resolve, 1));
                 }
                 
                 statusMessage.innerText = "⚡ Success! All pages converted.";
@@ -65,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Error reading PDF file data structure.";
+                statusMessage.innerText = "Error loading PDF structure.";
                 console.error(err);
             }
         };
@@ -75,15 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderPageControlled(num) {
         const page = await pdfDoc.getPage(num);
         
-        // Highly optimized standard viewport logic for instant processing
+        // Balanced 1.0 standard fast ratio
         const viewport = page.getViewport({ scale: 1.0 }); 
         
         const card = document.createElement('div');
         card.className = 'page-card';
         
         const canvas = document.createElement('canvas');
-        // Turning off transparency checks for pure 60fps canvas performance
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true }); 
+        const ctx = canvas.getContext('2d'); 
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         
@@ -100,15 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         previewGrid.appendChild(card);
 
-        // Hardware layer pass execution
-        await page.render({ 
-            canvasContext: ctx, 
-            viewport: viewport,
-            intent: 'print'
-        }).promise;
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
         
-        // Optimized compression matching point
-        const imgData = canvas.toDataURL('image/jpeg', 0.75);
+        const imgData = canvas.toDataURL('image/jpeg', 0.80);
         pageImages[num] = imgData;
 
         dlBtn.addEventListener('click', (e) => {
@@ -130,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
             zip.file(`page-${num}.jpg`, base64Data, { base64: true });
         }
         
-        // Zero delay dynamic packet assignment
         const content = await zip.generateAsync({ type: "blob", compression: "STORE" });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
@@ -139,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadAllBtn.innerText = "📥 Download All Pages (ZIP)";
     });
 });
-
 
 
 

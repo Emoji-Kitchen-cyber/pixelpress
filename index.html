@@ -2,26 +2,95 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Free online image tools – compress, resize, crop, convert, and watermark images directly in your browser.">
   <title>PixelPress – Free Online Image Toolkit</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/style.css">
   <style>
-    body { font-family: system-ui, sans-serif; margin:0; padding:20px; background:#f8fafc; }
-    .card { padding:30px; margin:15px; border-radius:16px; background:white; box-shadow:0 5px 15px rgba(0,0,0,0.1); text-align:center; }
+    body { background: #f5f7fa; }
+    .dashboard { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+    .dashboard h1 { text-align: center; margin-bottom: 10px; color: #1a1a2e; font-size: 2.2rem; }
+    .dashboard .subtitle { text-align: center; color: #666; margin-bottom: 40px; font-size: 1.1rem; }
+    .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .tool-card { background: #fff; border-radius: 20px; padding: 36px 28px 32px; text-align: center; text-decoration: none; color: #1a1a2e; transition: all 0.25s; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; display: block; position: relative; overflow: hidden; }
+    .tool-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); border-color: #2563eb; }
+    .tool-card .icon { font-size: 3.2rem; margin-bottom: 16px; transition: transform 0.2s; }
+    .tool-card:hover .icon { transform: scale(1.1); }
+    .tool-card h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+    .tool-card p { color: #6b7280; line-height: 1.5; }
+    .tool-card .category { display: inline-block; background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-top: 16px; }
+    .tool-card.popular::before { content: "Most Popular"; position: absolute; top: 16px; right: -30px; background: #2563eb; color: white; font-size: 0.7rem; font-weight: 600; padding: 4px 30px; transform: rotate(45deg); text-transform: uppercase; letter-spacing: 0.5px; }
+    @media (max-width: 640px) {
+      .tool-grid { grid-template-columns: 1fr; }
+      .dashboard h1 { font-size: 1.8rem; }
+    }
   </style>
 </head>
 <body>
-  <h1>🎨 PixelPress</h1>
-  <p>New Homepage - Test</p>
-  
-  <div class="card">
-    <h2>✨ Photo Editor</h2>
-    <p>Full Advanced Photo Editor</p>
-    <a href="/photo-editor">Open Photo Editor →</a>
+  <header class="main-header">
+    <a href="/" class="logo">🎨 PixelPress</a>
+    <nav>
+      <button id="loginBtn" class="btn-outline">Login</button>
+    </nav>
+  </header>
+
+  <div class="dashboard">
+    <h1>Free Online Image Tools</h1>
+    <p class="subtitle">Compress, resize, edit, convert, and watermark your images – all in your browser.</p>
+    <div class="tool-grid">
+      <a href="/photo-editor" class="tool-card popular">
+        <div class="icon">✨</div>
+        <h2>Photo Editor</h2>
+        <p>Adjust brightness, contrast, apply filters, rotate, add text – a complete editor.</p>
+        <span class="category">Editor</span>
+      </a>
+      <a href="/compress" class="tool-card">
+        <div class="icon">📦</div>
+        <h2>Compress Image</h2>
+        <p>Reduce file size while keeping high quality. Supports JPG, PNG, WebP.</p>
+        <span class="category">Optimize</span>
+      </a>
+      <a href="/resize" class="tool-card">
+        <div class="icon">📐</div>
+        <h2>Resize Image</h2>
+        <p>Change dimensions with exact pixel control or percentage scaling.</p>
+        <span class="category">Dimensions</span>
+      </a>
+      <a href="/convert" class="tool-card">
+        <div class="icon">🔄</div>
+        <h2>Convert Format</h2>
+        <p>Instantly convert between PNG, JPEG, WebP, and BMP.</p>
+        <span class="category">Format</span>
+      </a>
+      <a href="/watermark" class="tool-card">
+        <div class="icon">💧</div>
+        <h2>Add Watermark</h2>
+        <p>Protect your images with custom text or logo watermarks.</p>
+        <span class="category">Protection</span>
+      </a>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>📦 Compress Image</h2>
-    <a href="/compress">Open Compress →</a>
-  </div>
+  <footer style="text-align:center; padding:32px 20px; color:#9ca3af; font-size:0.9rem; border-top:1px solid #f3f4f6;">
+    © 2025 PixelPress. All processing happens in your browser.
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="/js/firebase-config.js"></script>
+  <script>
+    if (typeof firebase !== 'undefined') {
+      firebase.auth().onAuthStateChanged(user => {
+        const btn = document.getElementById('loginBtn');
+        if (btn) btn.textContent = user ? 'Logout' : 'Login';
+      });
+      document.getElementById('loginBtn').addEventListener('click', () => {
+        const user = firebase.auth().currentUser;
+        user ? firebase.auth().signOut() : firebase.auth().signInAnonymously();
+      });
+    }
+  </script>
 </body>
 </html>

@@ -7,22 +7,22 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            font-family: system-ui, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             background: #f1f5f9;
-            padding: 20px;
+            padding: 15px;
         }
         .container {
             max-width: 1100px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
             overflow: hidden;
         }
         .header {
             background: linear-gradient(135deg, #ec4899, #7e22ce);
             color: white;
-            padding: 30px;
+            padding: 35px 20px;
             text-align: center;
         }
         .upload-area {
@@ -32,11 +32,25 @@
             margin: 30px;
             border-radius: 20px;
             cursor: pointer;
+            transition: 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #ec4899;
+            background: #fdf4ff;
         }
         canvas {
             max-width: 100%;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #ec4899;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -50,18 +64,16 @@
         <div id="uploadScreen">
             <div class="upload-area" id="dropZone">
                 <h2>📸 Drop Photo Here</h2>
-                <p>or click to upload</p>
-                <small>JPG, PNG, WEBP</small>
+                <p>or click to upload from device</p>
+                <small>JPG, PNG, WEBP supported</small>
             </div>
             <input type="file" id="fileInput" accept="image/*" style="display:none;">
         </div>
 
-        <div id="editorScreen" style="display:none; padding:20px; text-align:center;">
+        <div id="editorScreen" style="display:none; padding:25px; text-align:center;">
             <canvas id="mainCanvas"></canvas>
             <br><br>
-            <button onclick="downloadImage()" style="padding:15px 40px; font-size:18px; background:#ec4899; color:white; border:none; border-radius:12px;">
-                📥 Download Edited Photo
-            </button>
+            <button onclick="downloadImage()">📥 Download Edited Photo</button>
         </div>
     </div>
 
@@ -76,7 +88,9 @@
         dropZone.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files[0]) loadImage(e.target.files[0]);
+            if (e.target.files && e.target.files[0]) {
+                loadImage(e.target.files[0]);
+            }
         });
 
         function loadImage(file) {
@@ -97,8 +111,8 @@
 
         function downloadImage() {
             const link = document.createElement('a');
-            link.download = 'photo-edited.png';
-            link.href = canvas.toDataURL('image/png');
+            link.download = 'edited-photo.png';
+            link.href = canvas.toDataURL('image/png', 0.95);
             link.click();
         }
     </script>

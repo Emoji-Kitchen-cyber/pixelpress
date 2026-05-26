@@ -1,4 +1,4 @@
-// photo-editor.js – works with the new photo-editor.html
+// photo-editor.js – works with the latest photo-editor.html
 let originalImage = null;
 let canvas = null;
 let ctx = null;

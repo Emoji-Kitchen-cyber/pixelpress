@@ -1,10 +1,17 @@
-<!DOCTYPE html><html lang="en">
-<head>  <meta charset="UTF-8" /><meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
-/>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
-  <title>Photo Editor — PixelPress</title>  <style>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Photo Editor — PixelPress</title>
+
+  <style>
 
     *{
       margin:0;
@@ -36,8 +43,22 @@ content="width=device-width, initial-scale=1.0"
     }
 
     .header h1{
-      font-size:40px;
+      font-size:42px;
       margin-bottom:10px;
+    }
+
+    .header p{
+      opacity:0.95;
+    }
+
+    .top-back{
+      display:inline-block;
+      margin-top:20px;
+      text-decoration:none;
+      color:white;
+      background:rgba(255,255,255,0.15);
+      padding:10px 18px;
+      border-radius:12px;
     }
 
     .upload-area{
@@ -87,7 +108,7 @@ content="width=device-width, initial-scale=1.0"
       display:flex;
       flex-wrap:wrap;
       gap:10px;
-      margin-top:15px;
+      margin-top:20px;
     }
 
     button{
@@ -98,6 +119,7 @@ content="width=device-width, initial-scale=1.0"
       font-weight:600;
       background:#ec4899;
       color:white;
+      transition:0.3s;
     }
 
     button:hover{
@@ -108,155 +130,181 @@ content="width=device-width, initial-scale=1.0"
       overflow:auto;
       text-align:center;
       margin-top:25px;
+      background:#e2e8f0;
+      padding:20px;
+      border-radius:18px;
     }
 
     canvas{
       max-width:100%;
       border-radius:18px;
       box-shadow:0 10px 30px rgba(0,0,0,0.15);
+      background:white;
     }
 
-    .top-back{
-      display:inline-block;
-      margin-top:20px;
-      text-decoration:none;
-      color:white;
-      background:rgba(255,255,255,0.15);
-      padding:10px 18px;
-      border-radius:12px;
+    @media(max-width:600px){
+
+      .header h1{
+        font-size:32px;
+      }
+
+      button{
+        width:100%;
+      }
+
     }
 
-  </style></head>
-<body><div class="container">  <div class="header"><h1>✨ Photo Editor</h1>
+  </style>
 
-<p>
-  Advanced browser based image editor
-</p>
+</head>
+<body>
 
-<a href="./index.html" class="top-back">
-  ← Back Home
-</a>
+<div class="container">
 
-  </div>  <div id="uploadSection"><div class="upload-area" id="dropZone">
+  <div class="header">
 
-  <h2>📸 Upload Photo</h2>
+    <h1>✨ Photo Editor</h1>
 
-  <p>
-    Click or Drag & Drop image here
-  </p>
+    <p>
+      Advanced Browser Based Image Editor
+    </p>
 
-  <small>
-    JPG, PNG, WEBP Supported
-  </small>
+    <a href="./index.html" class="top-back">
+      ← Back Home
+    </a>
 
-</div>
-
-<input
-  type="file"
-  id="fileInput"
-  accept="image/*"
-  hidden
->
-
-  </div>  <div class="editor" id="editorSection"><div class="controls">
-
-  <div class="control-box">
-    <label>Brightness</label>
-
-    <input
-      type="range"
-      id="brightness"
-      min="50"
-      max="200"
-      value="100"
-    >
   </div>
 
-  <div class="control-box">
+  <div id="uploadSection">
 
-    <label>Contrast</label>
+    <div class="upload-area" id="dropZone">
+
+      <h2>📸 Upload Photo</h2>
+
+      <p>
+        Click or Drag & Drop Image Here
+      </p>
+
+      <small>
+        JPG, PNG, WEBP Supported
+      </small>
+
+    </div>
 
     <input
-      type="range"
-      id="contrast"
-      min="50"
-      max="200"
-      value="100"
+      type="file"
+      id="fileInput"
+      accept="image/*"
+      hidden
     >
 
   </div>
 
-  <div class="control-box">
+  <div class="editor" id="editorSection">
 
-    <label>Saturation</label>
+    <div class="controls">
 
-    <input
-      type="range"
-      id="saturation"
-      min="0"
-      max="200"
-      value="100"
-    >
+      <div class="control-box">
+
+        <label>Brightness</label>
+
+        <input
+          type="range"
+          id="brightness"
+          min="50"
+          max="200"
+          value="100"
+        >
+
+      </div>
+
+      <div class="control-box">
+
+        <label>Contrast</label>
+
+        <input
+          type="range"
+          id="contrast"
+          min="50"
+          max="200"
+          value="100"
+        >
+
+      </div>
+
+      <div class="control-box">
+
+        <label>Saturation</label>
+
+        <input
+          type="range"
+          id="saturation"
+          min="0"
+          max="200"
+          value="100"
+        >
+
+      </div>
+
+    </div>
+
+    <div class="buttons">
+
+      <button id="rotateLeft">
+        ↩ Rotate Left
+      </button>
+
+      <button id="rotateRight">
+        ↪ Rotate Right
+      </button>
+
+      <button id="flipH">
+        ↔ Flip Horizontal
+      </button>
+
+      <button id="flipV">
+        ↕ Flip Vertical
+      </button>
+
+      <button id="grayscaleBtn">
+        ⚫ Grayscale
+      </button>
+
+      <button id="sepiaBtn">
+        🟤 Sepia
+      </button>
+
+      <button id="blurBtn">
+        🌫 Blur
+      </button>
+
+      <button id="zoomInBtn">
+        ➕ Zoom In
+      </button>
+
+      <button id="zoomOutBtn">
+        ➖ Zoom Out
+      </button>
+
+      <button id="resetBtn">
+        🔄 Reset
+      </button>
+
+      <button id="downloadBtn">
+        📥 Download
+      </button>
+
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="canvas"></canvas>
+    </div>
 
   </div>
 
 </div>
 
-<div class="buttons">
+<script src="./js/photo-editor.js"></script>
 
-  <button id="rotateLeft">
-    ↩ Rotate Left
-  </button>
-
-  <button id="rotateRight">
-    ↪ Rotate Right
-  </button>
-
-  <button id="flipH">
-    ↔ Flip H
-  </button>
-
-  <button id="flipV">
-    ↕ Flip V
-  </button>
-
-  <button onclick="addEffect('grayscale')">
-    ⚫ Grayscale
-  </button>
-
-  <button onclick="addEffect('sepia')">
-    🟤 Sepia
-  </button>
-
-  <button onclick="addEffect('blur')">
-    🌫 Blur
-  </button>
-
-  <button onclick="zoomIn()">
-    ➕ Zoom
-  </button>
-
-  <button onclick="zoomOut()">
-    ➖ Zoom
-  </button>
-
-  <button onclick="undoEdit()">
-    ↩ Undo
-  </button>
-
-  <button id="resetBtn">
-    🔄 Reset
-  </button>
-
-  <button id="downloadBtn">
-    📥 Download
-  </button>
-
-</div>
-
-<div class="canvas-wrapper">
-  <canvas id="canvas"></canvas>
-</div>
-
-  </div></div><script src="./js/photo-editor.js"></script></body>
+</body>
 </html>

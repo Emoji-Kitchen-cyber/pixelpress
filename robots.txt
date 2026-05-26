@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pixelpress-smoky.vercel.app/sitemap.xml

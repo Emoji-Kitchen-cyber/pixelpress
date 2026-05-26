@@ -1,80 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#ffffff">
-  <title>Compress Image – PixelPress</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compress Image – PixelPress</title>
+    <link rel="stylesheet" href="../css/style.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 20px;
+        }
+        .compress-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .step {
+            display: none;
+            padding: 30px;
+        }
+        .step.active {
+            display: block;
+        }
+        .upload-zone {
+            border: 4px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 80px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-zone:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+        .preview-img {
+            max-width: 100%;
+            max-height: 450px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .slider-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        button#main-btn {
+            padding: 16px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+    </style>
 </head>
 <body>
-  <header class="main-header">
-    <a href="/" class="logo">🎨 PixelPress</a>
-    <nav><a href="/" class="btn-outline">← All Tools</a></nav>
-  </header>
+    <div class="compress-container">
+        <div class="header">
+            <h1>📦 Compress Image</h1>
+            <p>Reduce image size without losing much quality</p>
+        </div>
 
-  <div class="tool-page">
-    <h1>📦 Compress Image</h1>
+        <!-- Upload Step -->
+        <div id="upload-step" class="step active">
+            <h2 style="text-align:center;">Step 1: Upload Image</h2>
+            <div id="compressUploadZone" class="upload-zone">
+                <h3>📁 Drop Image Here</h3>
+                <p>or click to browse</p>
+                <small>JPG, PNG, WEBP supported</small>
+            </div>
+            <input type="file" id="compressFileInput" accept="image/*" style="display: none;">
+        </div>
 
-    <!-- Step 1: Upload -->
-    <div class="workflow-step" id="upload-step">
-      <h2>1. Upload Image</h2>
-      <div class="upload-zone" id="compressUploadZone">
-        <div class="icon">📁</div>
-        <p>Drop your image here or click to browse</p>
-        <p style="font-size:0.85rem; margin-top:8px;">Supports JPEG, PNG, WebP</p>
-      </div>
-      <input type="file" id="compressFileInput" accept="image/*" hidden>
+        <!-- Settings Step -->
+        <div id="settings-step" class="step">
+            <h2>Step 2: Choose Compression Level</h2>
+            
+            <div class="info" style="margin-bottom: 25px;">
+                Original Size: <strong id="originalSize">0 KB</strong><br>
+                Estimated Compressed: <strong id="compressedSize">0 KB</strong>
+            </div>
+
+            <div style="margin: 25px 0;">
+                <label class="slider-label">Compression Quality: <span id="qualityValue">75%</span></label>
+                <input type="range" id="qualitySlider" min="10" max="95" value="75" style="width: 100%;">
+                <small>Lower = Smaller size | Higher = Better quality</small>
+            </div>
+
+            <button id="compressBtn" class="main-btn" style="background: #3b82f6; color: white;">
+                Compress Image →
+            </button>
+        </div>
+
+        <!-- Processing -->
+        <div id="processing-step" class="step">
+            <h2 style="text-align:center;">⏳ Compressing...</h2>
+            <p style="text-align:center;">Please wait</p>
+        </div>
+
+        <!-- Result -->
+        <div id="result-step" class="step">
+            <h2 style="text-align:center; color: #10b981;">✅ Compression Done!</h2>
+            
+            <div style="text-align:center; margin: 20px 0;">
+                <strong>Original:</strong> <span id="origSizeFinal">0 KB</span> → 
+                <strong>Compressed:</strong> <span id="compSizeFinal" style="color:#10b981;">0 KB</span>
+                <br><small id="savings"></small>
+            </div>
+
+            <img id="compressedPreview" class="preview-img" alt="Compressed Image">
+
+            <div style="text-align:center; margin-top: 30px;">
+                <button id="downloadCompressBtn" style="background:#10b981; color:white; padding:16px 40px; font-size:18px; border:none; border-radius:12px; margin:10px;">
+                    📥 Download Compressed Image
+                </button>
+                <button onclick="location.reload()" style="background:#6b7280; color:white; padding:16px 30px; font-size:18px; border:none; border-radius:12px; margin:10px;">
+                    Compress Another
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Step 2: Settings -->
-    <div class="workflow-step" id="settings-step" style="display:none">
-      <h2>2. Compression Settings</h2>
-      <div class="settings-grid">
-        <div class="form-group">
-          <label for="qualitySlider">Quality (10-100)</label>
-          <input type="range" id="qualitySlider" min="10" max="100" value="80">
-        </div>
-        <div class="form-group">
-          <span id="qualityValue">80%</span>
-        </div>
-        <button id="compressBtn" class="btn-primary">Compress Now</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Processing -->
-    <div class="workflow-step" id="processing-step" style="display:none">
-      <h2>3. Processing...</h2>
-      <div class="processing-bar" id="processingBar">
-        <div class="spinner"></div>
-        <p>Compressing your image...</p>
-      </div>
-    </div>
-
-    <!-- Step 4: Preview & Download -->
-    <div class="workflow-step" id="result-step" style="display:none">
-      <h2>4. Result</h2>
-      <div class="preview-container">
-        <div class="preview-box">
-          <p>Original</p>
-          <img id="originalPreview">
-          <p id="originalSize"></p>
-        </div>
-        <div class="preview-box">
-          <p>Compressed</p>
-          <img id="compressedPreview">
-          <p id="compressedSize"></p>
-        </div>
-      </div>
-      <div class="download-section">
-        <button id="downloadBtn" class="btn-primary">📥 Download Compressed Image</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/js/common.js"></script>
-  <script src="/js/compress.js"></script>
+    <script src="../js/compress.js"></script>
 </body>
 </html>

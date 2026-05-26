@@ -1,3 +1,4 @@
+// Ultra-Fast Blob-based JPG to PDF Engine
 let selectedImages = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,11 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dropZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-    dropZone.addEventListener('dragover', (e) => { 
-        e.preventDefault(); 
-        dropZone.style.borderColor = '#ec4899';
-    });
-    
+    dropZone.addEventListener('dragover', (e) => e.preventDefault());
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         handleFiles(e.dataTransfer.files);
@@ -26,58 +23,58 @@ document.addEventListener('DOMContentLoaded', () => {
         if(files.length === 0) return;
         workSection.style.display = 'block';
 
+        // Read files instantly using Object URLs instead of slow Base64
         Array.from(files).forEach(file => {
             if (!file.type.startsWith('image/')) return;
             
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const img = new Image();
-                img.onload = function() {
-                    selectedImages.push({ src: e.target.result, name: file.name, w: img.width, h: img.height });
-                    
-                    const wrap = document.createElement('div');
-                    wrap.className = 'thumb-wrapper';
-                    wrap.innerHTML = `<img src="${e.target.result}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;"><br><span style="font-size:11px;">${file.name}</span>`;
-                    previewContainer.appendChild(wrap);
-                };
-                img.src = e.target.result;
+            const blobUrl = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = function() {
+                selectedImages.push({ src: blobUrl, file: file, w: img.width, h: img.height });
+                
+                const wrap = document.createElement('div');
+                wrap.className = 'thumb-wrapper';
+                wrap.innerHTML = `<img src="${blobUrl}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;"><br><span style="font-size:11px;">${file.name}</span>`;
+                previewContainer.appendChild(wrap);
             };
-            reader.readAsDataURL(file);
+            img.src = blobUrl;
         });
     }
 
-    generatePdfBtn.addEventListener('click', (e) => {
+    generatePdfBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         if (selectedImages.length === 0) return;
 
-        generatePdfBtn.innerText = "Processing Data...";
+        generatePdfBtn.innerText = "Fast Converting...";
         generatePdfBtn.disabled = true;
 
-        // Dynamic jsPDF direct invocation without print screen
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'px', 'a4');
         const pdfW = pdf.internal.pageSize.getWidth();
         const pdfH = pdf.internal.pageSize.getHeight();
 
-        selectedImages.forEach((imgData, index) => {
+        // Optimized execution loop using internal image arrays
+        for(let index = 0; index < selectedImages.length; index++) {
             if (index > 0) pdf.addPage();
             
+            const imgData = selectedImages[index];
             let ratio = imgData.w / imgData.h;
-            let finalW = pdfW - 40; 
+            let finalW = pdfW - 20; 
             let finalH = finalW / ratio;
 
-            if (finalH > (pdfH - 40)) {
-                finalH = pdfH - 40;
+            if (finalH > (pdfH - 20)) {
+                finalH = pdfH - 20;
                 finalW = finalH * ratio;
             }
 
             const x = (pdfW - finalW) / 2;
             const y = (pdfH - finalH) / 2;
 
+            // Using standard compression for lightning fast generation
             pdf.addImage(imgData.src, 'JPEG', x, y, finalW, finalH, undefined, 'FAST');
-        });
+        }
 
-        pdf.save('pixelpress-document.pdf');
+        pdf.save('pixelpress-fast-document.pdf');
         generatePdfBtn.innerText = "⚡ Generate PDF Document";
         generatePdfBtn.disabled = false;
     });

@@ -1,229 +1,267 @@
-/* ============================================
-   PixelPress Pro – Main Application Shell
-   ============================================ */
+// ==================== PIXELPRESS APP ====================
 
-import { initializeAuth, signIn, signUp, signOut, onAuthChange } from './auth.js';
-import { setupDragDrop, formatBytes, showSpinner, hideSpinner, revokeURLs } from './utils/helpers.js';
-import { initCompressor } from './modules/compressor.js';
-import { initResizer } from './modules/resizer.js';
-import { initCropper } from './modules/cropper.js';
-import { initConverter } from './modules/converter.js';
-import { initWatermark } from './modules/watermark.js';
-import { initRotate } from './modules/rotate.js';
-import { initUpscale } from './modules/upscale.js';
-import { initBulkZip } from './modules/bulkZip.js';
-import { initExifRemover } from './modules/exifRemover.js';
-import { HistoryPanel } from './modules/history.js';
-import { FileQueue } from './modules/fileQueue.js';
+// ---------- STATE ----------
+const state = {
+  canvas: null,
+  ctx: null,
+  isDrawing: false,
+  currentTool: 'pencil',
+  color: '#ffffff',
+  brushSize: 10,
+  drawings: [],
+  currentPage: 'editor',
+  user: null
+};
 
-// ---------- State ----------
-let currentUser = null;
-const historyPanel = new HistoryPanel();
-const fileQueue = new FileQueue();
+// ---------- INIT ----------
+function init() {
+  setupCanvas();
+  setupTools();
+  setupNavigation();
+  setupSettings();
+  loadDrawings();
+  checkAuth();
+}
 
-// ---------- DOM references ----------
-const homePage = document.getElementById('homePage');
-const appMain = document.getElementById('appMain');
-const loginModal = document.getElementById('loginModal');
-const userArea = document.getElementById('userArea');
-const themeToggle = document.querySelector('.theme-toggle');
-const globalSpinner = document.getElementById('globalSpinner');
+// ---------- CANVAS ----------
+function setupCanvas() {
+  state.canvas = document.getElementById('pixelCanvas');
+  if (!state.canvas) return;
+  
+  state.ctx = state.canvas.getContext('2d');
+  
+  const size = Math.min(window.innerWidth - 40, 600);
+  state.canvas.width = size;
+  state.canvas.height = size;
+  
+  state.canvas.style.width = size + 'px';
+  state.canvas.style.height = size + 'px';
+  
+  // Mouse events
+  state.canvas.addEventListener('mousedown', startDrawing);
+  state.canvas.addEventListener('mousemove', draw);
+  state.canvas.addEventListener('mouseup', stopDrawing);
+  state.canvas.addEventListener('mouseleave', stopDrawing);
+  
+  // Touch events for mobile
+  state.canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startDrawing(e.touches[0]);
+  });
+  state.canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    draw(e.touches[0]);
+  });
+  state.canvas.addEventListener('touchend', stopDrawing);
+  
+  window.addEventListener('resize', () => {
+    const newSize = Math.min(window.innerWidth - 40, 600);
+    const imageData = state.ctx.getImageData(0, 0, state.canvas.width, state.canvas.height);
+    state.canvas.width = newSize;
+    state.canvas.height = newSize;
+    state.canvas.style.width = newSize + 'px';
+    state.canvas.style.height = newSize + 'px';
+    state.ctx.putImageData(imageData, 0, 0);
+  });
+}
 
-// ---------- Tool configurations ----------
-const tools = [
-  { id: 'compress', icon: '🗜️', label: 'Compress', desc: 'Reduce file size with quality control' },
-  { id: 'resize',  icon: '📏', label: 'Resize', desc: 'Change dimensions for any platform' },
-  { id: 'crop',    icon: '✂️', label: 'Crop', desc: 'Cut and frame your image perfectly' },
-  { id: 'convert', icon: '🔄', label: 'Convert', desc: 'JPEG, PNG, WebP, and more' },
-  { id: 'watermark', icon: '💧', label: 'Watermark', desc: 'Add text or logo overlay' },
-  { id: 'rotate',  icon: '🔃', label: 'Rotate & Flip', desc: 'Adjust orientation' },
-  { id: 'upscale', icon: '🔍', label: 'AI Upscale', desc: 'Enhance resolution (simulated)' },
-  { id: 'exif',    icon: '🧹', label: 'Remove EXIF', desc: 'Strip metadata and location' },
-  { id: 'bulkzip', icon: '📦', label: 'Bulk ZIP', desc: 'Download all as ZIP' },
-];
+function startDrawing(e) {
+  state.isDrawing = true;
+  state.ctx.beginPath();
+  state.ctx.moveTo(e.clientX - state.canvas.getBoundingClientRect().left, e.clientY - state.canvas.getBoundingClientRect().top);
+}
 
-// ---------- SPA Page Management ----------
-function navigateTo(toolId) {
-  // Remove any existing tool page
-  const existing = document.querySelector('.tool-page');
-  if (existing) existing.remove();
-  homePage.classList.add('hidden');
+function draw(e) {
+  if (!state.isDrawing) return;
+  const x = e.clientX - state.canvas.getBoundingClientRect().left;
+  const y = e.clientY - state.canvas.getBoundingClientRect().top;
+  
+  state.ctx.lineWidth = state.brushSize;
+  state.ctx.lineCap = 'round';
+  state.ctx.strokeStyle = state.currentTool === 'eraser' ? '#000000' : state.color;
+  state.ctx.lineTo(x, y);
+  state.ctx.stroke();
+}
 
-  if (!toolId || toolId === 'home') {
-    homePage.classList.remove('hidden');
+function stopDrawing() {
+  state.isDrawing = false;
+}
+
+// ---------- TOOLS ----------
+function setupTools() {
+  document.getElementById('toolPencil')?.addEventListener('click', () => {
+    state.currentTool = 'pencil';
+    highlightTool('toolPencil');
+  });
+  
+  document.getElementById('toolEraser')?.addEventListener('click', () => {
+    state.currentTool = 'eraser';
+    highlightTool('toolEraser');
+  });
+  
+  document.getElementById('toolFill')?.addEventListener('click', () => {
+    state.ctx.fillStyle = state.color;
+    state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+  });
+  
+  document.getElementById('colorPicker')?.addEventListener('change', (e) => {
+    state.color = e.target.value;
+  });
+  
+  document.getElementById('brushSize')?.addEventListener('input', (e) => {
+    state.brushSize = parseInt(e.target.value);
+  });
+  
+  highlightTool('toolPencil');
+}
+
+function highlightTool(toolId) {
+  document.querySelectorAll('#tools button').forEach(b => b.style.background = '#111');
+  const btn = document.getElementById(toolId);
+  if (btn) btn.style.background = '#333';
+}
+
+// ---------- NAVIGATION ----------
+function setupNavigation() {
+  document.querySelectorAll('#nav button[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = btn.dataset.page;
+      navigateTo(page);
+    });
+  });
+  
+  document.getElementById('loginBtn')?.addEventListener('click', () => {
+    if (state.user) {
+      firebase.auth().signOut();
+    } else {
+      firebase.auth().signInAnonymously();
+    }
+  });
+}
+
+function navigateTo(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(page + '-page')?.classList.add('active');
+  
+  document.querySelectorAll('#nav button[data-page]').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#nav button[data-page="${page}"]`)?.classList.add('active');
+}
+
+// ---------- SETTINGS ----------
+function setupSettings() {
+  document.getElementById('saveToCloud')?.addEventListener('click', saveToCloud);
+  document.getElementById('exportPNG')?.addEventListener('click', exportPNG);
+  document.getElementById('clearCanvas')?.addEventListener('click', clearCanvas);
+}
+
+function clearCanvas() {
+  if (confirm('Clear canvas?')) {
+    state.ctx.fillStyle = '#000000';
+    state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+  }
+}
+
+function exportPNG() {
+  const link = document.createElement('a');
+  link.download = 'pixelpress-' + Date.now() + '.png';
+  link.href = state.canvas.toDataURL();
+  link.click();
+}
+
+async function saveToCloud() {
+  if (!state.user) {
+    alert('Login to save!');
     return;
   }
-
-  // Create tool page container
-  const page = document.createElement('div');
-  page.className = 'tool-page page active';
-  page.id = `tool-${toolId}`;
-  page.innerHTML = `
-    <div class="container">
-      <button class="back-btn">← Back to Home</button>
-      <div id="toolContent"></div>
-    </div>
-  `;
-  appMain.appendChild(page);
-  page.querySelector('.back-btn').addEventListener('click', () => navigateTo('home'));
-
-  const content = page.querySelector('#toolContent');
-  // Initialize the specific tool module
-  switch (toolId) {
-    case 'compress': initCompressor(content, fileQueue, historyPanel); break;
-    case 'resize': initResizer(content); break;
-    case 'crop': initCropper(content); break;
-    case 'convert': initConverter(content, fileQueue); break;
-    case 'watermark': initWatermark(content); break;
-    case 'rotate': initRotate(content); break;
-    case 'upscale': initUpscale(content); break;
-    case 'exif': initExifRemover(content); break;
-    case 'bulkzip': initBulkZip(content, fileQueue); break;
+  
+  try {
+    const db = firebase.firestore();
+    const data = state.canvas.toDataURL();
+    await db.collection('drawings').add({
+      userId: state.user.uid,
+      data: data,
+      timestamp: Date.now()
+    });
+    alert('Saved!');
+    loadDrawings();
+  } catch(e) {
+    console.error('Save failed:', e);
+    alert('Save failed');
   }
 }
 
-// ---------- Render Home Tool Cards ----------
-function renderToolCards() {
-  const grid = document.getElementById('toolsGrid');
+async function loadDrawings() {
+  if (!state.user) return;
+  
+  try {
+    const db = firebase.firestore();
+    const snapshot = await db.collection('drawings')
+      .where('userId', '==', state.user.uid)
+      .orderBy('timestamp', 'desc')
+      .limit(20)
+      .get();
+    
+    state.drawings = [];
+    snapshot.forEach(doc => {
+      state.drawings.push({ id: doc.id, ...doc.data() });
+    });
+    
+    renderGallery();
+  } catch(e) {
+    console.error('Load failed:', e);
+  }
+}
+
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
   if (!grid) return;
-  grid.innerHTML = tools.map(tool => `
-    <div class="tool-card" data-tool="${tool.id}" tabindex="0" role="button" aria-label="${tool.label} tool">
-      <div class="tool-icon">${tool.icon}</div>
-      <h3>${tool.label}</h3>
-      <p>${tool.desc}</p>
-    </div>
-  `).join('');
-
-  grid.querySelectorAll('.tool-card').forEach(card => {
-    card.addEventListener('click', () => navigateTo(card.dataset.tool));
-    card.addEventListener('keydown', (e) => { if (e.key === 'Enter') navigateTo(card.dataset.tool); });
+  
+  grid.innerHTML = '';
+  state.drawings.forEach(d => {
+    const img = document.createElement('img');
+    img.src = d.data;
+    img.addEventListener('click', () => {
+      const image = new Image();
+      image.src = d.data;
+      image.onload = () => {
+        state.ctx.drawImage(image, 0, 0);
+      };
+      navigateTo('editor');
+    });
+    grid.appendChild(img);
   });
 }
 
-// ---------- Dark Mode ----------
-function applyTheme(isDark) {
-  document.body.classList.toggle('dark', isDark);
-  themeToggle.textContent = isDark ? '☀️' : '🌙';
-  localStorage.setItem('pixelpress-theme', isDark ? 'dark' : 'light');
-}
-const storedTheme = localStorage.getItem('pixelpress-theme');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-applyTheme(storedTheme === 'dark' || (!storedTheme && prefersDark));
-themeToggle.addEventListener('click', () => {
-  applyTheme(!document.body.classList.contains('dark'));
-});
-
-// ---------- Auth UI & Logic ----------
-async function updateUserUI() {
-  if (currentUser) {
-    userArea.innerHTML = `<span>👤 ${currentUser.email}</span> <a href="#" id="logoutLink">Logout</a>`;
-    document.getElementById('logoutLink').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await signOut();
-    });
-  } else {
-    userArea.innerHTML = `<a href="#" id="loginLink">Login</a>`;
-    document.getElementById('loginLink').addEventListener('click', (e) => {
-      e.preventDefault();
-      openLoginModal();
-    });
-  }
-}
-
-function openLoginModal() {
-  loginModal.classList.add('active');
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('registerForm').style.display = 'none';
-}
-
-function closeLoginModal() {
-  loginModal.classList.remove('active');
-}
-
-// Firebase auth state observer
-initializeAuth(); // called once
-onAuthChange(async (user) => {
-  currentUser = user;
-  updateUserUI();
-  if (user) closeLoginModal();
-});
-
-// Modal events
-document.querySelector('.close-modal').addEventListener('click', closeLoginModal);
-window.addEventListener('click', (e) => { if (e.target === loginModal) closeLoginModal(); });
-
-document.getElementById('showRegister').addEventListener('click', (e) => {
-  e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('registerForm').style.display = 'block';
-});
-document.getElementById('showLogin').addEventListener('click', (e) => {
-  e.preventDefault();
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'block';
-});
-
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  if (!email || !password) return alert('Please fill all fields.');
-  try {
-    await signIn(email, password);
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
-document.getElementById('registerBtn').addEventListener('click', async () => {
-  const email = document.getElementById('regEmail').value.trim();
-  const password = document.getElementById('regPassword').value;
-  if (!email || !password) return alert('Please fill all fields.');
-  try {
-    await signUp(email, password);
-    alert('Registration successful! You are now logged in.');
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
-// ---------- Keyboard Shortcuts ----------
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 'z') {
-    e.preventDefault();
-    historyPanel.undo();
-  } else if (e.ctrlKey && e.key === 'y') {
-    e.preventDefault();
-    historyPanel.redo();
-  } else if (e.key === 'Escape') {
-    closeLoginModal();
-  }
-});
-
-// ---------- PWA Registration ----------
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/js/pwa/sw.js').then(() => {
-      console.log('Service worker registered.');
-    }).catch(err => console.error('SW registration failed:', err));
+// ---------- AUTH ----------
+function checkAuth() {
+  if (typeof firebase === 'undefined') return;
+  
+  firebase.auth().onAuthStateChanged(user => {
+    state.user = user;
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+      loginBtn.textContent = user ? 'Logout' : 'Login';
+    }
+    if (user) {
+      loadDrawings();
+    }
   });
 }
 
-// ---------- Global Helpers (exported for modules) ----------
-window.showSpinner = showSpinner;
-window.hideSpinner = hideSpinner;
-window.revokeURLs = revokeURLs;
-window.fileQueue = fileQueue;
-window.historyPanel = historyPanel;
-window.formatBytes = formatBytes;
+// ---------- PWA ----------
+function setupPWA() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('PWA Ready'))
+        .catch(err => console.log('SW failed:', err));
+    });
+  }
+}
 
-// ---------- Initialization ----------
-renderToolCards();
-document.getElementById('heroCta')?.addEventListener('click', () => navigateTo('compress'));
-document.querySelector('.nav-home')?.addEventListener('click', (e) => { e.preventDefault(); navigateTo('home'); });
-document.querySelector('.nav-tools')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  navigateTo('home');
-  setTimeout(() => document.querySelector('.tools-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
+// ---------- START ----------
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  setupPWA();
 });
-document.getElementById('homeLogo')?.addEventListener('click', () => navigateTo('home'));
-updateUserUI();

@@ -1,4 +1,4 @@
-// Self-Contained WebWorker Bridge for PDF parsing
+// High-Speed Parallel PDF to JPG Engine
 let pdfDoc = null;
 const pageImages = {}; 
 
@@ -13,33 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropZone || !fileInput) return;
 
-    // Secure fallback loader block
     const pdfjs = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
     if (pdfjs) {
         pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     }
 
     dropZone.addEventListener('click', () => fileInput.click());
-    
     fileInput.addEventListener('change', (e) => {
         if (e.target.files) processPDF(e.target.files);
     });
 
-    dropZone.addEventListener('dragover', (e) => { 
-        e.preventDefault(); 
-        dropZone.style.borderColor = '#ec4899';
-        dropZone.style.background = '#fdf4ff';
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = '#94a3b8';
-        dropZone.style.background = 'transparent';
-    });
-    
+    dropZone.addEventListener('dragover', (e) => e.preventDefault());
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = '#94a3b8';
-        dropZone.style.background = 'transparent';
         if (e.dataTransfer.files) processPDF(e.dataTransfer.files);
     });
 
@@ -47,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.style.display = 'none';
         workSection.style.display = 'block';
         previewGrid.innerHTML = '';
+        statusMessage.innerText = "Loading PDF securely...";
         
         const fileReader = new FileReader();
         fileReader.onload = async function () {
@@ -54,20 +41,23 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const loadingTask = pdfjs.getDocument({ data: typedarray });
                 pdfDoc = await loadingTask.promise;
-                statusMessage.innerText = `Document Loaded! Rendering ${pdfDoc.numPages} pages...`;
+                statusMessage.innerText = `Converting ${pdfDoc.numPages} pages in parallel threads...`;
                 
+                // Create a list of parallel promises to boost rendering speed
+                const renderPromises = [];
                 for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                    await renderPage(pageNum);
+                    renderPromises.push(renderPage(pageNum));
                 }
                 
-                statusMessage.innerText = "Conversion Finished Successfully!";
-                // Fallback direct check if JSZip exists
+                // Execute all pages together at once
+                await Promise.all(renderPromises);
+                
+                statusMessage.innerText = "Finished instantly!";
                 if (typeof JSZip !== 'undefined') {
                     downloadAllBtn.style.display = 'inline-block';
                 }
             } catch (err) {
-                statusMessage.style.color = '#ef4444';
-                statusMessage.innerText = "Error reading PDF file structure.";
+                statusMessage.innerText = "Error parsing file.";
                 console.error(err);
             }
         };
@@ -76,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: 1.2 }); // Balanced scale for ultra-fast conversion
         
         const card = document.createElement('div');
         card.className = 'page-card';
@@ -93,32 +83,31 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const dlBtn = document.createElement('button');
         dlBtn.className = 'btn';
-        dlBtn.style.padding = '6px 12px';
-        dlBtn.style.fontSize = '12px';
-        dlBtn.style.marginTop = '8px';
-        dlBtn.innerText = 'Download Image';
+        dlBtn.style = 'padding:6px 12px; font-size:12px; margin-top:8px;';
+        dlBtn.innerText = 'Download';
         card.appendChild(dlBtn);
         
         previewGrid.appendChild(card);
 
+        // Render to canvas asynchronously
         await page.render({ canvasContext: ctx, viewport: viewport }).promise;
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        // Optimize image quality ratio for speed
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
         pageImages[num] = imgData;
 
         dlBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const a = document.createElement('a');
             a.href = imgData;
-            a.download = `pixelpress-page-${num}.jpg`;
-            document.body.appendChild(a);
+            a.download = `page-${num}.jpg`;
             a.click();
-            document.body.removeChild(a);
         });
     }
 
     downloadAllBtn.addEventListener('click', async (e) => {
         e.preventDefault();
+        downloadAllBtn.innerText = "Zipping files...";
         const zip = new JSZip();
         for (const [num, data] of Object.entries(pageImages)) {
             const base64Data = data.replace(/^data:image\/jpeg;base64,/, "");
@@ -127,10 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "pixelpress-all-pages.zip";
-        document.body.appendChild(link);
+        link.download = "pixelpress-images.zip";
         link.click();
-        document.body.removeChild(link);
+        downloadAllBtn.innerText = "📥 Download All Pages (ZIP)";
     });
 });
 

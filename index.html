@@ -2,233 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Free online image tools – compress, resize, edit, convert, and watermark images directly in your browser. No uploads.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PixelPress – Free Online Image Toolkit</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="stylesheet" href="/css/style.css">
-
   <style>
-    body { background: #ffffff; }
-    .main-header { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
-    .main-header .logo { color: #1a1a2e; font-weight: 700; }
-
-    /* Hero */
-    .hero {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      color: white;
-      text-align: center;
-      padding: 70px 20px 90px;
-      margin-bottom: 40px;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::after {
-      content: "";
-      position: absolute;
-      bottom: -30px;
-      left: 0;
-      right: 0;
-      height: 100px;
-      background: #ffffff;
-      border-radius: 50% 50% 0 0;
-    }
-    .hero h1 {
-      font-size: 2.9rem;
-      font-weight: 800;
-      margin-bottom: 12px;
-      letter-spacing: -0.6px;
-    }
-    .hero p {
-      font-size: 1.25rem;
-      opacity: 0.95;
-      max-width: 620px;
-      margin: 0 auto 28px;
-    }
-
-    /* Tools Grid */
-    .dashboard {
-      max-width: 1200px;
-      margin: -40px auto 80px;
-      padding: 0 20px;
-      position: relative;
-      z-index: 2;
-    }
-    .section-title {
-      text-align: center;
-      margin-bottom: 40px;
-      color: #1f2937;
-      font-size: 1.8rem;
-      font-weight: 700;
-    }
-    .tool-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 28px;
-    }
-    .tool-card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 24px;
-      padding: 40px 28px 36px;
-      text-align: center;
-      text-decoration: none;
-      color: #1a1a2e;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .tool-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-      border-color: #2563eb;
-    }
-    .tool-card .icon {
-      font-size: 3.8rem;
-      margin-bottom: 20px;
-      transition: transform 0.3s;
-    }
-    .tool-card:hover .icon {
-      transform: scale(1.15);
-    }
-    .tool-card h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .tool-card p {
-      color: #6b7280;
-      line-height: 1.6;
-      flex-grow: 1;
-    }
-    .tool-card .category {
-      margin-top: 20px;
-      background: #eff6ff;
-      color: #2563eb;
-      padding: 6px 16px;
-      border-radius: 30px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    .tool-card.popular {
-      border-color: #2563eb;
-      position: relative;
-    }
-    .tool-card.popular::before {
-      content: "⭐ Most Popular";
-      position: absolute;
-      top: -12px;
-      right: 20px;
-      background: #2563eb;
-      color: white;
-      font-size: 0.75rem;
-      padding: 4px 18px;
-      border-radius: 30px;
-    }
-
-    .home-footer {
-      text-align: center;
-      padding: 40px 20px;
-      color: #9ca3af;
-      font-size: 0.95rem;
-      border-top: 1px solid #f3f4f6;
-    }
-
-    @media (max-width: 640px) {
-      .hero h1 { font-size: 2.2rem; }
-      .hero p { font-size: 1.05rem; }
-      .tool-grid { grid-template-columns: 1fr; }
-    }
+    body { font-family: system-ui, sans-serif; margin:0; padding:20px; background:#f8fafc; }
+    .card { padding:30px; margin:15px; border-radius:16px; background:white; box-shadow:0 5px 15px rgba(0,0,0,0.1); text-align:center; }
   </style>
 </head>
 <body>
-
-  <!-- HEADER -->
-  <header class="main-header">
-    <a href="/" class="logo">🎨 PixelPress</a>
-    <nav>
-      <button id="loginBtn" class="btn-outline">Login</button>
-    </nav>
-  </header>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="badge">✨ 100% Free • No Sign-up • Private</div>
-    <h1>Every Image Tool You Need</h1>
-    <p>Compress, resize, edit, convert & watermark images directly in your browser.<br>No data leaves your device.</p>
-  </section>
-
-  <!-- TOOLS DASHBOARD -->
-  <div class="dashboard">
-    <h2 class="section-title">Choose Your Tool</h2>
-    <div class="tool-grid">
-
-      <!-- Photo Editor -->
-      <a href="/photo-editor" class="tool-card popular">
-        <div class="icon">✨</div>
-        <h2>Photo Editor</h2>
-        <p>Advanced editing: Crop, Rotate, Filters, Brightness, Contrast, Saturation, Text & more. Like a mini Photoshop in browser.</p>
-        <span class="category">Full Editor</span>
-      </a>
-
-      <!-- Compress -->
-      <a href="/compress" class="tool-card">
-        <div class="icon">📦</div>
-        <h2>Compress Image</h2>
-        <p>Reduce file size while maintaining excellent quality.</p>
-        <span class="category">Optimize</span>
-      </a>
-
-      <!-- Resize -->
-      <a href="/resize" class="tool-card">
-        <div class="icon">📐</div>
-        <h2>Resize Image</h2>
-        <p>Change dimensions with aspect ratio lock.</p>
-        <span class="category">Dimensions</span>
-      </a>
-
-      <!-- Convert -->
-      <a href="/convert" class="tool-card">
-        <div class="icon">🔄</div>
-        <h2>Convert Format</h2>
-        <p>Convert between PNG, JPG, WebP instantly.</p>
-        <span class="category">Format</span>
-      </a>
-
-      <!-- Watermark -->
-      <a href="/watermark" class="tool-card">
-        <div class="icon">💧</div>
-        <h2>Add Watermark</h2>
-        <p>Protect your images with custom text watermarks.</p>
-        <span class="category">Protection</span>
-      </a>
-
-    </div>
+  <h1>🎨 PixelPress</h1>
+  <p>New Homepage - Test</p>
+  
+  <div class="card">
+    <h2>✨ Photo Editor</h2>
+    <p>Full Advanced Photo Editor</p>
+    <a href="/photo-editor">Open Photo Editor →</a>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="home-footer">
-    © 2025 PixelPress. All processing happens locally in your browser. Your privacy is our priority.
-  </footer>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="/js/firebase-config.js"></script>
-  <script>
-    if (typeof firebase !== 'undefined') {
-      firebase.auth().onAuthStateChanged(user => {
-        const btn = document.getElementById('loginBtn');
-        if (btn) btn.textContent = user ? 'Logout' : 'Login';
-      });
-      document.getElementById('loginBtn').addEventListener('click', () => {
-        const user = firebase.auth().currentUser;
-        user ? firebase.auth().signOut() : firebase.auth().signInAnonymously();
-      });
-    }
-  </script>
+  <div class="card">
+    <h2>📦 Compress Image</h2>
+    <a href="/compress">Open Compress →</a>
+  </div>
 </body>
 </html>

@@ -1,4 +1,3 @@
-// Optimized Super-Fast JPG to PDF Engine
 let selectedImages = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(files.length === 0) return;
         workSection.style.display = 'block';
 
-        // Parallel processing optimized for speed
         Array.from(files).forEach(file => {
             if (!file.type.startsWith('image/')) return;
             
@@ -35,9 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = function (e) {
                 const img = new Image();
                 img.onload = function() {
-                    selectedImages.push({ src: e.target.result, name: file.name });
+                    selectedImages.push({ src: e.target.result, name: file.name, w: img.width, h: img.height });
                     
-                    // Fast UI Render
                     const wrap = document.createElement('div');
                     wrap.className = 'thumb-wrapper';
                     wrap.innerHTML = `<img src="${e.target.result}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;"><br><span style="font-size:11px;">${file.name}</span>`;
@@ -53,35 +50,37 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (selectedImages.length === 0) return;
 
-        generatePdfBtn.innerText = "Generating PDF...";
+        generatePdfBtn.innerText = "Processing Data...";
         generatePdfBtn.disabled = true;
 
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html>
-            <head>
-                <style>
-                    body { margin: 0; padding: 0; background: white; }
-                    .page { page-break-after: always; display: flex; align-items: center; justify-content: center; height: 100vh; }
-                    img { max-width: 100%; max-height: 100%; object-fit: contain; }
-                    @page { size: auto; margin: 0mm; }
-                </style>
-            </head>
-            <body>
-                ${selectedImages.map(img => `<div class="page"><img src="${img.src}"></div>`).join('')}
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        window.close();
-                    };
-                <\/script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-        
+        // Dynamic jsPDF direct invocation without print screen
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'px', 'a4');
+        const pdfW = pdf.internal.pageSize.getWidth();
+        const pdfH = pdf.internal.pageSize.getHeight();
+
+        selectedImages.forEach((imgData, index) => {
+            if (index > 0) pdf.addPage();
+            
+            let ratio = imgData.w / imgData.h;
+            let finalW = pdfW - 40; 
+            let finalH = finalW / ratio;
+
+            if (finalH > (pdfH - 40)) {
+                finalH = pdfH - 40;
+                finalW = finalH * ratio;
+            }
+
+            const x = (pdfW - finalW) / 2;
+            const y = (pdfH - finalH) / 2;
+
+            pdf.addImage(imgData.src, 'JPEG', x, y, finalW, finalH, undefined, 'FAST');
+        });
+
+        pdf.save('pixelpress-document.pdf');
         generatePdfBtn.innerText = "⚡ Generate PDF Document";
         generatePdfBtn.disabled = false;
     });
 });
+
 

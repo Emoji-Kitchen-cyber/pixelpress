@@ -1,11 +1,22 @@
 {
-"version": 2,
-"rewrites": [
-{ "source": "/photo-editor", "destination": "/photo-editor.html" },
-{ "source": "/compress", "destination": "/compress.html" },
-{ "source": "/resize", "destination": "/resize.html" },
-{ "source": "/convert", "destination": "/convert.html" },
-{ "source": "/watermark", "destination": "/watermark.html" },
-{ "source": "/(.*)", "destination": "/index.html" }
-]
+  "version": 2,
+  "rewrites": [
+    { "source": "/remove-bg", "destination": "/remove-bg.html" },
+    { "source": "/photo-editor", "destination": "/photo-editor.html" },
+    { "source": "/compress", "destination": "/compress.html" },
+    { "source": "/resize", "destination": "/resize.html" },
+    { "source": "/convert", "destination": "/convert.html" },
+    { "source": "/watermark", "destination": "/watermark.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+      ]
+    }
+  ]
 }

@@ -1,10 +1,9 @@
-// js/remove-bg.js
 const RemoveBG = {
     filesData: [],
     MAX_FILES: 10,
 
     init() {
-        console.log('%c[RemoveBG] Stable Version Loaded Successfully', 'color:#22c55e;font-weight:bold');
+        console.log('%cBackground Remover Loaded', 'color:#22c55e');
         this.setupUI();
     },
 
@@ -23,7 +22,6 @@ const RemoveBG = {
 
         fileInput.addEventListener('change', e => this.handleFiles(e.target.files));
 
-        // Slider
         let dragging = false;
         const divider = document.getElementById('slider-divider');
         divider.addEventListener('mousedown', () => dragging = true);
@@ -66,13 +64,13 @@ const RemoveBG = {
                 <div class="preview-container">
                     <img src="${file.originalUrl}" class="preview">
                     <div class="processing-overlay" id="overlay-${file.id}">
-                        <div>Removing Background...</div>
+                        <div>Processing...</div>
                     </div>
                 </div>
                 <div style="padding:16px;">
                     <div style="font-size:13px;margin-bottom:8px;">${file.name}</div>
                     <button onclick="RemoveBG.processSingle(${i})" class="btn-primary" style="width:100%;margin-bottom:6px;">Remove Background</button>
-                    \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">View Result</button>` : ''}
+                    \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">View</button>` : ''}
                 </div>
             `;
             container.appendChild(card);
@@ -92,41 +90,37 @@ const RemoveBG = {
             file.processedUrl = URL.createObjectURL(resultBlob);
             file.blob = resultBlob;
             this.renderFiles();
-            this.showToast(`${file.name} processed successfully`);
+            this.showToast('Image processed successfully');
         } catch (err) {
-            console.error(err);
-            this.showToast("Failed to process image", "error");
+            this.showToast('Processing failed', 'error');
         } finally {
             overlay.style.display = 'none';
         }
     },
 
     async removeBackground(dataUrl) {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
                 canvas.width = img.width;
                 canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
 
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
 
-                // Improved background removal logic
                 for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i + 1], b = data[i + 2];
-                    // Remove near-white / uniform backgrounds
-                    if (r > 220 && g > 220 && b > 220) {
-                        data[i + 3] = 0;
-                    } else if (Math.abs(r - g) < 25 && Math.abs(g - b) < 25 && r > 180) {
-                        data[i + 3] = 0;
+                    const r = data[i], g = data[i+1], b = data[i+2];
+                    if (r > 210 && g > 210 && b > 210 || 
+                        (Math.abs(r-g) < 30 && Math.abs(g-b) < 30 && r > 180)) {
+                        data[i+3] = 0;
                     }
                 }
 
                 ctx.putImageData(imageData, 0, 0);
-                canvas.toBlob(resolve, 'image/png', 0.92);
+                canvas.toBlob(resolve, 'image/png');
             };
             img.src = dataUrl;
         });
@@ -166,7 +160,7 @@ const RemoveBG = {
             if (f.blob) zip.file(f.name.replace(/\.\w+$/, '') + '-nobg.png', f.blob);
         });
         const content = await zip.generateAsync({type: "blob"});
-        saveAs(content, `removed-bg-${Date.now()}.zip`);
+        saveAs(content, `removed-${Date.now()}.zip`);
     },
 
     clearAll() {
@@ -181,7 +175,7 @@ const RemoveBG = {
         toast.textContent = msg;
         toast.style.borderLeftColor = type === 'error' ? '#ef4444' : '#22c55e';
         toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 3000);
+        setTimeout(() => toast.style.display = 'none', 2800);
     }
 };
 

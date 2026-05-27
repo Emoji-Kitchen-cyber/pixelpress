@@ -2,92 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    content="width=device-width, initial-scale=1.0"
   />
 
-  <title>Background Remover – PixelPress</title>
+  <title>AI Background Remover – PixelPress</title>
 
-  <!-- Shared Global Styles -->
+  <!-- GLOBAL WEBSITE CSS -->
   <link rel="stylesheet" href="./css/style.css" />
 
   <style>
-    /* ==========================================================================
+    /* =========================================================
        PIXELPRESS REMOVE BG TOOL
-       FULLY SCOPED / ISOLATED CSS
-       NOTHING HERE TOUCHES GLOBAL WEBSITE LAYOUT
-       ========================================================================== */
+       FULLY SCOPED
+       ========================================================= */
 
-    .pp-rbg-tool *,
-    .pp-rbg-tool *::before,
-    .pp-rbg-tool *::after {
+    .pp-remove-bg *,
+    .pp-remove-bg *::before,
+    .pp-remove-bg *::after {
       box-sizing: border-box;
     }
 
-    .pp-rbg-tool {
+    .pp-remove-bg {
       width: 100%;
       max-width: 1200px;
       margin: 40px auto;
       padding: 16px;
-      font-family: inherit;
       color: #0f172a;
+      font-family: inherit;
     }
 
     .pp-rbg-card {
       background: #ffffff;
       border: 1px solid #e5e7eb;
-      border-radius: 20px;
-      padding: 22px;
-      margin-bottom: 22px;
-      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+      border-radius: 22px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
     }
 
-    .pp-rbg-heading {
-      margin: 0 0 8px;
+    .pp-rbg-title {
       font-size: 2rem;
-      line-height: 1.2;
       font-weight: 800;
-      color: #111827;
+      margin: 0 0 8px;
     }
 
-    .pp-rbg-subheading {
-      margin: 0 0 22px;
+    .pp-rbg-subtitle {
       color: #64748b;
-      font-size: 0.95rem;
+      margin-bottom: 22px;
       line-height: 1.6;
     }
 
-    .pp-rbg-section-title {
-      margin: 0 0 18px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #111827;
-    }
+    /* =========================================================
+       UPLOAD
+       ========================================================= */
 
-    /* ==========================================================================
-       UPLOAD ZONE
-       ========================================================================== */
-
-    .pp-rbg-upload {
+    .pp-rbg-dropzone {
       border: 2px dashed #cbd5e1;
-      border-radius: 18px;
-      padding: 48px 24px;
+      border-radius: 20px;
+      padding: 50px 20px;
       text-align: center;
       cursor: pointer;
-      transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease,
-        transform 0.2s ease;
       background: #f8fafc;
-      user-select: none;
+      transition: 0.2s;
     }
 
-    .pp-rbg-upload:hover,
-    .pp-rbg-upload.pp-rbg-dragover {
+    .pp-rbg-dropzone:hover,
+    .pp-rbg-dropzone.dragging {
       border-color: #2563eb;
-      background: rgba(37, 99, 235, 0.05);
-      transform: translateY(-1px);
+      background: rgba(37,99,235,0.04);
     }
 
     .pp-rbg-upload-icon {
@@ -96,28 +81,25 @@
     }
 
     .pp-rbg-upload-title {
-      margin: 0;
       font-size: 1.1rem;
       font-weight: 700;
-      color: #0f172a;
+      margin-bottom: 8px;
     }
 
     .pp-rbg-upload-sub {
-      margin-top: 10px;
       color: #64748b;
-      font-size: 0.92rem;
+      font-size: 0.95rem;
     }
 
     .pp-rbg-hidden {
       display: none !important;
     }
 
-    /* ==========================================================================
+    /* =========================================================
        BUTTONS
-       ========================================================================== */
+       ========================================================= */
 
     .pp-rbg-btn {
-      appearance: none;
       border: none;
       outline: none;
       cursor: pointer;
@@ -125,27 +107,16 @@
       padding: 12px 18px;
       font-size: 0.95rem;
       font-weight: 700;
-      transition:
-        background-color 0.2s ease,
-        color 0.2s ease,
-        opacity 0.2s ease,
-        transform 0.2s ease;
-    }
-
-    .pp-rbg-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
+      transition: 0.2s;
     }
 
     .pp-rbg-btn-primary {
       background: #2563eb;
-      color: #ffffff;
+      color: white;
     }
 
-    .pp-rbg-btn-primary:hover:not(:disabled) {
+    .pp-rbg-btn-primary:hover {
       background: #1d4ed8;
-      transform: translateY(-1px);
     }
 
     .pp-rbg-btn-outline {
@@ -154,18 +125,47 @@
       color: #0f172a;
     }
 
-    .pp-rbg-btn-outline:hover:not(:disabled) {
+    .pp-rbg-btn-outline:hover {
       background: #f8fafc;
     }
 
-    /* ==========================================================================
+    .pp-rbg-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* =========================================================
+       PROGRESS
+       ========================================================= */
+
+    .pp-rbg-progress-wrap {
+      margin-top: 22px;
+      display: none;
+    }
+
+    .pp-rbg-progress {
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .pp-rbg-progress-text {
+      margin-top: 10px;
+      color: #475569;
+      text-align: center;
+      font-size: 0.92rem;
+    }
+
+    /* =========================================================
        CONTROLS
-       ========================================================================== */
+       ========================================================= */
 
     .pp-rbg-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 14px;
+      margin-top: 20px;
     }
 
     .pp-rbg-control {
@@ -178,115 +178,82 @@
     .pp-rbg-label {
       display: block;
       margin-bottom: 8px;
-      font-size: 0.92rem;
       font-weight: 700;
-      color: #111827;
+      font-size: 0.92rem;
     }
 
-    .pp-rbg-tool input[type="color"],
-    .pp-rbg-tool input[type="file"],
-    .pp-rbg-tool input[type="range"],
-    .pp-rbg-tool select {
+    .pp-remove-bg select,
+    .pp-remove-bg input[type="file"],
+    .pp-remove-bg input[type="range"],
+    .pp-remove-bg input[type="color"] {
       width: 100%;
     }
 
-    .pp-rbg-tool select,
-    .pp-rbg-tool input[type="file"] {
+    .pp-remove-bg select,
+    .pp-remove-bg input[type="file"] {
       border: 1px solid #d1d5db;
       border-radius: 10px;
-      background: #ffffff;
       padding: 10px;
-      font-size: 0.92rem;
-    }
-
-    .pp-rbg-inline-colors {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      background: white;
     }
 
     .pp-rbg-range-value {
       display: inline-block;
       margin-top: 8px;
+      color: #64748b;
       font-size: 0.85rem;
-      color: #475569;
-      font-weight: 600;
     }
 
-    /* ==========================================================================
-       PROGRESS
-       ========================================================================== */
-
-    .pp-rbg-progress-wrap {
-      margin-top: 20px;
-      display: none;
+    .pp-rbg-action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
     }
 
-    .pp-rbg-progress {
-      width: 100%;
-      height: 14px;
-      overflow: hidden;
-      border-radius: 999px;
-      appearance: none;
-    }
-
-    .pp-rbg-progress::-webkit-progress-bar {
-      background: #e5e7eb;
-      border-radius: 999px;
-    }
-
-    .pp-rbg-progress::-webkit-progress-value {
-      background: #2563eb;
-      border-radius: 999px;
-    }
-
-    .pp-rbg-progress::-moz-progress-bar {
-      background: #2563eb;
-      border-radius: 999px;
-    }
-
-    .pp-rbg-progress-text {
-      margin-top: 10px;
-      font-size: 0.92rem;
-      text-align: center;
-      color: #475569;
-    }
-
-    /* ==========================================================================
-       RESULTS GRID
-       ========================================================================== */
+    /* =========================================================
+       RESULTS
+       ========================================================= */
 
     .pp-rbg-results {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
       gap: 18px;
-      margin-top: 20px;
+      margin-top: 24px;
     }
 
-    .pp-rbg-item {
-      background: #ffffff;
+    .pp-rbg-result-card {
+      background: white;
       border: 1px solid #e5e7eb;
       border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
     }
 
-    /* ==========================================================================
-       BEFORE / AFTER
-       ========================================================================== */
+    .pp-rbg-file-name {
+      padding: 12px;
+      font-size: 0.88rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* =========================================================
+       COMPARISON SLIDER
+       ========================================================= */
 
     .pp-rbg-compare {
       position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 1/1;
       overflow: hidden;
 
       background-color: #f8fafc;
       background-image:
-        linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
-        linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
-        linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+        linear-gradient(45deg,#e5e7eb 25%,transparent 25%),
+        linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#e5e7eb 75%),
+        linear-gradient(-45deg,transparent 75%,#e5e7eb 75%);
       background-size: 18px 18px;
       background-position:
         0 0,
@@ -303,7 +270,6 @@
       height: 100%;
       object-fit: contain;
       pointer-events: none;
-      user-select: none;
     }
 
     .pp-rbg-after {
@@ -326,141 +292,80 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: #2563eb;
-      color: #ffffff;
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%,-50%);
+      z-index: 3;
       font-size: 1rem;
       font-weight: 700;
-      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
-      z-index: 3;
+      box-shadow: 0 8px 20px rgba(37,99,235,0.35);
       pointer-events: none;
     }
 
-    .pp-rbg-item-footer {
+    .pp-rbg-result-actions {
       padding: 14px;
       display: flex;
-      gap: 10px;
       justify-content: center;
-      flex-wrap: wrap;
     }
 
-    .pp-rbg-name {
-      padding: 12px 14px 0;
-      font-size: 0.88rem;
-      color: #64748b;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    /* =========================================================
+       LOADER
+       ========================================================= */
 
-    /* ==========================================================================
-       LOADING OVERLAY
-       ========================================================================== */
-
-    .pp-rbg-overlay {
+    .pp-rbg-loader {
       position: fixed;
       inset: 0;
+      background: rgba(255,255,255,0.96);
       z-index: 999999;
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(8px);
-
       display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
 
-    .pp-rbg-overlay-box {
+    .pp-rbg-loader-box {
       width: 100%;
       max-width: 460px;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
+      background: white;
       border-radius: 24px;
-      padding: 28px;
-      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+      padding: 30px;
       text-align: center;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
     }
 
-    .pp-rbg-overlay-title {
-      margin: 0 0 8px;
-      font-size: 1.15rem;
+    .pp-rbg-loader-title {
+      font-size: 1.2rem;
       font-weight: 800;
-      color: #111827;
+      margin-bottom: 10px;
     }
 
-    .pp-rbg-overlay-sub {
-      margin: 0 0 18px;
+    .pp-rbg-loader-sub {
       color: #64748b;
-      font-size: 0.92rem;
+      margin-bottom: 18px;
       line-height: 1.6;
     }
 
-    .pp-rbg-overlay-progress {
+    .pp-rbg-loader progress {
       width: 100%;
       height: 14px;
-      appearance: none;
-      overflow: hidden;
-      border-radius: 999px;
     }
 
-    .pp-rbg-overlay-progress::-webkit-progress-bar {
-      background: #e5e7eb;
-    }
-
-    .pp-rbg-overlay-progress::-webkit-progress-value {
-      background: #2563eb;
-    }
-
-    .pp-rbg-overlay-progress::-moz-progress-bar {
-      background: #2563eb;
-    }
-
-    .pp-rbg-overlay-small {
+    .pp-rbg-loader-small {
       margin-top: 12px;
       color: #64748b;
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       word-break: break-word;
     }
 
-    .pp-rbg-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    /* ==========================================================================
-       ERROR
-       ========================================================================== */
-
-    .pp-rbg-error {
-      padding: 18px;
-      text-align: center;
-      color: #dc2626;
-      font-size: 0.92rem;
-    }
-
-    /* ==========================================================================
-       MOBILE
-       ========================================================================== */
-
     @media (max-width: 640px) {
-      .pp-rbg-tool {
-        padding: 12px;
-      }
-
-      .pp-rbg-card {
-        padding: 18px;
-      }
-
-      .pp-rbg-heading {
+      .pp-rbg-title {
         font-size: 1.7rem;
       }
     }
@@ -469,124 +374,115 @@
 
 <body>
 
-  <!-- =========================================================================
-       AI LOADING OVERLAY
-       ========================================================================= -->
+  <!-- =======================================================
+       LOADING OVERLAY
+       ======================================================= -->
 
-  <div class="pp-rbg-overlay" id="ppRbgOverlay">
-    <div class="pp-rbg-overlay-box">
+  <div class="pp-rbg-loader" id="ppRbgLoader">
 
-      <h2 class="pp-rbg-overlay-title" id="ppRbgOverlayTitle">
-        Initializing AI Engine
-      </h2>
+    <div class="pp-rbg-loader-box">
 
-      <p class="pp-rbg-overlay-sub" id="ppRbgOverlaySub">
-        Downloading and preparing segmentation model...
-      </p>
+      <div class="pp-rbg-loader-title">
+        Loading AI Background Engine
+      </div>
+
+      <div class="pp-rbg-loader-sub">
+        Preparing fully client-side remover...
+      </div>
 
       <progress
         id="ppRbgModelProgress"
-        class="pp-rbg-overlay-progress"
         max="100"
         value="0"
       ></progress>
 
-      <div class="pp-rbg-overlay-small" id="ppRbgOverlayFile">
-        Preparing secure runtime...
-      </div>
-
-      <div class="pp-rbg-actions">
-        <button
-          type="button"
-          id="ppRbgFallbackBtn"
-          class="pp-rbg-btn pp-rbg-btn-outline pp-rbg-hidden"
-        >
-          Continue in Manual Mode
-        </button>
+      <div
+        class="pp-rbg-loader-small"
+        id="ppRbgLoaderText"
+      >
+        Initializing...
       </div>
 
     </div>
+
   </div>
 
-  <!-- =========================================================================
+  <!-- =======================================================
        TOOL
-       ========================================================================= -->
+       ======================================================= -->
 
-  <div class="pp-rbg-tool" id="ppRbgTool">
+  <div class="pp-remove-bg">
 
     <div class="pp-rbg-card">
 
-      <h1 class="pp-rbg-heading">
+      <div class="pp-rbg-title">
         AI Background Remover
-      </h1>
+      </div>
 
-      <p class="pp-rbg-subheading">
-        Remove backgrounds directly in your browser with zero uploads.
-        Fully private. Fully client-side.
-      </p>
+      <div class="pp-rbg-subtitle">
+        Remove image backgrounds directly in your browser.
+        Nothing uploads to any server.
+      </div>
 
       <div
-        class="pp-rbg-upload"
-        id="ppRbgDropZone"
-        role="button"
-        tabindex="0"
+        class="pp-rbg-dropzone"
+        id="ppRbgDropzone"
       >
-        <div class="pp-rbg-upload-icon">🖼️</div>
+        <div class="pp-rbg-upload-icon">
+          🖼️
+        </div>
 
-        <p class="pp-rbg-upload-title">
-          Drag & Drop up to 10 Images
-        </p>
+        <div class="pp-rbg-upload-title">
+          Drop up to 10 images
+        </div>
 
-        <p class="pp-rbg-upload-sub">
-          JPG, PNG, WEBP • Entirely Browser-Based
-        </p>
+        <div class="pp-rbg-upload-sub">
+          JPG, PNG, WEBP
+        </div>
       </div>
 
       <input
-        id="ppRbgFileInput"
         type="file"
+        id="ppRbgInput"
         accept="image/png,image/jpeg,image/webp"
         multiple
         class="pp-rbg-hidden"
       />
 
-      <div class="pp-rbg-progress-wrap" id="ppRbgBatchWrap">
-
+      <div
+        class="pp-rbg-progress-wrap"
+        id="ppRbgProgressWrap"
+      >
         <progress
-          id="ppRbgBatchProgress"
           class="pp-rbg-progress"
+          id="ppRbgProgress"
           max="100"
           value="0"
         ></progress>
 
         <div
           class="pp-rbg-progress-text"
-          id="ppRbgBatchText"
+          id="ppRbgProgressText"
         >
-          Preparing images...
+          Preparing...
         </div>
-
       </div>
 
     </div>
 
-    <!-- =======================================================================
+    <!-- =======================================================
          RESULTS
-         ======================================================================= -->
+         ======================================================= -->
 
     <div
       class="pp-rbg-card pp-rbg-hidden"
       id="ppRbgResultsSection"
     >
 
-      <h2 class="pp-rbg-section-title">
-        Customize & Export
-      </h2>
-
       <div class="pp-rbg-controls">
 
         <div class="pp-rbg-control">
-          <label class="pp-rbg-label" for="ppRbgBgType">
+          <label class="pp-rbg-label">
             Background Type
           </label>
 
@@ -617,8 +513,8 @@
           class="pp-rbg-control pp-rbg-hidden"
           id="ppRbgSolidWrap"
         >
-          <label class="pp-rbg-label" for="ppRbgSolidColor">
-            Solid Color
+          <label class="pp-rbg-label">
+            Color
           </label>
 
           <input
@@ -633,38 +529,20 @@
           id="ppRbgGradientWrap"
         >
           <label class="pp-rbg-label">
-            Gradient Colors
-          </label>
-
-          <div class="pp-rbg-inline-colors">
-            <input
-              type="color"
-              id="ppRbgGradientStart"
-              value="#ff9a9e"
-            />
-
-            <span>→</span>
-
-            <input
-              type="color"
-              id="ppRbgGradientEnd"
-              value="#fad0c4"
-            />
-          </div>
-        </div>
-
-        <div
-          class="pp-rbg-control pp-rbg-hidden"
-          id="ppRbgCustomWrap"
-        >
-          <label class="pp-rbg-label" for="ppRbgCustomBg">
-            Custom Background
+            Gradient
           </label>
 
           <input
-            type="file"
-            id="ppRbgCustomBg"
-            accept="image/*"
+            type="color"
+            id="ppRbgGrad1"
+            value="#ff9a9e"
+          />
+
+          <input
+            type="color"
+            id="ppRbgGrad2"
+            value="#fad0c4"
+            style="margin-top:10px;"
           />
         </div>
 
@@ -672,16 +550,15 @@
           class="pp-rbg-control pp-rbg-hidden"
           id="ppRbgBlurWrap"
         >
-          <label class="pp-rbg-label" for="ppRbgBlurAmount">
+          <label class="pp-rbg-label">
             Blur Amount
           </label>
 
           <input
             type="range"
-            id="ppRbgBlurAmount"
+            id="ppRbgBlur"
             min="0"
             max="24"
-            step="1"
             value="8"
           />
 
@@ -693,8 +570,23 @@
           </span>
         </div>
 
+        <div
+          class="pp-rbg-control pp-rbg-hidden"
+          id="ppRbgCustomWrap"
+        >
+          <label class="pp-rbg-label">
+            Custom Image
+          </label>
+
+          <input
+            type="file"
+            id="ppRbgCustomBg"
+            accept="image/*"
+          />
+        </div>
+
         <div class="pp-rbg-control">
-          <label class="pp-rbg-label" for="ppRbgFeather">
+          <label class="pp-rbg-label">
             Edge Feather
           </label>
 
@@ -703,8 +595,8 @@
             id="ppRbgFeather"
             min="0"
             max="12"
-            step="0.5"
             value="0"
+            step="0.5"
           />
 
           <span
@@ -716,44 +608,44 @@
         </div>
 
         <div class="pp-rbg-control">
-          <label class="pp-rbg-label" for="ppRbgOutputFormat">
+          <label class="pp-rbg-label">
             Output Format
           </label>
 
-          <select id="ppRbgOutputFormat">
+          <select id="ppRbgFormat">
             <option value="image/png">
               PNG
             </option>
 
             <option value="image/jpeg">
-              JPEG
+              JPG
             </option>
 
             <option value="image/webp">
-              WebP
+              WEBP
             </option>
           </select>
         </div>
 
       </div>
 
-      <div class="pp-rbg-actions">
+      <div class="pp-rbg-action-row">
+
         <button
-          type="button"
           class="pp-rbg-btn pp-rbg-btn-primary"
-          id="ppRbgApplyBtn"
+          id="ppRbgApply"
         >
           Apply Background
         </button>
 
         <button
-          type="button"
           class="pp-rbg-btn pp-rbg-btn-primary"
-          id="ppRbgZipBtn"
+          id="ppRbgZip"
           disabled
         >
           Download ZIP
         </button>
+
       </div>
 
       <div
@@ -765,26 +657,14 @@
 
   </div>
 
-  <!-- =========================================================================
-       CDN SCRIPTS
-       NO DYNAMIC IMPORTS
-       VERCEL SAFE
-       ========================================================================= -->
+  <!-- =======================================================
+       LIBRARIES
+       ======================================================= -->
 
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
-    defer
-  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js"
-    defer
-  ></script>
-
-  <script
-    src="./js/remove-bg.js"
-    defer
-  ></script>
+  <!-- IMG.LY -->
+  <script type="module" src="./js/remove-bg.js"></script>
 
 </body>
 </html>

@@ -1,63 +1,45 @@
-const CACHE_NAME = 'pixelpress-v7'; // Updated version for PDF tools integration
+const CACHE_NAME = 'pixelpress-cache-v1';
 
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/photo-editor.html',
-  '/compress.html',
-  '/resize.html',
-  '/convert.html',
-  '/watermark.html',
-  '/pdf-to-jpg.html',
-  '/jpg-to-pdf.html',
-  '/css/style.css',
-  '/js/common.js',
-  '/js/compress.js',
-  '/js/resize.js',
-  '/js/convert.js',
-  '/js/watermark.js',
-  '/js/pdf-to-jpg.js',
-  '/js/jpg-to-pdf.js',
-  '/manifest.json'
-];
-
-self.addEventListener('install', e => {
-  self.skipWaiting(); 
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS).catch(err => console.log("Cache listing safe update"));
-    })
-  );
+// Install Event - Forces the new service worker to take over immediately
+self.addEventListener('install', event => {
+  self.skipWaiting();
+  console.log('[Service Worker] Installed & Ready');
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
+// Activate Event - Cleans up any old caches so users always get your latest code
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('Clearing old cache:', cache);
-            return caches.delete(cache);
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[Service Worker] Clearing old cache:', cacheName);
+            return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim()) 
+    })
   );
+  return self.clients.claim();
 });
 
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    fetch(e.request)
-      .then(response => {
-        if (response && response.status === 200 && e.request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(e.request, responseClone);
-          });
-        }
-        return response;
+// Fetch Event - "Network First, Falling back to Cache" Strategy
+// This ensures users always get the freshest live version from Vercel if internet is on!
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request)
+      .then(networkResponse => {
+        // If internet is working, return fresh data and silently update cache
+        return caches.open(CACHE_NAME).then(cache => {
+          if (event.request.method === 'GET') {
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        });
       })
-      .catch(() => caches.match(e.request).then(r => r)) 
+      .catch(() => {
+        // If user is offline, give them the cached version (Bulletproof offline mode)
+        return caches.match(event.request);
+      })
   );
 });
-

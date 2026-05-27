@@ -1,670 +1,264 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
-  <title>AI Background Remover – PixelPress</title>
-
-  <!-- GLOBAL WEBSITE CSS -->
-  <link rel="stylesheet" href="./css/style.css" />
-
-  <style>
-    /* =========================================================
-       PIXELPRESS REMOVE BG TOOL
-       FULLY SCOPED
-       ========================================================= */
-
-    .pp-remove-bg *,
-    .pp-remove-bg *::before,
-    .pp-remove-bg *::after {
-      box-sizing: border-box;
-    }
-
-    .pp-remove-bg {
-      width: 100%;
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 16px;
-      color: #0f172a;
-      font-family: inherit;
-    }
-
-    .pp-rbg-card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 22px;
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-    }
-
-    .pp-rbg-title {
-      font-size: 2rem;
-      font-weight: 800;
-      margin: 0 0 8px;
-    }
-
-    .pp-rbg-subtitle {
-      color: #64748b;
-      margin-bottom: 22px;
-      line-height: 1.6;
-    }
-
-    /* =========================================================
-       UPLOAD
-       ========================================================= */
-
-    .pp-rbg-dropzone {
-      border: 2px dashed #cbd5e1;
-      border-radius: 20px;
-      padding: 50px 20px;
-      text-align: center;
-      cursor: pointer;
-      background: #f8fafc;
-      transition: 0.2s;
-    }
-
-    .pp-rbg-dropzone:hover,
-    .pp-rbg-dropzone.dragging {
-      border-color: #2563eb;
-      background: rgba(37,99,235,0.04);
-    }
-
-    .pp-rbg-upload-icon {
-      font-size: 42px;
-      margin-bottom: 14px;
-    }
-
-    .pp-rbg-upload-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .pp-rbg-upload-sub {
-      color: #64748b;
-      font-size: 0.95rem;
-    }
-
-    .pp-rbg-hidden {
-      display: none !important;
-    }
-
-    /* =========================================================
-       BUTTONS
-       ========================================================= */
-
-    .pp-rbg-btn {
-      border: none;
-      outline: none;
-      cursor: pointer;
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      transition: 0.2s;
-    }
-
-    .pp-rbg-btn-primary {
-      background: #2563eb;
-      color: white;
-    }
-
-    .pp-rbg-btn-primary:hover {
-      background: #1d4ed8;
-    }
-
-    .pp-rbg-btn-outline {
-      background: transparent;
-      border: 1px solid #cbd5e1;
-      color: #0f172a;
-    }
-
-    .pp-rbg-btn-outline:hover {
-      background: #f8fafc;
-    }
-
-    .pp-rbg-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* =========================================================
-       PROGRESS
-       ========================================================= */
-
-    .pp-rbg-progress-wrap {
-      margin-top: 22px;
-      display: none;
-    }
-
-    .pp-rbg-progress {
-      width: 100%;
-      height: 14px;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .pp-rbg-progress-text {
-      margin-top: 10px;
-      color: #475569;
-      text-align: center;
-      font-size: 0.92rem;
-    }
-
-    /* =========================================================
-       CONTROLS
-       ========================================================= */
-
-    .pp-rbg-controls {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-top: 20px;
-    }
-
-    .pp-rbg-control {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .pp-rbg-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 700;
-      font-size: 0.92rem;
-    }
-
-    .pp-remove-bg select,
-    .pp-remove-bg input[type="file"],
-    .pp-remove-bg input[type="range"],
-    .pp-remove-bg input[type="color"] {
-      width: 100%;
-    }
-
-    .pp-remove-bg select,
-    .pp-remove-bg input[type="file"] {
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      padding: 10px;
-      background: white;
-    }
-
-    .pp-rbg-range-value {
-      display: inline-block;
-      margin-top: 8px;
-      color: #64748b;
-      font-size: 0.85rem;
-    }
-
-    .pp-rbg-action-row {
-      display: flex;
-      gap: 12px;
-      margin-top: 22px;
-      flex-wrap: wrap;
-    }
-
-    /* =========================================================
-       RESULTS
-       ========================================================= */
-
-    .pp-rbg-results {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
-      gap: 18px;
-      margin-top: 24px;
-    }
-
-    .pp-rbg-result-card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      overflow: hidden;
-    }
-
-    .pp-rbg-file-name {
-      padding: 12px;
-      font-size: 0.88rem;
-      color: #64748b;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* =========================================================
-       COMPARISON SLIDER
-       ========================================================= */
-
-    .pp-rbg-compare {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1/1;
-      overflow: hidden;
-
-      background-color: #f8fafc;
-      background-image:
-        linear-gradient(45deg,#e5e7eb 25%,transparent 25%),
-        linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),
-        linear-gradient(45deg,transparent 75%,#e5e7eb 75%),
-        linear-gradient(-45deg,transparent 75%,#e5e7eb 75%);
-      background-size: 18px 18px;
-      background-position:
-        0 0,
-        0 9px,
-        9px -9px,
-        -9px 0;
-    }
-
-    .pp-rbg-before,
-    .pp-rbg-after {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-    }
-
-    .pp-rbg-after {
-      clip-path: inset(0 50% 0 0);
-      z-index: 1;
-    }
-
-    .pp-rbg-divider {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 3px;
-      background: #2563eb;
-      z-index: 2;
-      transform: translateX(-50%);
-    }
-
-    .pp-rbg-handle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #2563eb;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transform: translate(-50%,-50%);
-      z-index: 3;
-      font-size: 1rem;
-      font-weight: 700;
-      box-shadow: 0 8px 20px rgba(37,99,235,0.35);
-      pointer-events: none;
-    }
-
-    .pp-rbg-result-actions {
-      padding: 14px;
-      display: flex;
-      justify-content: center;
-    }
-
-    /* =========================================================
-       LOADER
-       ========================================================= */
-
-    .pp-rbg-loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.96);
-      z-index: 999999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .pp-rbg-loader-box {
-      width: 100%;
-      max-width: 460px;
-      background: white;
-      border-radius: 24px;
-      padding: 30px;
-      text-align: center;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-    }
-
-    .pp-rbg-loader-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
-
-    .pp-rbg-loader-sub {
-      color: #64748b;
-      margin-bottom: 18px;
-      line-height: 1.6;
-    }
-
-    .pp-rbg-loader progress {
-      width: 100%;
-      height: 14px;
-    }
-
-    .pp-rbg-loader-small {
-      margin-top: 12px;
-      color: #64748b;
-      font-size: 0.84rem;
-      word-break: break-word;
-    }
-
-    @media (max-width: 640px) {
-      .pp-rbg-title {
-        font-size: 1.7rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove BG - AI Background Remover</title>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        .remove-bg-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            margin: 4px 0 0 0;
+            font-size: 15px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #475569;
+            border-radius: 16px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #1e2937;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #334155;
+        }
+        
+        .upload-area.dragover {
+            border-color: #22c55e;
+            background: #052e16;
+        }
+        
+        .files-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .file-card {
+            background: #1e2937;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        
+        .preview-container {
+            position: relative;
+            height: 220px;
+            background: #0f172a;
+        }
+        
+        .preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .processing-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            z-index: 5;
+        }
+        
+        .progress-bar {
+            width: 80%;
+            height: 6px;
+            background: #334155;
+            border-radius: 9999px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a5b4fc);
+            transition: width 0.4s ease;
+        }
+        
+        .controls {
+            padding: 16px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover { background: #4f46e5; }
+        
+        .btn-secondary { background: #334155; color: #e2e8f0; }
+        .btn-danger { background: #ef4444; color: white; }
+        
+        .result-panel {
+            display: none;
+            margin-top: 30px;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #1e2937;
+        }
+        
+        .slider-container {
+            position: relative;
+            height: 420px;
+            background: #0f172a;
+        }
+        
+        .before-after {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+        
+        .before, .after {
+            position: absolute;
+            top: 0;
+            height: 100%;
+        }
+        
+        .before { left: 0; width: 50%; }
+        .after { left: 50%; width: 50%; }
+        
+        .slider-divider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background: white;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+        
+        .options-panel {
+            padding: 20px;
+            background: #0f172a;
+            border-top: 1px solid #334155;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2937;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 10000;
+            border-left: 4px solid #22c55e;
+        }
+    </style>
 </head>
-
 <body>
+    <div class="remove-bg-container">
+        <div class="header">
+            <div>
+                <h1 class="title">✂️ AI Background Remover</h1>
+                <p class="subtitle">100% Browser-based • Private • Fast</p>
+            </div>
+            <div id="status">Initializing AI Engine...</div>
+        </div>
 
-  <!-- =======================================================
-       LOADING OVERLAY
-       ======================================================= -->
+        <div id="upload-area" class="upload-area">
+            <div style="font-size:52px; margin-bottom:16px;">📤</div>
+            <h3>Drop images or click to upload</h3>
+            <p style="color:#64748b;">JPG, PNG, WEBP • Max 10 images</p>
+            <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
+        </div>
 
-  <div class="pp-rbg-loader" id="ppRbgLoader">
+        <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+            <button onclick="RemoveBG.processAll()" class="btn-primary" id="process-all-btn" disabled>Process All</button>
+            <button onclick="RemoveBG.clearAll()" class="btn-secondary">Clear All</button>
+            <button onclick="RemoveBG.downloadAll()" class="btn-primary" id="download-all-btn" style="display:none;">Download ZIP</button>
+        </div>
 
-    <div class="pp-rbg-loader-box">
+        <div id="files-list" class="files-list"></div>
 
-      <div class="pp-rbg-loader-title">
-        Loading AI Background Engine
-      </div>
-
-      <div class="pp-rbg-loader-sub">
-        Preparing fully client-side remover...
-      </div>
-
-      <progress
-        id="ppRbgModelProgress"
-        max="100"
-        value="0"
-      ></progress>
-
-      <div
-        class="pp-rbg-loader-small"
-        id="ppRbgLoaderText"
-      >
-        Initializing...
-      </div>
-
+        <!-- Result Panel -->
+        <div id="result-panel" class="result-panel">
+            <div style="padding:16px 20px; background:#0f172a; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+                <strong id="current-file-name"></strong>
+                <div>
+                    <button onclick="RemoveBG.closeResult()" class="btn-secondary">Close</button>
+                    <button onclick="RemoveBG.downloadCurrent()" class="btn-primary" style="margin-left:8px;">Download PNG</button>
+                </div>
+            </div>
+            
+            <div class="slider-container">
+                <div id="before-after" class="before-after">
+                    <div id="before-img" class="before"><img id="original-preview" style="width:100%;height:100%;object-fit:contain;"></div>
+                    <div id="after-img" class="after"><img id="processed-preview" style="width:100%;height:100%;object-fit:contain;"></div>
+                    <div id="slider-divider" class="slider-divider"></div>
+                </div>
+            </div>
+            
+            <div class="options-panel">
+                <button onclick="RemoveBG.downloadCurrent()" class="btn-primary" style="width:100%;padding:14px;">⬇️ Download Current Image</button>
+            </div>
+        </div>
     </div>
 
-  </div>
+    <div id="toast" class="toast"></div>
 
-  <!-- =======================================================
-       TOOL
-       ======================================================= -->
-
-  <div class="pp-remove-bg">
-
-    <div class="pp-rbg-card">
-
-      <div class="pp-rbg-title">
-        AI Background Remover
-      </div>
-
-      <div class="pp-rbg-subtitle">
-        Remove image backgrounds directly in your browser.
-        Nothing uploads to any server.
-      </div>
-
-      <div
-        class="pp-rbg-dropzone"
-        id="ppRbgDropzone"
-      >
-        <div class="pp-rbg-upload-icon">
-          🖼️
-        </div>
-
-        <div class="pp-rbg-upload-title">
-          Drop up to 10 images
-        </div>
-
-        <div class="pp-rbg-upload-sub">
-          JPG, PNG, WEBP
-        </div>
-      </div>
-
-      <input
-        type="file"
-        id="ppRbgInput"
-        accept="image/png,image/jpeg,image/webp"
-        multiple
-        class="pp-rbg-hidden"
-      />
-
-      <div
-        class="pp-rbg-progress-wrap"
-        id="ppRbgProgressWrap"
-      >
-        <progress
-          class="pp-rbg-progress"
-          id="ppRbgProgress"
-          max="100"
-          value="0"
-        ></progress>
-
-        <div
-          class="pp-rbg-progress-text"
-          id="ppRbgProgressText"
-        >
-          Preparing...
-        </div>
-      </div>
-
-    </div>
-
-    <!-- =======================================================
-         RESULTS
-         ======================================================= -->
-
-    <div
-      class="pp-rbg-card pp-rbg-hidden"
-      id="ppRbgResultsSection"
-    >
-
-      <div class="pp-rbg-controls">
-
-        <div class="pp-rbg-control">
-          <label class="pp-rbg-label">
-            Background Type
-          </label>
-
-          <select id="ppRbgBgType">
-            <option value="transparent">
-              Transparent
-            </option>
-
-            <option value="solid">
-              Solid Color
-            </option>
-
-            <option value="gradient">
-              Gradient
-            </option>
-
-            <option value="blur">
-              Blur Background
-            </option>
-
-            <option value="custom">
-              Custom Image
-            </option>
-          </select>
-        </div>
-
-        <div
-          class="pp-rbg-control pp-rbg-hidden"
-          id="ppRbgSolidWrap"
-        >
-          <label class="pp-rbg-label">
-            Color
-          </label>
-
-          <input
-            type="color"
-            id="ppRbgSolidColor"
-            value="#ffffff"
-          />
-        </div>
-
-        <div
-          class="pp-rbg-control pp-rbg-hidden"
-          id="ppRbgGradientWrap"
-        >
-          <label class="pp-rbg-label">
-            Gradient
-          </label>
-
-          <input
-            type="color"
-            id="ppRbgGrad1"
-            value="#ff9a9e"
-          />
-
-          <input
-            type="color"
-            id="ppRbgGrad2"
-            value="#fad0c4"
-            style="margin-top:10px;"
-          />
-        </div>
-
-        <div
-          class="pp-rbg-control pp-rbg-hidden"
-          id="ppRbgBlurWrap"
-        >
-          <label class="pp-rbg-label">
-            Blur Amount
-          </label>
-
-          <input
-            type="range"
-            id="ppRbgBlur"
-            min="0"
-            max="24"
-            value="8"
-          />
-
-          <span
-            class="pp-rbg-range-value"
-            id="ppRbgBlurValue"
-          >
-            8px
-          </span>
-        </div>
-
-        <div
-          class="pp-rbg-control pp-rbg-hidden"
-          id="ppRbgCustomWrap"
-        >
-          <label class="pp-rbg-label">
-            Custom Image
-          </label>
-
-          <input
-            type="file"
-            id="ppRbgCustomBg"
-            accept="image/*"
-          />
-        </div>
-
-        <div class="pp-rbg-control">
-          <label class="pp-rbg-label">
-            Edge Feather
-          </label>
-
-          <input
-            type="range"
-            id="ppRbgFeather"
-            min="0"
-            max="12"
-            value="0"
-            step="0.5"
-          />
-
-          <span
-            class="pp-rbg-range-value"
-            id="ppRbgFeatherValue"
-          >
-            0px
-          </span>
-        </div>
-
-        <div class="pp-rbg-control">
-          <label class="pp-rbg-label">
-            Output Format
-          </label>
-
-          <select id="ppRbgFormat">
-            <option value="image/png">
-              PNG
-            </option>
-
-            <option value="image/jpeg">
-              JPG
-            </option>
-
-            <option value="image/webp">
-              WEBP
-            </option>
-          </select>
-        </div>
-
-      </div>
-
-      <div class="pp-rbg-action-row">
-
-        <button
-          class="pp-rbg-btn pp-rbg-btn-primary"
-          id="ppRbgApply"
-        >
-          Apply Background
-        </button>
-
-        <button
-          class="pp-rbg-btn pp-rbg-btn-primary"
-          id="ppRbgZip"
-          disabled
-        >
-          Download ZIP
-        </button>
-
-      </div>
-
-      <div
-        class="pp-rbg-results"
-        id="ppRbgResults"
-      ></div>
-
-    </div>
-
-  </div>
-
-  <!-- =======================================================
-       LIBRARIES
-       ======================================================= -->
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-  <!-- IMG.LY -->
-  <script src="./js/remove-bg.js" defer></script>
-
+    <script src="js/remove-bg.js"></script>
 </body>
 </html>

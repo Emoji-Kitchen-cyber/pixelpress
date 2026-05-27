@@ -3,7 +3,7 @@
 // Improvements: GPU Acceleration, Memory Leaks Patched, Aspect Correct Maps
 // ============================================================================
 
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+const { pipeline, env } = window.transformers;
 
 // ── DOM References ──────────────────────────────────────
 const dropZone          = document.getElementById('dropZone');
@@ -151,9 +151,16 @@ async function executeAlphaExtraction(originalBlob) {
 
   if (useAIModel && segmenter) {
     const output = await segmenter(sourceImg);
-    const modelMask = output.mask;   
+    
+    let modelMask = output.mask;
+    if (!modelMask && Array.isArray(output) && output) {
+      modelMask = output.mask;
+    }
 
-    // Step 1: Create an isolated staging layer for the layout model mask
+    if (!modelMask) {
+      throw new Error("AI Model output response architecture mismatch.");
+    }
+
     const layerCanvas = document.createElement('canvas');
     layerCanvas.width = sourceImg.width;
     layerCanvas.height = sourceImg.height;
@@ -183,7 +190,6 @@ async function executeAlphaExtraction(originalBlob) {
       bufferCanvas.width = 0;
     }    
 
-    // Step 2: Extract Alpha Channels directly into GPU Compositor Context
     const productionCanvas = document.createElement('canvas');    
     productionCanvas.width = sourceImg.width;    
     productionCanvas.height = sourceImg.height;    
@@ -323,7 +329,7 @@ function renderOutputStage() {
     window.addEventListener('mouseup', () => { activeDrag = false; });    
     
     handle.addEventListener('touchstart', e => { activeDrag = true; e.preventDefault(); });    
-    window.addEventListener('touchmove', e => { if (activeDrag && e.touches) adjustViewport(e.touches.clientX); });    
+    window.addEventListener('touchmove', e => { if (activeDrag && e.touches && e.touches) adjustViewport(e.touches.clientX); });    
     window.addEventListener('touchend', () => { activeDrag = false; });    
 
     card.querySelector('.download-single').addEventListener('click', () => downloadSingle(result.currentBlob, result.file.name));

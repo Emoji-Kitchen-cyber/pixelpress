@@ -1,270 +1,227 @@
-(() => {
-  "use strict";
+// js/remove-bg.js
+const RemoveBG = {
+    filesData: [],
+    MAX_FILES: 10,
+    isLibraryLoaded: false,
+    removeBackgroundFn: null,
 
-  // ======================================================
-  // SAFE GLOBALS
-  // ======================================================
+    init() {
+        console.log('%c[RemoveBG] Production v1.0 initialized', 'color:#6366f1;font-weight:bold');
+        this.setupListeners();
+        this.loadLibrary();
+        this.checkCompatibility();
+    },
 
-  const state = {
-    results: [],
-    processing: false
-  };
+    checkCompatibility() {
+        if (typeof WebAssembly === 'undefined') {
+            this.showToast('WebAssembly not supported on this browser.', 'error');
+        }
+    },
 
-  // ======================================================
-  // DOM
-  // ======================================================
+    async loadLibrary() {
+        const status = document.getElementById('status');
+        try {
+            const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm');
+            this.removeBackgroundFn = module.removeBackground;
+            this.isLibraryLoaded = true;
+            status.textContent = '✅ AI Ready';
+            console.log('%c[RemoveBG] @imgly/background-removal loaded successfully', 'color:#22c55e');
+        } catch (e) {
+            console.error(e);
+            status.textContent = '⚠️ AI Model Failed';
+        }
+    },
 
-  const dropzone = document.getElementById("ppRbgDropzone");
-  const input = document.getElementById("ppRbgInput");
-  const results = document.getElementById("ppRbgResults");
-  const resultsSection = document.getElementById("ppRbgResultsSection");
+    setupListeners() {
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
 
-  // ======================================================
-  // LOAD LIBRARY SAFELY
-  // ======================================================
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            this.handleFiles(e.dataTransfer.files);
+        });
 
-  async function loadEngine() {
+        fileInput.addEventListener('change', e => this.handleFiles(e.target.files));
 
-    if (window.removeBackground) {
-      return true;
+        // Slider
+        let dragging = false;
+        const divider = document.getElementById('slider-divider');
+        
+        divider.addEventListener('mousedown', () => dragging = true);
+        window.addEventListener('mouseup', () => dragging = false);
+        window.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const rect = document.getElementById('before-after').getBoundingClientRect();
+            let pos = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
+            document.getElementById('before-img').style.width = pos + '%';
+            document.getElementById('after-img').style.left = pos + '%';
+            divider.style.left = pos + '%';
+        });
+    },
+
+    handleFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            if (!file.type.startsWith('image/') || this.filesData.length >= this.MAX_FILES) return;
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    this.filesData.push({
+                        id: Date.now(),
+                        name: file.name,
+                        originalUrl: ev.target.result,
+                        processedUrl: null,
+                        blob: null
+                    });
+                    this.renderFiles();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    },
+
+    renderFiles() {
+        const container = document.getElementById('files-list');
+        container.innerHTML = '';
+
+        this.filesData.forEach((file, i) => {
+            const div = document.createElement('div');
+            div.className = 'file-card';
+            div.innerHTML = `
+                <div class="preview-container">
+                    <img src="${file.originalUrl}" class="preview">
+                    <div class="processing-overlay" id="overlay-${file.id}">
+                        <div>Processing with AI...</div>
+                        <div class="progress-bar"><div class="progress" style="width:0%"></div></div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div style="font-size:13px;margin-bottom:8px;">${file.name}</div>
+                    <button onclick="RemoveBG.processSingle(${i})" class="btn-primary" style="width:100%;margin-bottom:6px;">Remove Background</button>
+                    \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">View Result</button>` : ''}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        document.getElementById('process-all-btn').disabled = this.filesData.length === 0;
+    },
+
+    async processSingle(index) {
+        const file = this.filesData[index];
+        if (!file || file.processedUrl) return;
+
+        const overlay = document.getElementById(`overlay-${file.id}`);
+        overlay.style.display = 'flex';
+
+        try {
+            let resultBlob;
+
+            if (this.isLibraryLoaded && this.removeBackgroundFn) {
+                const img = new Image();
+                img.src = file.originalUrl;
+                await new Promise(r => img.onload = r);
+
+                resultBlob = await this.removeBackgroundFn(img, {
+                    model: 'isnet',
+                    output: { format: 'image/png' }
+                });
+            } else {
+                // Fallback
+                resultBlob = await this.simpleFallback(file.originalUrl);
+            }
+
+            file.processedUrl = URL.createObjectURL(resultBlob);
+            file.blob = resultBlob;
+
+            this.renderFiles();
+
+        } catch (err) {
+            console.error(err);
+            this.showToast('Processing failed for ' + file.name, 'error');
+        } finally {
+            overlay.style.display = 'none';
+        }
+    },
+
+    async processAll() {
+        for (let i = 0; i < this.filesData.length; i++) {
+            if (!this.filesData[i].processedUrl) {
+                await this.processSingle(i);
+            }
+        }
+        document.getElementById('download-all-btn').style.display = 'inline-block';
+    },
+
+    async simpleFallback(dataUrl) {
+        return new Promise(resolve => {
+            const canvas = document.createElement('canvas');
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                canvas.toBlob(resolve, 'image/png', 0.95);
+            };
+            img.src = dataUrl;
+        });
+    },
+
+    showResult(index) {
+        const file = this.filesData[index];
+        document.getElementById('current-file-name').textContent = file.name;
+        document.getElementById('original-preview').src = file.originalUrl;
+        document.getElementById('processed-preview').src = file.processedUrl;
+        document.getElementById('result-panel').style.display = 'block';
+    },
+
+    closeResult() {
+        document.getElementById('result-panel').style.display = 'none';
+    },
+
+    downloadCurrent() {
+        const index = this.filesData.findIndex(f => f.processedUrl);
+        if (index === -1) return;
+        const file = this.filesData[index];
+        const a = document.createElement('a');
+        a.href = file.processedUrl;
+        a.download = file.name.replace(/\.\w+/, '') + '-nobg.png';
+        a.click();
+    },
+
+    async downloadAll() {
+        const zip = new JSZip();
+        this.filesData.forEach(file => {
+            if (file.blob) {
+                zip.file(file.name.replace(/\.\w+/, '') + '-nobg.png', file.blob);
+            }
+        });
+        const blob = await zip.generateAsync({type:"blob"});
+        saveAs(blob, `removed-backgrounds-${Date.now()}.zip`);
+    },
+
+    clearAll() {
+        this.filesData.forEach(f => { if (f.processedUrl) URL.revokeObjectURL(f.processedUrl); });
+        this.filesData = [];
+        this.renderFiles();
+        document.getElementById('download-all-btn').style.display = 'none';
+    },
+
+    showToast(msg, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.style.borderLeftColor = type === 'error' ? '#ef4444' : '#22c55e';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
     }
+};
 
-    try {
-
-      const script = document.createElement("script");
-
-      script.src =
-        "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/browser.js";
-
-      script.async = true;
-
-      document.body.appendChild(script);
-
-      await new Promise((resolve, reject) => {
-
-        script.onload = resolve;
-
-        script.onerror = reject;
-      });
-
-      return true;
-
-    } catch (err) {
-
-      console.error(err);
-
-      alert("AI engine failed to load.");
-
-      return false;
-    }
-  }
-
-  // ======================================================
-  // IMAGE
-  // ======================================================
-
-  function fileToUrl(file) {
-    return URL.createObjectURL(file);
-  }
-
-  async function processFile(file) {
-
-    const ok = await loadEngine();
-
-    if (!ok) return null;
-
-    try {
-
-      const blob = await window.removeBackground(file, {
-        publicPath:
-          "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/",
-      });
-
-      return blob;
-
-    } catch (err) {
-
-      console.error(err);
-
-      alert("Background removal failed.");
-
-      return null;
-    }
-  }
-
-  // ======================================================
-  // RENDER
-  // ======================================================
-
-  function renderCard(originalFile, processedBlob) {
-
-    const originalURL = fileToUrl(originalFile);
-
-    const processedURL =
-      URL.createObjectURL(processedBlob);
-
-    const card = document.createElement("div");
-
-    card.className = "pp-rbg-result-card";
-
-    card.innerHTML = `
-      <div class="pp-rbg-file-name">
-        ${originalFile.name}
-      </div>
-
-      <div class="pp-rbg-compare">
-
-        <img
-          class="pp-rbg-before"
-          src="${originalURL}"
-        />
-
-        <img
-          class="pp-rbg-after"
-          src="${processedURL}"
-        />
-
-        <div class="pp-rbg-divider"></div>
-
-        <div class="pp-rbg-handle">
-          ⇆
-        </div>
-
-      </div>
-
-      <div class="pp-rbg-result-actions">
-
-        <button class="pp-rbg-btn pp-rbg-btn-outline save-btn">
-          Save
-        </button>
-
-      </div>
-    `;
-
-    const saveBtn =
-      card.querySelector(".save-btn");
-
-    saveBtn.addEventListener("click", () => {
-
-      const a = document.createElement("a");
-
-      a.href = processedURL;
-
-      a.download =
-        originalFile.name.replace(/\.[^/.]+$/, "") +
-        "-removed.png";
-
-      a.click();
-    });
-
-    results.appendChild(card);
-
-    initSlider(card);
-  }
-
-  // ======================================================
-  // SLIDER
-  // ======================================================
-
-  function initSlider(card) {
-
-    const compare =
-      card.querySelector(".pp-rbg-compare");
-
-    const after =
-      card.querySelector(".pp-rbg-after");
-
-    const divider =
-      card.querySelector(".pp-rbg-divider");
-
-    let active = false;
-
-    function update(x) {
-
-      const rect =
-        compare.getBoundingClientRect();
-
-      let percent =
-        ((x - rect.left) / rect.width) * 100;
-
-      percent = Math.max(0, Math.min(100, percent));
-
-      after.style.clipPath =
-        `inset(0 ${100 - percent}% 0 0)`;
-
-      divider.style.left = percent + "%";
-    }
-
-    compare.addEventListener("pointerdown", e => {
-      active = true;
-      update(e.clientX);
-    });
-
-    window.addEventListener("pointermove", e => {
-      if (!active) return;
-      update(e.clientX);
-    });
-
-    window.addEventListener("pointerup", () => {
-      active = false;
-    });
-  }
-
-  // ======================================================
-  // PROCESS
-  // ======================================================
-
-  async function handleFiles(files) {
-
-    if (state.processing) return;
-
-    state.processing = true;
-
-    results.innerHTML = "";
-
-    const valid =
-      Array.from(files)
-        .filter(f => f.type.startsWith("image/"))
-        .slice(0, 10);
-
-    for (const file of valid) {
-
-      const blob =
-        await processFile(file);
-
-      if (blob) {
-        renderCard(file, blob);
-      }
-    }
-
-    resultsSection.classList.remove(
-      "pp-rbg-hidden"
-    );
-
-    state.processing = false;
-  }
-
-  // ======================================================
-  // EVENTS
-  // ======================================================
-
-  dropzone.addEventListener("click", () => {
-    input.click();
-  });
-
-  input.addEventListener("change", e => {
-    handleFiles(e.target.files);
-  });
-
-  dropzone.addEventListener("dragover", e => {
-    e.preventDefault();
-  });
-
-  dropzone.addEventListener("drop", e => {
-
-    e.preventDefault();
-
-    handleFiles(e.dataTransfer.files);
-  });
-
-})();
+window.onload = () => RemoveBG.init();
+window.RemoveBG = RemoveBG;

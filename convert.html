@@ -4,47 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Convert Image – PixelPress</title>
-    <link rel="stylesheet" href="../css/style.css">
     <style>
-        body {font-family:'Segoe UI',sans-serif; background:#f9fafb; margin:0; padding:20px;}
-        .container {max-width:1100px; margin:auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1);}
-        .header {background:linear-gradient(135deg, #14b8a6, #0f766e); color:white; padding:25px; text-align:center;}
-        .step {display:none; padding:30px;}
-        .step.active {display:block;}
-        .upload-zone {border:4px dashed #cbd5e1; border-radius:16px; padding:80px 20px; text-align:center; cursor:pointer;}
+        body { font-family:'Segoe UI',sans-serif; background:#f9fafb; margin:0; padding:20px; }
+        .container { max-width:1200px; margin:auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1); overflow:hidden; }
+        .header { background:linear-gradient(135deg, #14b8a6, #0f766e); color:white; padding:25px; text-align:center; }
+        .header a { color:white; text-decoration:underline; }
+        .main-area { padding:25px; }
+        .upload-zone { border:4px dashed #cbd5e1; border-radius:16px; padding:60px 20px; text-align:center; cursor:pointer; transition:0.3s; margin-bottom:20px; }
+        .upload-zone.dragover { border-color:#14b8a6; background:#f0fdfa; }
+        .queue-list { list-style:none; padding:0; }
+        .queue-item { display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #e2e8f0; }
+        .queue-item img { width:60px; height:60px; object-fit:cover; border-radius:8px; }
+        .controls-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px; margin:20px 0; }
+        .control-card { background:#f8fafc; border-radius:12px; padding:15px; }
+        .control-card label { display:block; font-weight:600; margin-bottom:8px; }
+        input[type="range"] { width:100%; }
+        select, input[type="number"] { width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; }
+        .btn { padding:12px 20px; border:none; border-radius:12px; font-weight:600; cursor:pointer; transition:0.3s; }
+        .btn-primary { background:#14b8a6; color:white; }
+        .btn-primary:hover { background:#0d9488; }
+        .btn-secondary { background:#e2e8f0; color:#1e293b; }
+        .btn-danger { background:#ef4444; color:white; }
+        .progress { height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin:10px 0; }
+        .progress-bar { height:100%; background:#14b8a6; width:0%; transition:width 0.3s; }
+        .preview-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:10px; margin-top:15px; }
+        .preview-grid img { width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+        .toolbar { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; }
+        #smartRecommend { font-size:14px; background:#ecfdf5; padding:8px 12px; border-radius:8px; margin-top:10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header"><h1>🔄 Convert Image Format</h1></div>
-
-        <div id="upload-step" class="step active">
-            <h2 style="text-align:center;">Upload Image</h2>
-            <div id="convertUploadZone" class="upload-zone">Drop or Click</div>
-            <input type="file" id="convertFileInput" accept="image/*" style="display:none;">
+        <div class="header">
+            <h1>🔄 Batch Image Converter</h1>
+            <a href="./index.html">← Back Home</a>
         </div>
-
-        <div id="settings-step" class="step">
-            <h2>Choose Output Format</h2>
-            <select id="formatSelect" style="width:100%; padding:14px; font-size:18px; border-radius:10px;">
-                <option value="image/png">PNG</option>
-                <option value="image/jpeg">JPG</option>
-                <option value="image/webp">WEBP</option>
-            </select><br><br>
-            <button id="convertBtn" style="width:100%; padding:16px; background:#14b8a6; color:white; border:none; border-radius:12px; font-size:18px;">Convert Now</button>
-        </div>
-
-        <div id="processing-step" class="step"><h2 style="text-align:center;">⏳ Converting...</h2></div>
-
-        <div id="result-step" class="step">
-            <h2 style="text-align:center; color:#10b981;">✅ Conversion Complete!</h2>
-            <img id="convertedPreview" style="max-width:100%; border-radius:12px;">
-            <div style="text-align:center; margin-top:25px;">
-                <button id="downloadConvertBtn" style="background:#10b981; color:white; padding:16px 40px; border:none; border-radius:12px;">Download Converted Image</button>
+        <div class="main-area">
+            <div class="toolbar">
+                <button class="btn btn-secondary" id="clearQueueBtn">🗑 Clear Queue</button>
+                <button class="btn btn-secondary" id="historyBtn">📋 History</button>
             </div>
+
+            <div id="uploadZone" class="upload-zone">
+                <h3>📁 Drop images or click to browse</h3>
+                <p>Supports JPG, PNG, WEBP, AVIF, GIF, BMP, TIFF, HEIC, SVG, ICO</p>
+                <input type="file" id="fileInput" accept="image/*" multiple hidden>
+            </div>
+
+            <div id="queueContainer" style="display:none;">
+                <h3>Queue (<span id="queueCount">0</span>)</h3>
+                <ul id="queueList" class="queue-list"></ul>
+                <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+                <p id="processingStatus" style="color:#64748b;"></p>
+            </div>
+
+            <div id="settingsPanel" style="display:none;">
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <label>Output Format</label>
+                        <select id="formatSelect">
+                            <option value="image/png">PNG</option>
+                            <option value="image/jpeg">JPEG</option>
+                            <option value="image/webp">WebP</option>
+                            <option value="image/avif">AVIF</option>
+                            <option value="image/bmp">BMP</option>
+                            <option value="image/gif">GIF</option>
+                            <option value="image/tiff">TIFF</option>
+                        </select>
+                        <div id="smartRecommend" style="display:none;"></div>
+                    </div>
+                    <div class="control-card">
+                        <label>Quality (JPEG/WebP/AVIF)</label>
+                        <input type="range" id="qualitySlider" min="0.1" max="1" step="0.01" value="0.92">
+                        <span id="qualityValue">92%</span>
+                    </div>
+                    <div class="control-card">
+                        <label>Resize</label>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input type="number" id="resizeWidth" placeholder="Width" style="width:80px;">
+                            <span>×</span>
+                            <input type="number" id="resizeHeight" placeholder="Height" style="width:80px;">
+                            <button id="lockAspect" class="btn btn-secondary" title="Lock Aspect Ratio">🔒</button>
+                        </div>
+                        <label style="margin-top:10px;"><input type="checkbox" id="keepAspect"> Keep Aspect Ratio</label>
+                    </div>
+                    <div class="control-card">
+                        <label>Presets</label>
+                        <select id="presetSelect">
+                            <option value="">Custom</option>
+                            <option value="web-optimize">Web Optimized (WebP 80%)</option>
+                            <option value="instagram-square">Instagram Square (1080×1080)</option>
+                            <option value="facebook-cover">Facebook Cover (820×312)</option>
+                            <option value="twitter-post">Twitter Post (1200×675)</option>
+                            <option value="thumbnail">Thumbnail (150×150)</option>
+                        </select>
+                    </div>
+                    <div class="control-card">
+                        <label><input type="checkbox" id="stripMeta" checked> Strip Metadata</label>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button id="convertAllBtn" class="btn btn-primary" style="flex:1;">Convert All</button>
+                    <button id="downloadZipBtn" class="btn btn-primary" style="flex:1;" disabled>📦 Download as ZIP</button>
+                </div>
+            </div>
+
+            <div id="resultPreview" class="preview-grid" style="margin-top:20px;"></div>
         </div>
     </div>
 
-    <script src="../js/convert.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="./js/convert.js"></script>
 </body>
 </html>

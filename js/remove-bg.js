@@ -1,8 +1,8 @@
 // ============================================================
-// PixelPress Background Remover – Self‑Hosted & Reliable
+// PixelPress Background Remover – Lightweight & Reliable
 // ============================================================
 
-import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm';
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.1';
 
 // ── DOM refs ──────────────────────────────────────────────
 const dropZone       = document.getElementById('dropZone');
@@ -32,47 +32,55 @@ const loadingOverlay = document.getElementById('loadingOverlay');
 const loadingMsg     = document.getElementById('loadingMsg');
 const modelProgress  = document.getElementById('modelProgress');
 const loadingSubMsg  = document.getElementById('loadingSubMsg');
+const fallbackBtn    = document.getElementById('fallbackBtn');
 
 // ── Configuration ─────────────────────────────────────────
-const PUBLIC_PATH = '/models/bg-removal/';   // self‑hosted model files
+env.allowLocalModels = false;
+env.useBrowserCache  = true;
 
-const CONFIG = {
-  publicPath: PUBLIC_PATH,
-  model: 'medium',          // 'medium' = isnet_fp16, 'small' = isnet_quint8
-  device: 'cpu',            // 'cpu' (WASM) – works everywhere; 'gpu' for WebGPU
-  output: { format: 'image/png', quality: 1 },
-  debug: false,
-  progress: (key, current, total) => {
-    const pct = total ? Math.round((current / total) * 100) : 0;
-    modelProgress.value = pct;
-    loadingSubMsg.textContent = `Loading ${key} …`;
-    if (pct === 100) {
-      loadingMsg.textContent = 'Model ready!';
-      loadingSubMsg.textContent = '';
-    }
-  }
-};
+let segmenter = null;        // Transformers pipeline
+let useAIModel = true;       // set to false if model fails, manual fallback becomes available
 
 // ── State ─────────────────────────────────────────────────
 let processedResults = [];
 let customBackgroundImage = null;
 
-// ── Model Preload ─────────────────────────────────────────
-(async function preloadModel() {
+// ── Model Loading with Progress & Fallback ────────────────
+(async function loadModel() {
   loadingOverlay.style.display = 'flex';
-  loadingMsg.textContent = 'Loading AI model …';
+  loadingMsg.textContent = 'Loading AI model…';
+
   try {
-    // pre‑warm with a tiny image so the library downloads & caches everything
-    const tiny = new ImageData(32, 32);
-    await removeBackground(tiny, CONFIG);
-  } catch (e) {
-    console.error('Model preload error:', e);
-    loadingMsg.textContent = 'Model failed to load.';
-    loadingSubMsg.textContent = 'Check that /models/bg-removal/ is accessible.';
-    return;
+    segmenter = await pipeline('image-segmentation', 'Xenova/modnet-onnx', {
+      progress_callback: (progress) => {
+        if (progress.status === 'progress') {
+          modelProgress.value = Math.round(progress.progress || 0);
+          loadingSubMsg.textContent = progress.file || '';
+        } else if (progress.status === 'done') {
+          modelProgress.value = 100;
+        }
+      },
+      device: 'wasm'      // force WASM for universal compatibility; WebGPU can be used with 'webgpu' but less reliable
+    });
+    loadingMsg.textContent = 'Model ready!';
+  } catch (err) {
+    console.error('Model loading failed:', err);
+    loadingMsg.textContent = 'AI model failed to load.';
+    loadingSubMsg.textContent = 'You can use manual removal instead.';
+    useAIModel = false;
+    fallbackBtn.style.display = 'inline-block';
   }
-  setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
+
+  // Hide overlay after a short delay
+  setTimeout(() => { loadingOverlay.style.display = 'none'; }, 1000);
 })();
+
+// Manual fallback (chroma key) – activates when AI fails
+fallbackBtn.addEventListener('click', () => {
+  loadingOverlay.style.display = 'none';
+  useAIModel = false;
+  alert('Manual background removal: after uploading, select a background colour to remove using the options.');
+});
 
 // ── File Handling ─────────────────────────────────────────
 dropZone.addEventListener('click', () => fileInput.click());
@@ -88,6 +96,10 @@ fileInput.addEventListener('change', e => handleFiles(e.target.files));
 function handleFiles(fileList) {
   const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 10);
   if (files.length === 0) return;
+  if (useAIModel && !segmenter) {
+    alert('AI model is still loading. Please wait a moment.');
+    return;
+  }
   startProcessing(files);
 }
 
@@ -103,15 +115,14 @@ async function startProcessing(files) {
     batchProgress.value = ((i / files.length) * 100).toFixed(0);
 
     try {
-      const scaled = await downscaleIfNeeded(file, 2048);
-      const resultBlob = await removeBackground(scaled, CONFIG);
       const originalBlob = await fileToBlob(file);
+      const cutoutBlob = await processImage(file, originalBlob);
 
       processedResults.push({
         file,
         originalBlob,
-        cutoutBlob: resultBlob,
-        currentBlob: resultBlob,
+        cutoutBlob,
+        currentBlob: cutoutBlob,
         appliedBg: 'transparent'
       });
     } catch (err) {
@@ -126,6 +137,93 @@ async function startProcessing(files) {
   resultsSection.style.display = 'block';
 }
 
+// ── Core Processing ──────────────────────────────────────
+async function processImage(file, originalBlob) {
+  // Downscale large images to max 1024px for performance
+  const scaledBlob = await downscaleIfNeeded(originalBlob, 1024);
+  const img = await blobToImageEl(scaledBlob);
+
+  if (useAIModel && segmenter) {
+    // AI background removal
+    const output = await segmenter(img);
+    // MODNet returns a single mask (foreground probability 0-1)
+    const mask = output.mask;   // Float32Array or RawImage
+
+    // Convert mask to ImageData
+    let maskData;
+    if (mask.toCanvas) {
+      const maskCanvas = mask.toCanvas();
+      maskData = maskCanvas.getContext('2d').getImageData(0,0,maskCanvas.width,maskCanvas.height).data;
+    } else {
+      // raw Float32Array with shape [1, h, w]
+      const { data, width, height } = mask;
+      const tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = width;
+      tmpCanvas.height = height;
+      const ctx = tmpCanvas.getContext('2d');
+      const imgData = ctx.createImageData(width, height);
+      for (let i = 0; i < data.length; i++) {
+        const val = Math.round(data[i] * 255);
+        imgData.data[i*4] = val;
+        imgData.data[i*4+1] = val;
+        imgData.data[i*4+2] = val;
+        imgData.data[i*4+3] = 255;
+      }
+      ctx.putImageData(imgData, 0, 0);
+      maskData = imgData.data;
+    }
+
+    // Apply mask: set alpha = foreground probability
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const fg = maskData[i] / 255;   // because mask is grayscale R channel
+      imageData.data[i+3] = Math.round(fg * 255);
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return await canvasToBlob(canvas, 'image/png', 1);
+  } else {
+    // Fallback: simple chroma key (remove a colour selected by user)
+    return await manualChromaKey(img, originalBlob);
+  }
+}
+
+// ── Manual chroma‑key fallback ───────────────────────────
+async function manualChromaKey(img, originalBlob) {
+  // Let user pick a colour to remove (default white)
+  const targetColor = prompt('Enter hex colour to remove (e.g. #ffffff for white):', '#ffffff');
+  if (!targetColor) throw new Error('No colour chosen');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  // Convert hex to RGB
+  const hex = targetColor.replace('#', '');
+  const r = parseInt(hex.substring(0,2), 16);
+  const g = parseInt(hex.substring(2,4), 16);
+  const b = parseInt(hex.substring(4,6), 16);
+
+  const threshold = 50; // tolerance
+  for (let i = 0; i < data.length; i += 4) {
+    if (Math.abs(data[i] - r) < threshold &&
+        Math.abs(data[i+1] - g) < threshold &&
+        Math.abs(data[i+2] - b) < threshold) {
+      data[i+3] = 0;  // make transparent
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+  return await canvasToBlob(canvas, 'image/png', 1);
+}
+
 // ── Helpers ───────────────────────────────────────────────
 function fileToBlob(file) {
   return new Promise(resolve => {
@@ -135,15 +233,15 @@ function fileToBlob(file) {
   });
 }
 
-async function downscaleIfNeeded(file, maxPx) {
-  const img = await blobToImageEl(await fileToBlob(file));
-  if (img.width <= maxPx && img.height <= maxPx) return file;  // small enough
+async function downscaleIfNeeded(blob, maxPx) {
+  const img = await blobToImageEl(blob);
+  if (img.width <= maxPx && img.height <= maxPx) return blob;
   const scale = Math.min(maxPx / img.width, maxPx / img.height);
-  const c = document.createElement('canvas');
-  c.width = Math.round(img.width * scale);
-  c.height = Math.round(img.height * scale);
-  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-  return new Promise(r => c.toBlob(r, 'image/png', 1));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1));
 }
 
 function blobToImageEl(blob) {
@@ -187,7 +285,7 @@ function renderResults() {
       </div>`;
     resultGrid.appendChild(card);
 
-    // ── before / after slider ──
+    // before / after slider
     const slider = card.querySelector('.comparison-slider');
     const handle = slider.querySelector('.slider-handle');
     const afterImg = slider.querySelector('.img-after');
@@ -248,7 +346,6 @@ applyBgBtn.addEventListener('click', async () => {
     canvas.height = cutoutImg.height;
     const ctx = canvas.getContext('2d');
 
-    // background
     if (type === 'solid') {
       ctx.fillStyle = solidColor.value;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -270,7 +367,6 @@ applyBgBtn.addEventListener('click', async () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // feathering
     if (featherPx > 0 && type !== 'transparent') {
       const mask = document.createElement('canvas');
       mask.width = canvas.width;
@@ -285,7 +381,6 @@ applyBgBtn.addEventListener('click', async () => {
       ctx.drawImage(mask, 0, 0);
       ctx.restore();
     }
-
     ctx.drawImage(cutoutImg, 0, 0);
     result.currentBlob = await canvasToBlob(canvas, format, 0.95);
     result.appliedBg = type;
@@ -323,7 +418,7 @@ function updateDownloadAllState() {
   downloadAllBtn.disabled = !processedResults.some(r => !r.error && r.currentBlob);
 }
 
-// ── Init ──────────────────────────────────────────────────
+// ── Initial UI ────────────────────────────────────────────
 solidColorCard.style.display = 'block';
 gradientCard.style.display = 'none';
 customBgCard.style.display = 'none';

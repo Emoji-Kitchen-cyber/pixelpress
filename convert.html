@@ -4,67 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Convert Image Format — PixelPress</title>
+  
+  <link rel="stylesheet" href="../css/style.css">
+  
   <style>
-    :root { --primary: #14b8a6; --primary-hover: #0f766e; --text-dark: #0f172a; --text-muted: #64748b; --bg-main: #f8fafc; }
+    :root { --primary: #14b8a6; --primary-hover: #0f766e; --text-dark: #0f172a; --bg-main: #f8fafc; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-main); color: var(--text-dark); padding: 10px; }
-    .container { width: 100%; max-width: 800px; margin: auto; padding: 15px 10px; }
-
+    body { font-family: system-ui, sans-serif; background: var(--bg-main); color: var(--text-dark); padding: 10px; }
+    .container { max-width: 800px; margin: auto; padding: 20px; }
+    
     /* Header & Sidebar Menu */
-    .brand-header { display: flex; align-items: center; justify-content: center; position: relative; margin-top: 15px; margin-bottom: 25px; }
-    .menu-btn { position: absolute; left: 10px; background: none; border: none; font-size: 26px; color: var(--text-dark); cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s; }
-    .menu-btn:hover { background: #e2e8f0; }
-    .brand-logo { font-size: 24px; font-weight: 800; text-decoration: none; color: var(--text-dark); }
-    .brand-logo span { color: var(--primary); }
-
-    .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 9998; display: none; opacity: 0; transition: 0.3s; }
-    .menu-overlay.show { display: block; opacity: 1; }
-    .side-menu { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 9999; transition: 0.3s; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+    .brand-header { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 25px; }
+    .menu-btn { position: absolute; left: 10px; background: none; border: none; font-size: 26px; cursor: pointer; padding: 5px; }
+    .side-menu { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 9999; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); transition: 0.3s; }
     .side-menu.open { left: 0; }
-    .menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
-    .close-btn { background: #f1f5f9; border: none; font-size: 18px; color: #64748b; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; }
-    .menu-links { display: flex; flex-direction: column; gap: 10px; }
-    .menu-links a { text-decoration: none; color: var(--text-dark); font-size: 15px; font-weight: 500; padding: 12px 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+    .menu-links a { display: block; padding: 12px; text-decoration: none; color: #334; border-radius: 8px; font-weight: 500; }
     .menu-links a:hover { background: #f0fdfa; color: var(--primary); }
 
-    /* Tool Area */
-    .tool-header { text-align: center; margin-bottom: 20px; }
-    .tool-header h1 { font-size: 26px; margin-bottom: 8px; }
-    .tool-header p { color: var(--text-muted); font-size: 15px; }
+    /* Tool UI */
+    .tool-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .upload-zone { border: 2px dashed #cbd5e1; padding: 50px; text-align: center; border-radius: 12px; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+    .upload-zone.dragover { border-color: var(--primary); background: #f0fdfa; }
+    
+    .file-info { background: #f1f5f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: none; }
+    
+    .btn { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    .btn:hover { background: var(--primary-hover); }
+    
+    select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 16px; outline: none; }
+    .slider-group { margin-bottom: 15px; display: none; }
+    .slider-group label { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; margin-bottom: 5px; }
+    input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
 
-    /* Drag & Drop Box */
-    .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 50px 20px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; position: relative; }
-    .upload-area:hover, .upload-area.dragover { border-color: var(--primary); background: #f0fdfa; }
-    .upload-icon { font-size: 40px; margin-bottom: 15px; }
-    .upload-text { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
-    
-    /* Controls */
-    .controls { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 20px; display: none; }
-    .controls.active { display: block; }
-    select { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; outline: none; }
-    
-    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.2s; width: 100%; text-align: center; display: inline-block; text-decoration: none; }
-    .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
-    
-    .preview-container { margin-top: 20px; text-align: center; display: none; }
-    .preview-container img { max-width: 100%; max-height: 300px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-
-    /* Toast */
-    .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; transition: 0.3s; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .toast.show { bottom: 30px; }
-    .toast.error { background: #ef4444; }
-    .toast.success { background: #10b981; }
+    #previewImg { max-width: 100%; max-height: 300px; margin-top: 20px; border-radius: 8px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #334; color: white; padding: 10px 20px; border-radius: 20px; display: none; z-index: 10000; }
   </style>
 </head>
 <body>
 
-  <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
-
   <div class="side-menu" id="sideMenu">
-    <div class="menu-header">
-      <div class="brand-logo">PIXEL<span>PRESS</span></div>
-      <button class="close-btn" onclick="toggleMenu(false)">✕</button>
-    </div>
+    <div style="text-align:right"><button onclick="toggleMenu(false)" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button></div>
     <div class="menu-links">
       <a href="./index.html">🏠 Home</a>
       <a href="./compress.html">📦 Compress Image</a>
@@ -78,116 +57,123 @@
   <div class="container">
     <header class="brand-header">
       <button class="menu-btn" onclick="toggleMenu(true)">☰</button>
-      <a href="./index.html" class="brand-logo">PIXEL<span>PRESS</span></a>
+      <h1 style="font-size: 22px; font-weight: 800;">🔄 Convert Format</h1>
     </header>
 
-    <div class="tool-header">
-      <h1>Convert Image Format</h1>
-      <p>Transform your images to PNG, JPG, or WEBP instantly.</p>
-    </div>
+    <div class="tool-box">
+      <div class="upload-zone" id="dropZone">📁 Drop Image Here or Click to Upload</div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      
+      <div class="file-info" id="fileInfo"></div>
 
-    <div class="upload-area" id="dropZone">
-      <div class="upload-icon">🔄</div>
-      <div class="upload-text">Choose an image or drop it here</div>
-      <input type="file" id="fileInput" accept="image/*" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" />
-    </div>
+      <div id="controls" style="display:none">
+        <select id="formatSelect">
+          <option value="image/png">Convert to PNG</option>
+          <option value="image/jpeg">Convert to JPG</option>
+          <option value="image/webp">Convert to WEBP</option>
+        </select>
 
-    <div class="controls" id="controlsPanel">
-      <select id="formatSelect">
-        <option value="image/png">Convert to PNG</option>
-        <option value="image/jpeg">Convert to JPG</option>
-        <option value="image/webp">Convert to WEBP</option>
-      </select>
-      <button class="btn" id="convertBtn">Convert & Download</button>
-    </div>
+        <div class="slider-group" id="qualityGroup">
+          <label>Conversion Quality: <span id="qVal">90%</span></label>
+          <input type="range" id="qualitySlider" min="10" max="100" value="90">
+        </div>
 
-    <div class="preview-container" id="previewContainer">
-      <img id="previewImg" src="" alt="Preview">
+        <button class="btn" id="convertBtn">Convert & Download Instantly</button>
+      </div>
+      <center><img id="previewImg" alt="Preview"></center>
     </div>
   </div>
 
   <div class="toast" id="toastBox"></div>
 
   <script>
-    function toggleMenu(show) {
-      document.getElementById('sideMenu').classList.toggle('open', show);
-      document.getElementById('menuOverlay').classList.toggle('show', show);
-    }
+    function toggleMenu(s) { document.getElementById('sideMenu').classList.toggle('open', s); }
+    const dropZone = document.getElementById('dropZone'), fileInput = document.getElementById('fileInput');
+    const formatSelect = document.getElementById('formatSelect'), qualityGroup = document.getElementById('qualityGroup');
+    let selectedFile = null;
+    let originalName = "converted";
 
-    function showToast(message, type = 'normal') {
-      const toast = document.getElementById('toastBox');
-      toast.innerText = message;
-      toast.className = 'toast show';
-      if (type === 'error') toast.classList.add('error');
-      if (type === 'success') toast.classList.add('success');
-      setTimeout(() => toast.className = 'toast', 3000);
-    }
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => handleFile(e.target.files);
 
-    let loadedImgSrc = null;
-    let originalName = "image";
-    const fileInput = document.getElementById('fileInput');
-    const controlsPanel = document.getElementById('controlsPanel');
-
-    fileInput.addEventListener('change', function(e) {
-      const file = e.target.files;
-      if (!file) return;
-      if (!file.type.startsWith('image/')) {
-        showToast('Please upload a valid image file!', 'error');
-        return;
-      }
-      originalName = file.name.substring(0, file.name.lastIndexOf('.')) || "converted";
-      
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        loadedImgSrc = event.target.result;
-        document.getElementById('previewImg').src = loadedImgSrc;
-        document.getElementById('previewContainer').style.display = 'block';
-        controlsPanel.classList.add('active');
-        showToast('Image uploaded successfully!', 'success');
-      };
-      reader.readAsDataURL(file);
-    });
-
-    document.getElementById('convertBtn').addEventListener('click', function() {
-      if (!loadedImgSrc) return;
-      
-      try {
-        const format = document.getElementById('formatSelect').value;
-        const ext = format.split('/') === 'jpeg' ? 'jpg' : format.split('/');
-        const img = new Image();
-        img.src = loadedImgSrc;
-        
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          
-          // Background handling for transparent PNGs turning to JPG
-          if (format === 'image/jpeg') {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-          }
-          
-          ctx.drawImage(img, 0, 0);
-          
-          const link = document.createElement('a');
-          link.download = `${originalName}.${ext}`;
-          link.href = canvas.toDataURL(format, 0.9);
-          link.click();
-          showToast('Conversion complete! Download started.', 'success');
-        };
-      } catch (err) {
-        showToast('Error during conversion!', 'error');
-        console.error(err);
-      }
-    });
-
-    // Drag & Drop visual helpers
-    const dropZone = document.getElementById('dropZone');
+    // Fixed Drag & Drop Logic
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files);
+    });
+
+    function handleFile(file) {
+      if(!file || !file.type.startsWith('image/')) return showToast('Please select a valid image file!');
+      selectedFile = file;
+      originalName = file.name.substring(0, file.name.lastIndexOf('.')) || "image";
+
+      // Show Live File Metadata
+      document.getElementById('fileInfo').style.display = 'block';
+      document.getElementById('fileInfo').innerHTML = `<strong>File Loaded:</strong> ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        document.getElementById('previewImg').src = event.target.result;
+        document.getElementById('previewImg').style.display = 'block';
+        document.getElementById('controls').style.display = 'block';
+        toggleQualitySlider();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    formatSelect.onchange = toggleQualitySlider;
+    function toggleQualitySlider() {
+      if(formatSelect.value === 'image/png') {
+        qualityGroup.style.display = 'none';
+      } else {
+        qualityGroup.style.display = 'block';
+      }
+    }
+
+    document.getElementById('qualitySlider').oninput = (e) => {
+      document.getElementById('qVal').innerText = e.target.value + '%';
+    };
+
+    document.getElementById('convertBtn').onclick = () => {
+      if(!selectedFile) return;
+      try {
+        const format = formatSelect.value;
+        const quality = parseInt(document.getElementById('qualitySlider').value) / 100;
+        const ext = format.split('/') === 'jpeg' ? 'jpg' : format.split('/');
+        
+        const img = document.getElementById('previewImg');
+        const canvas = document.createElement('canvas');
+        
+        // Lock Canvas to true image dimensions
+        canvas.width = img.naturalWidth; 
+        canvas.height = img.naturalHeight;
+        
+        const ctx = canvas.getContext('2d');
+        if (format === 'image/jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0);
+        
+        const link = document.createElement('a');
+        link.download = `${originalName}_pixelpress.${ext}`;
+        link.href = canvas.toDataURL(format, quality);
+        link.click();
+        showToast('Success! Download started.', 'success');
+      } catch(e) { 
+        showToast('Conversion failed. Try another format!'); 
+        console.error(e);
+      }
+    };
+
+    function showToast(msg) {
+      const t = document.getElementById('toastBox');
+      t.innerText = msg; t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
   </script>
 </body>
 </html>

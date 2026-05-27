@@ -1,386 +1,170 @@
-import {
-  removeBackground
-} from "https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm";
-
 (() => {
   "use strict";
 
-  /* =========================================================
-     DOM
-     ========================================================= */
-
-  const $ = (id) => document.getElementById(id);
-
-  const dom = {
-    loader: $("ppRbgLoader"),
-    loaderText: $("ppRbgLoaderText"),
-    loaderProgress: $("ppRbgModelProgress"),
-
-    dropzone: $("ppRbgDropzone"),
-    input: $("ppRbgInput"),
-
-    progressWrap: $("ppRbgProgressWrap"),
-    progress: $("ppRbgProgress"),
-    progressText: $("ppRbgProgressText"),
-
-    resultsSection: $("ppRbgResultsSection"),
-    results: $("ppRbgResults"),
-
-    bgType: $("ppRbgBgType"),
-
-    solidWrap: $("ppRbgSolidWrap"),
-    solidColor: $("ppRbgSolidColor"),
-
-    gradientWrap: $("ppRbgGradientWrap"),
-    grad1: $("ppRbgGrad1"),
-    grad2: $("ppRbgGrad2"),
-
-    blurWrap: $("ppRbgBlurWrap"),
-    blur: $("ppRbgBlur"),
-    blurValue: $("ppRbgBlurValue"),
-
-    customWrap: $("ppRbgCustomWrap"),
-    customBg: $("ppRbgCustomBg"),
-
-    feather: $("ppRbgFeather"),
-    featherValue: $("ppRbgFeatherValue"),
-
-    format: $("ppRbgFormat"),
-
-    apply: $("ppRbgApply"),
-    zip: $("ppRbgZip")
-  };
-
-  /* =========================================================
-     STATE
-     ========================================================= */
+  // ======================================================
+  // SAFE GLOBALS
+  // ======================================================
 
   const state = {
     results: [],
-    customImage: null,
     processing: false
   };
 
-  /* =========================================================
-     HELPERS
-     ========================================================= */
+  // ======================================================
+  // DOM
+  // ======================================================
 
-  function delay(ms) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
+  const dropzone = document.getElementById("ppRbgDropzone");
+  const input = document.getElementById("ppRbgInput");
+  const results = document.getElementById("ppRbgResults");
+  const resultsSection = document.getElementById("ppRbgResultsSection");
 
-  function revoke(url) {
-    if (url) URL.revokeObjectURL(url);
-  }
+  // ======================================================
+  // LOAD LIBRARY SAFELY
+  // ======================================================
 
-  function cleanupCanvas(canvas) {
-    if (!canvas) return;
+  async function loadEngine() {
 
-    const ctx = canvas.getContext("2d");
-
-    if (ctx) {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (window.removeBackground) {
+      return true;
     }
 
-    canvas.width = 1;
-    canvas.height = 1;
-  }
+    try {
 
-  function getExtension(type) {
-    if (type === "image/jpeg") return "jpg";
-    if (type === "image/webp") return "webp";
-    return "png";
-  }
+      const script = document.createElement("script");
 
-  function safeName(name) {
-    return name
-      .replace(/\.[^/.]+$/, "")
-      .replace(/[^\w-]/g, "_");
-  }
+      script.src =
+        "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/browser.js";
 
-  /* =========================================================
-     IMAGE HELPERS
-     ========================================================= */
+      script.async = true;
 
-  async function fileToImage(file) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
+      document.body.appendChild(script);
 
-      const img = new Image();
+      await new Promise((resolve, reject) => {
 
-      img.onload = () => {
-        revoke(url);
-        resolve(img);
-      };
+        script.onload = resolve;
 
-      img.onerror = () => {
-        revoke(url);
-        reject(new Error("Image load failed"));
-      };
+        script.onerror = reject;
+      });
 
-      img.src = url;
-    });
-  }
+      return true;
 
-  async function blobToImage(blob) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(blob);
+    } catch (err) {
 
-      const img = new Image();
+      console.error(err);
 
-      img.onload = () => {
-        revoke(url);
-        resolve(img);
-      };
+      alert("AI engine failed to load.");
 
-      img.onerror = () => {
-        revoke(url);
-        reject(new Error("Blob image failed"));
-      };
-
-      img.src = url;
-    });
-  }
-
-  async function canvasToBlob(canvas, type, quality) {
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error("Canvas export failed"));
-          return;
-        }
-
-        resolve(blob);
-      }, type, quality);
-    });
-  }
-
-  /* =========================================================
-     IMAGE OPTIMIZER
-     ========================================================= */
-
-  async function optimizeImage(file) {
-    const img = await fileToImage(file);
-
-    const MAX = 1024;
-
-    let width = img.width;
-    let height = img.height;
-
-    if (width > MAX || height > MAX) {
-      const ratio = Math.min(MAX / width, MAX / height);
-
-      width = Math.round(width * ratio);
-      height = Math.round(height * ratio);
+      return false;
     }
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-
-    ctx.drawImage(img,0,0,width,height);
-
-    const blob = await canvasToBlob(
-      canvas,
-      "image/png",
-      0.95
-    );
-
-    cleanupCanvas(canvas);
-
-    return blob;
   }
 
-  /* =========================================================
-     REMOVE BG
-     ========================================================= */
+  // ======================================================
+  // IMAGE
+  // ======================================================
 
-  async function processImage(blob) {
-    const arrayBuffer = await blob.arrayBuffer();
-
-    const resultBlob = await removeBackground(
-      arrayBuffer,
-      {
-        progress: (key, current, total) => {
-          const value = total
-            ? Math.round((current / total) * 100)
-            : 0;
-
-          dom.loaderProgress.value = value;
-
-          dom.loaderText.textContent =
-            `${key} ${value}%`;
-        }
-      }
-    );
-
-    return resultBlob;
+  function fileToUrl(file) {
+    return URL.createObjectURL(file);
   }
 
-  /* =========================================================
-     PROCESS FILES
-     ========================================================= */
+  async function processFile(file) {
 
-  async function handleFiles(files) {
-    if (state.processing) return;
+    const ok = await loadEngine();
 
-    state.processing = true;
+    if (!ok) return null;
 
-    dom.results.innerHTML = "";
+    try {
 
-    state.results = [];
+      const blob = await window.removeBackground(file, {
+        publicPath:
+          "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/",
+      });
 
-    const valid = Array.from(files)
-      .filter(file => file.type.startsWith("image/"))
-      .slice(0,10);
+      return blob;
 
-    if (!valid.length) {
-      state.processing = false;
-      return;
+    } catch (err) {
+
+      console.error(err);
+
+      alert("Background removal failed.");
+
+      return null;
     }
-
-    dom.progressWrap.style.display = "block";
-
-    for (let i=0; i<valid.length; i++) {
-
-      const file = valid[i];
-
-      dom.progress.value =
-        Math.round((i / valid.length) * 100);
-
-      dom.progressText.textContent =
-        `Processing ${i+1} / ${valid.length}`;
-
-      try {
-        dom.loader.style.display = "flex";
-
-        const optimized =
-          await optimizeImage(file);
-
-        const removed =
-          await processImage(optimized);
-
-        dom.loader.style.display = "none";
-
-        state.results.push({
-          file,
-          originalBlob: optimized,
-          cutoutBlob: removed,
-          currentBlob: removed
-        });
-
-      } catch (err) {
-        console.error(err);
-
-        state.results.push({
-          file,
-          error: true,
-          message: err.message
-        });
-
-        dom.loader.style.display = "none";
-      }
-
-      await delay(50);
-    }
-
-    dom.progress.value = 100;
-
-    dom.progressText.textContent =
-      "Processing completed";
-
-    renderResults();
-
-    dom.resultsSection.classList.remove(
-      "pp-rbg-hidden"
-    );
-
-    state.processing = false;
   }
 
-  /* =========================================================
-     RENDER
-     ========================================================= */
+  // ======================================================
+  // RENDER
+  // ======================================================
 
-  function renderResults() {
+  function renderCard(originalFile, processedBlob) {
 
-    dom.results.innerHTML = "";
+    const originalURL = fileToUrl(originalFile);
 
-    state.results.forEach((item,index) => {
+    const processedURL =
+      URL.createObjectURL(processedBlob);
 
-      if (item.error) {
-        return;
-      }
+    const card = document.createElement("div");
 
-      const originalURL =
-        URL.createObjectURL(item.originalBlob);
+    card.className = "pp-rbg-result-card";
 
-      const processedURL =
-        URL.createObjectURL(item.currentBlob);
+    card.innerHTML = `
+      <div class="pp-rbg-file-name">
+        ${originalFile.name}
+      </div>
 
-      const card = document.createElement("div");
+      <div class="pp-rbg-compare">
 
-      card.className = "pp-rbg-result-card";
+        <img
+          class="pp-rbg-before"
+          src="${originalURL}"
+        />
 
-      card.innerHTML = `
-        <div class="pp-rbg-file-name">
-          ${item.file.name}
+        <img
+          class="pp-rbg-after"
+          src="${processedURL}"
+        />
+
+        <div class="pp-rbg-divider"></div>
+
+        <div class="pp-rbg-handle">
+          ⇆
         </div>
 
-        <div class="pp-rbg-compare">
+      </div>
 
-          <img
-            class="pp-rbg-before"
-            src="${originalURL}"
-          />
+      <div class="pp-rbg-result-actions">
 
-          <img
-            class="pp-rbg-after"
-            src="${processedURL}"
-          />
+        <button class="pp-rbg-btn pp-rbg-btn-outline save-btn">
+          Save
+        </button>
 
-          <div class="pp-rbg-divider"></div>
+      </div>
+    `;
 
-          <div class="pp-rbg-handle">
-            ⇆
-          </div>
+    const saveBtn =
+      card.querySelector(".save-btn");
 
-        </div>
+    saveBtn.addEventListener("click", () => {
 
-        <div class="pp-rbg-result-actions">
+      const a = document.createElement("a");
 
-          <button
-            class="pp-rbg-btn pp-rbg-btn-outline pp-save-btn"
-            data-index="${index}"
-          >
-            Save
-          </button>
+      a.href = processedURL;
 
-        </div>
-      `;
+      a.download =
+        originalFile.name.replace(/\.[^/.]+$/, "") +
+        "-removed.png";
 
-      dom.results.appendChild(card);
-
-      initSlider(card);
-
-      item.originalURL = originalURL;
-      item.processedURL = processedURL;
+      a.click();
     });
 
-    dom.zip.disabled = false;
+    results.appendChild(card);
+
+    initSlider(card);
   }
 
-  /* =========================================================
-     SLIDER
-     ========================================================= */
+  // ======================================================
+  // SLIDER
+  // ======================================================
 
   function initSlider(card) {
 
@@ -393,409 +177,94 @@ import {
     const divider =
       card.querySelector(".pp-rbg-divider");
 
-    let dragging = false;
+    let active = false;
 
     function update(x) {
 
       const rect =
         compare.getBoundingClientRect();
 
-      let ratio =
-        (x - rect.left) / rect.width;
+      let percent =
+        ((x - rect.left) / rect.width) * 100;
 
-      ratio = Math.max(0, Math.min(1, ratio));
-
-      const percent = ratio * 100;
+      percent = Math.max(0, Math.min(100, percent));
 
       after.style.clipPath =
-        `inset(0 ${100-percent}% 0 0)`;
+        `inset(0 ${100 - percent}% 0 0)`;
 
-      divider.style.left = `${percent}%`;
+      divider.style.left = percent + "%";
     }
 
     compare.addEventListener("pointerdown", e => {
-      dragging = true;
+      active = true;
       update(e.clientX);
     });
 
     window.addEventListener("pointermove", e => {
-      if (!dragging) return;
+      if (!active) return;
       update(e.clientX);
     });
 
     window.addEventListener("pointerup", () => {
-      dragging = false;
+      active = false;
     });
   }
 
-  /* =========================================================
-     APPLY BACKGROUND
-     ========================================================= */
+  // ======================================================
+  // PROCESS
+  // ======================================================
 
-  async function applyBackgrounds() {
+  async function handleFiles(files) {
 
-    const type = dom.bgType.value;
+    if (state.processing) return;
 
-    const feather =
-      parseFloat(dom.feather.value);
+    state.processing = true;
 
-    const format =
-      dom.format.value;
+    results.innerHTML = "";
 
-    dom.apply.disabled = true;
+    const valid =
+      Array.from(files)
+        .filter(f => f.type.startsWith("image/"))
+        .slice(0, 10);
 
-    dom.apply.textContent =
-      "Applying...";
+    for (const file of valid) {
 
-    for (const item of state.results) {
+      const blob =
+        await processFile(file);
 
-      if (item.error) continue;
-
-      const cutout =
-        await blobToImage(item.cutoutBlob);
-
-      const original =
-        await blobToImage(item.originalBlob);
-
-      const canvas =
-        document.createElement("canvas");
-
-      canvas.width = cutout.width;
-      canvas.height = cutout.height;
-
-      const ctx =
-        canvas.getContext("2d");
-
-      /* BACKGROUND */
-
-      if (type === "solid") {
-
-        ctx.fillStyle =
-          dom.solidColor.value;
-
-        ctx.fillRect(
-          0,0,
-          canvas.width,
-          canvas.height
-        );
+      if (blob) {
+        renderCard(file, blob);
       }
-
-      if (type === "gradient") {
-
-        const gradient =
-          ctx.createLinearGradient(
-            0,0,
-            canvas.width,
-            canvas.height
-          );
-
-        gradient.addColorStop(
-          0,
-          dom.grad1.value
-        );
-
-        gradient.addColorStop(
-          1,
-          dom.grad2.value
-        );
-
-        ctx.fillStyle = gradient;
-
-        ctx.fillRect(
-          0,0,
-          canvas.width,
-          canvas.height
-        );
-      }
-
-      if (type === "blur") {
-
-        ctx.filter =
-          `blur(${dom.blur.value}px)`;
-
-        ctx.drawImage(
-          original,
-          0,0,
-          canvas.width,
-          canvas.height
-        );
-
-        ctx.filter = "none";
-      }
-
-      if (
-        type === "custom" &&
-        state.customImage
-      ) {
-        ctx.drawImage(
-          state.customImage,
-          0,0,
-          canvas.width,
-          canvas.height
-        );
-      }
-
-      /* FEATHER */
-
-      if (feather > 0) {
-
-        const featherCanvas =
-          document.createElement("canvas");
-
-        featherCanvas.width =
-          canvas.width;
-
-        featherCanvas.height =
-          canvas.height;
-
-        const featherCtx =
-          featherCanvas.getContext("2d");
-
-        featherCtx.filter =
-          `blur(${feather}px)`;
-
-        featherCtx.drawImage(
-          cutout,
-          0,
-          0
-        );
-
-        featherCtx.filter = "none";
-
-        ctx.drawImage(
-          featherCanvas,
-          0,
-          0
-        );
-
-        cleanupCanvas(featherCanvas);
-      }
-
-      /* FOREGROUND */
-
-      ctx.drawImage(cutout,0,0);
-
-      item.currentBlob =
-        await canvasToBlob(
-          canvas,
-          format,
-          0.95
-        );
-
-      cleanupCanvas(canvas);
     }
 
-    renderResults();
+    resultsSection.classList.remove(
+      "pp-rbg-hidden"
+    );
 
-    dom.apply.disabled = false;
-
-    dom.apply.textContent =
-      "Apply Background";
+    state.processing = false;
   }
 
-  /* =========================================================
-     DOWNLOAD
-     ========================================================= */
+  // ======================================================
+  // EVENTS
+  // ======================================================
 
-  function downloadBlob(blob,name) {
+  dropzone.addEventListener("click", () => {
+    input.click();
+  });
 
-    const url =
-      URL.createObjectURL(blob);
+  input.addEventListener("change", e => {
+    handleFiles(e.target.files);
+  });
 
-    const a =
-      document.createElement("a");
+  dropzone.addEventListener("dragover", e => {
+    e.preventDefault();
+  });
 
-    a.href = url;
-    a.download = name;
+  dropzone.addEventListener("drop", e => {
 
-    document.body.appendChild(a);
+    e.preventDefault();
 
-    a.click();
-
-    a.remove();
-
-    setTimeout(() => {
-      revoke(url);
-    },300);
-  }
-
-  /* =========================================================
-     SAVE SINGLE
-     ========================================================= */
-
-  function saveSingle(index) {
-
-    const item =
-      state.results[index];
-
-    if (!item || item.error) return;
-
-    const ext =
-      getExtension(dom.format.value);
-
-    downloadBlob(
-      item.currentBlob,
-      `pixelpress-${safeName(item.file.name)}.${ext}`
-    );
-  }
-
-  /* =========================================================
-     ZIP
-     ========================================================= */
-
-  async function downloadZip() {
-
-    const zip = new JSZip();
-
-    const ext =
-      getExtension(dom.format.value);
-
-    for (const item of state.results) {
-
-      if (item.error) continue;
-
-      zip.file(
-        `pixelpress-${safeName(item.file.name)}.${ext}`,
-        item.currentBlob
-      );
-    }
-
-    const blob =
-      await zip.generateAsync({
-        type: "blob"
-      });
-
-    downloadBlob(
-      blob,
-      "pixelpress-backgrounds.zip"
-    );
-  }
-
-  /* =========================================================
-     CONTROLS
-     ========================================================= */
-
-  function updateControls() {
-
-    const type = dom.bgType.value;
-
-    dom.solidWrap.classList.toggle(
-      "pp-rbg-hidden",
-      type !== "solid"
-    );
-
-    dom.gradientWrap.classList.toggle(
-      "pp-rbg-hidden",
-      type !== "gradient"
-    );
-
-    dom.blurWrap.classList.toggle(
-      "pp-rbg-hidden",
-      type !== "blur"
-    );
-
-    dom.customWrap.classList.toggle(
-      "pp-rbg-hidden",
-      type !== "custom"
-    );
-
-    if (type === "transparent") {
-      dom.format.value = "image/png";
-    }
-  }
-
-  /* =========================================================
-     EVENTS
-     ========================================================= */
-
-  function bind() {
-
-    dom.dropzone.addEventListener("click", () => {
-      dom.input.click();
-    });
-
-    dom.dropzone.addEventListener("dragover", e => {
-      e.preventDefault();
-      dom.dropzone.classList.add("dragging");
-    });
-
-    dom.dropzone.addEventListener("dragleave", () => {
-      dom.dropzone.classList.remove("dragging");
-    });
-
-    dom.dropzone.addEventListener("drop", e => {
-      e.preventDefault();
-
-      dom.dropzone.classList.remove("dragging");
-
-      handleFiles(e.dataTransfer.files);
-    });
-
-    dom.input.addEventListener("change", e => {
-      handleFiles(e.target.files);
-    });
-
-    dom.bgType.addEventListener(
-      "change",
-      updateControls
-    );
-
-    dom.blur.addEventListener("input", () => {
-      dom.blurValue.textContent =
-        `${dom.blur.value}px`;
-    });
-
-    dom.feather.addEventListener("input", () => {
-      dom.featherValue.textContent =
-        `${dom.feather.value}px`;
-    });
-
-    dom.customBg.addEventListener(
-      "change",
-      async e => {
-
-        const file =
-          e.target.files[0];
-
-        if (!file) return;
-
-        state.customImage =
-          await fileToImage(file);
-      }
-    );
-
-    dom.apply.addEventListener(
-      "click",
-      applyBackgrounds
-    );
-
-    dom.zip.addEventListener(
-      "click",
-      downloadZip
-    );
-
-    dom.results.addEventListener(
-      "click",
-      e => {
-
-        const btn =
-          e.target.closest(".pp-save-btn");
-
-        if (!btn) return;
-
-        saveSingle(
-          Number(btn.dataset.index)
-        );
-      }
-    );
-  }
-
-  /* =========================================================
-     INIT
-     ========================================================= */
-
-  bind();
-
-  updateControls();
+    handleFiles(e.dataTransfer.files);
+  });
 
 })();

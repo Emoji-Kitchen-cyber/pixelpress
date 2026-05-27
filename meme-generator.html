@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meme Generator – PixelPress</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .tool-page { max-width: 1000px; margin: 40px auto; padding: 20px; }
+    .workflow-step { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+    .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; max-height: 300px; overflow-y: auto; }
+    .template-grid img { width: 100%; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+    .template-grid img.selected { border-color: #ec4899; }
+    .canvas-wrapper { text-align: center; margin: 15px 0; }
+    canvas { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .text-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+    .text-item { display: flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 8px; border-radius: 8px; }
+    .layer-list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; }
+    .layer-list li { padding: 5px; cursor: pointer; }
+    .layer-list li.active { background: #e0f2fe; }
+    .dark-mode { background: #1e293b; color: #f1f5f9; }
+    .dark-mode .workflow-step { background: #334155; border-color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="tool-page">
+    <h1>😂 Meme Generator</h1>
+    <button id="darkModeToggle" class="btn-outline" style="margin-bottom:15px;">🌓 Toggle Dark Mode</button>
+
+    <!-- Step 1: Choose template or upload custom -->
+    <div class="workflow-step">
+      <h2>1. Choose Template or Upload</h2>
+      <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <button id="loadTemplatesBtn" class="btn-primary">Load Templates</button>
+        <button id="customUploadBtn" class="btn-outline">📷 Upload Custom</button>
+        <input type="file" id="customFileInput" accept="image/*" hidden>
+      </div>
+      <div class="template-grid" id="templateGrid"></div>
+    </div>
+
+    <!-- Step 2: Edit meme -->
+    <div class="workflow-step" id="editorSection" style="display:none;">
+      <h2>2. Customize Meme</h2>
+      <div class="canvas-wrapper">
+        <canvas id="memeCanvas" width="500" height="500"></canvas>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+        <button id="addTextBtn" class="btn-outline">+ Add Text</button>
+        <button id="addStickerBtn" class="btn-outline">😀 Add Sticker</button>
+        <button id="undoBtn" class="btn-outline">↩ Undo</button>
+        <button id="redoBtn" class="btn-outline">↪ Redo</button>
+        <button id="downloadMemeBtn" class="btn-primary">📥 Download</button>
+        <select id="exportFormat">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="webp">WebP</option>
+        </select>
+      </div>
+      <div style="margin-top:15px;">
+        <label>Font Size: <input type="range" id="fontSizeSlider" min="10" max="80" value="40"></label>
+        <label>Font: <select id="fontFamilySelect">
+          <option value="Impact">Impact</option>
+          <option value="Arial">Arial</option>
+          <option value="Comic Sans MS">Comic Sans</option>
+        </select></label>
+        <label>Stroke: <input type="checkbox" id="strokeCheck" checked></label>
+      </div>
+      <div>
+        <h4>Layers (drag to reorder)</h4>
+        <ul id="layerList" class="layer-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/meme-generator.js"></script>
+</body>
+</html>

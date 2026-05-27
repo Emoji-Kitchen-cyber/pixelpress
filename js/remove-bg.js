@@ -1,10 +1,10 @@
-// js/remove-bg.js - FINAL STABLE VERSION
+// js/remove-bg.js
 const RemoveBG = {
     filesData: [],
     MAX_FILES: 10,
 
     init() {
-        console.log('%c[RemoveBG] Final Stable Version Loaded', 'color:#22c55e;font-weight:bold');
+        console.log('%c[RemoveBG] Stable Version Loaded Successfully', 'color:#22c55e;font-weight:bold');
         this.setupUI();
     },
 
@@ -41,7 +41,6 @@ const RemoveBG = {
     handleFiles(fileList) {
         Array.from(fileList).forEach(file => {
             if (this.filesData.length >= this.MAX_FILES || !file.type.startsWith('image/')) return;
-
             const reader = new FileReader();
             reader.onload = e => {
                 this.filesData.push({
@@ -60,7 +59,6 @@ const RemoveBG = {
     renderFiles() {
         const container = document.getElementById('files-list');
         container.innerHTML = '';
-
         this.filesData.forEach((file, i) => {
             const card = document.createElement('div');
             card.className = 'file-card';
@@ -68,18 +66,17 @@ const RemoveBG = {
                 <div class="preview-container">
                     <img src="${file.originalUrl}" class="preview">
                     <div class="processing-overlay" id="overlay-${file.id}">
-                        <div>Processing Image...</div>
+                        <div>Removing Background...</div>
                     </div>
                 </div>
                 <div style="padding:16px;">
                     <div style="font-size:13px;margin-bottom:8px;">${file.name}</div>
                     <button onclick="RemoveBG.processSingle(${i})" class="btn-primary" style="width:100%;margin-bottom:6px;">Remove Background</button>
-                    \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">View</button>` : ''}
+                    \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">View Result</button>` : ''}
                 </div>
             `;
             container.appendChild(card);
         });
-
         document.getElementById('process-all-btn').disabled = this.filesData.length === 0;
     },
 
@@ -91,26 +88,25 @@ const RemoveBG = {
         overlay.style.display = 'flex';
 
         try {
-            const resultBlob = await this.processImage(file.originalUrl);
+            const resultBlob = await this.removeBackground(file.originalUrl);
             file.processedUrl = URL.createObjectURL(resultBlob);
             file.blob = resultBlob;
-
             this.renderFiles();
-            this.showToast(`${file.name} processed!`);
+            this.showToast(`${file.name} processed successfully`);
         } catch (err) {
             console.error(err);
-            this.showToast("Processing failed", "error");
+            this.showToast("Failed to process image", "error");
         } finally {
             overlay.style.display = 'none';
         }
     },
 
-    async processImage(dataUrl) {
-        return new Promise(resolve => {
+    async removeBackground(dataUrl) {
+        return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                const ctx = canvas.getContext('2d');
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
@@ -118,17 +114,19 @@ const RemoveBG = {
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
 
-                // Simple but effective background removal (works on most images)
+                // Improved background removal logic
                 for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i+1], b = data[i+2];
-                    // Detect background (simple threshold - works well for common cases)
-                    if (Math.abs(r - g) < 30 && Math.abs(g - b) < 30 && r > 200) {
-                        data[i+3] = 0; // Make transparent
+                    const r = data[i], g = data[i + 1], b = data[i + 2];
+                    // Remove near-white / uniform backgrounds
+                    if (r > 220 && g > 220 && b > 220) {
+                        data[i + 3] = 0;
+                    } else if (Math.abs(r - g) < 25 && Math.abs(g - b) < 25 && r > 180) {
+                        data[i + 3] = 0;
                     }
                 }
 
                 ctx.putImageData(imageData, 0, 0);
-                canvas.toBlob(resolve, 'image/png', 0.95);
+                canvas.toBlob(resolve, 'image/png', 0.92);
             };
             img.src = dataUrl;
         });
@@ -136,9 +134,7 @@ const RemoveBG = {
 
     async processAll() {
         for (let i = 0; i < this.filesData.length; i++) {
-            if (!this.filesData[i].processedUrl) {
-                await this.processSingle(i);
-            }
+            if (!this.filesData[i].processedUrl) await this.processSingle(i);
         }
         document.getElementById('download-all-btn').style.display = 'inline-block';
     },
@@ -170,7 +166,7 @@ const RemoveBG = {
             if (f.blob) zip.file(f.name.replace(/\.\w+$/, '') + '-nobg.png', f.blob);
         });
         const content = await zip.generateAsync({type: "blob"});
-        saveAs(content, `background-removed-${Date.now()}.zip`);
+        saveAs(content, `removed-bg-${Date.now()}.zip`);
     },
 
     clearAll() {

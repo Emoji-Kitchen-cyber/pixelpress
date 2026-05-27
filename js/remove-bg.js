@@ -38,8 +38,8 @@ const fallbackBtn    = document.getElementById('fallbackBtn');
 env.allowLocalModels = false;
 env.useBrowserCache  = true;
 
-let segmenter = null;        // Transformers pipeline
-let useAIModel = true;       // set to false if model fails, manual fallback becomes available
+let segmenter = null;        
+let useAIModel = true;       
 
 // ── State ─────────────────────────────────────────────────
 let processedResults = [];
@@ -60,7 +60,7 @@ let customBackgroundImage = null;
           modelProgress.value = 100;
         }
       },
-      device: 'wasm'      // force WASM for universal compatibility; WebGPU can be used with 'webgpu' but less reliable
+      device: 'wasm'      
     });
     loadingMsg.textContent = 'Model ready!';
   } catch (err) {
@@ -71,11 +71,9 @@ let customBackgroundImage = null;
     fallbackBtn.style.display = 'inline-block';
   }
 
-  // Hide overlay after a short delay
   setTimeout(() => { loadingOverlay.style.display = 'none'; }, 1000);
 })();
 
-// Manual fallback (chroma key) – activates when AI fails
 fallbackBtn.addEventListener('click', () => {
   loadingOverlay.style.display = 'none';
   useAIModel = false;
@@ -112,22 +110,22 @@ async function startProcessing(files) {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     progressStatus.textContent = `Removing background ${i+1}/${files.length} …`;
-    batchProgress.value = ((i / files.length) * 100).toFixed(0);
+    batchProgress.value = Math.round(((i / files.length) * 100));
 
-    try {
-      const originalBlob = await fileToBlob(file);
-      const cutoutBlob = await processImage(file, originalBlob);
+    try {    
+      const originalBlob = await fileToBlob(file);    
+      const cutoutBlob = await processImage(file, originalBlob);    
 
-      processedResults.push({
-        file,
-        originalBlob,
-        cutoutBlob,
-        currentBlob: cutoutBlob,
-        appliedBg: 'transparent'
-      });
-    } catch (err) {
-      console.error('Failed', file.name, err);
-      processedResults.push({ file, error: true, errorMsg: err.message || 'Unknown error' });
+      processedResults.push({    
+        file,    
+        originalBlob,    
+        cutoutBlob,    
+        currentBlob: cutoutBlob,    
+        appliedBg: 'transparent'    
+      });    
+    } catch (err) {    
+      console.error('Failed', file.name, err);    
+      processedResults.push({ file, error: true, errorMsg: err.message || 'Unknown error' });    
     }
   }
 
@@ -139,62 +137,62 @@ async function startProcessing(files) {
 
 // ── Core Processing ──────────────────────────────────────
 async function processImage(file, originalBlob) {
-  // Downscale large images to max 1024px for performance
   const scaledBlob = await downscaleIfNeeded(originalBlob, 1024);
   const img = await blobToImageEl(scaledBlob);
 
   if (useAIModel && segmenter) {
-    // AI background removal
     const output = await segmenter(img);
-    // MODNet returns a single mask (foreground probability 0-1)
-    const mask = output.mask;   // Float32Array or RawImage
+    const mask = output.mask;   
 
-    // Convert mask to ImageData
-    let maskData;
-    if (mask.toCanvas) {
-      const maskCanvas = mask.toCanvas();
-      maskData = maskCanvas.getContext('2d').getImageData(0,0,maskCanvas.width,maskCanvas.height).data;
-    } else {
-      // raw Float32Array with shape [1, h, w]
-      const { data, width, height } = mask;
-      const tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = width;
-      tmpCanvas.height = height;
-      const ctx = tmpCanvas.getContext('2d');
-      const imgData = ctx.createImageData(width, height);
-      for (let i = 0; i < data.length; i++) {
-        const val = Math.round(data[i] * 255);
-        imgData.data[i*4] = val;
-        imgData.data[i*4+1] = val;
-        imgData.data[i*4+2] = val;
-        imgData.data[i*4+3] = 255;
-      }
-      ctx.putImageData(imgData, 0, 0);
-      maskData = imgData.data;
-    }
+    // Perfect Resizing Map Layer Setup
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = img.width;
+    maskCanvas.height = img.height;
+    const mCtx = maskCanvas.getContext('2d');
 
-    // Apply mask: set alpha = foreground probability
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const fg = maskData[i] / 255;   // because mask is grayscale R channel
-      imageData.data[i+3] = Math.round(fg * 255);
-    }
-    ctx.putImageData(imageData, 0, 0);
+    if (mask.toCanvas) {    
+      const rawMaskCanvas = mask.toCanvas();    
+      mCtx.drawImage(rawMaskCanvas, 0, 0, img.width, img.height);    
+    } else {    
+      const { data, width, height } = mask;    
+      const tmpCanvas = document.createElement('canvas');    
+      tmpCanvas.width = width;    
+      tmpCanvas.height = height;    
+      const tmpCtx = tmpCanvas.getContext('2d');    
+      const imgData = tmpCtx.createImageData(width, height);    
+      for (let i = 0; i < data.length; i++) {    
+        const val = Math.round(data[i] * 255);    
+        imgData.data[i*4] = val;    
+        imgData.data[i*4+1] = val;    
+        imgData.data[i*4+2] = val;    
+        imgData.data[i*4+3] = 255;    
+      }    
+      tmpCtx.putImageData(imgData, 0, 0);    
+      mCtx.drawImage(tmpCanvas, 0, 0, img.width, img.height);
+    }    
+
+    const maskData = mCtx.getImageData(0, 0, img.width, img.height).data;    
+
+    const canvas = document.createElement('canvas');    
+    canvas.width = img.width;    
+    canvas.height = img.height;    
+    const ctx = canvas.getContext('2d');    
+    ctx.drawImage(img, 0, 0);    
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);    
+    for (let i = 0; i < imageData.data.length; i += 4) {    
+      const fg = maskData[i] / 255;   
+      imageData.data[i+3] = Math.round(fg * 255);    
+    }    
+    ctx.putImageData(imageData, 0, 0);    
     return await canvasToBlob(canvas, 'image/png', 1);
   } else {
-    // Fallback: simple chroma key (remove a colour selected by user)
     return await manualChromaKey(img, originalBlob);
   }
 }
 
 // ── Manual chroma‑key fallback ───────────────────────────
 async function manualChromaKey(img, originalBlob) {
-  // Let user pick a colour to remove (default white)
   const targetColor = prompt('Enter hex colour to remove (e.g. #ffffff for white):', '#ffffff');
   if (!targetColor) throw new Error('No colour chosen');
 
@@ -206,18 +204,17 @@ async function manualChromaKey(img, originalBlob) {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
-  // Convert hex to RGB
   const hex = targetColor.replace('#', '');
   const r = parseInt(hex.substring(0,2), 16);
   const g = parseInt(hex.substring(2,4), 16);
   const b = parseInt(hex.substring(4,6), 16);
 
-  const threshold = 50; // tolerance
+  const threshold = 50; 
   for (let i = 0; i < data.length; i += 4) {
     if (Math.abs(data[i] - r) < threshold &&
         Math.abs(data[i+1] - g) < threshold &&
         Math.abs(data[i+2] - b) < threshold) {
-      data[i+3] = 0;  // make transparent
+      data[i+3] = 0;  
     }
   }
   ctx.putImageData(imageData, 0, 0);
@@ -265,44 +262,44 @@ function renderResults() {
     const card = document.createElement('div');
     card.className = 'result-card';
 
-    if (result.error) {
-      card.innerHTML = `<p style="padding:12px; text-align:center;">⚠️ ${result.errorMsg || 'Failed'}</p>`;
-      resultGrid.appendChild(card);
-      return;
-    }
+    if (result.error) {    
+      card.innerHTML = `<p style="padding:12px; text-align:center;">⚠️ ${result.errorMsg || 'Failed'}</p>`;    
+      resultGrid.appendChild(card);    
+      return;    
+    }    
 
-    const origUrl = URL.createObjectURL(result.originalBlob);
-    const currUrl = URL.createObjectURL(result.currentBlob);
+    const origUrl = URL.createObjectURL(result.originalBlob);    
+    const currUrl = URL.createObjectURL(result.currentBlob);    
 
-    card.innerHTML = `
-      <div class="comparison-slider" id="slider-${idx}">
-        <img src="${origUrl}" alt="before" class="img-before">
-        <img src="${currUrl}" alt="after" class="img-after" style="clip-path: inset(0 50% 0 0);">
-        <div class="slider-handle" style="left:50%;"><div class="handle-circle">⇔</div></div>
-      </div>
-      <div style="padding:8px; text-align:center;">
-        <button class="btn-outline download-single" data-idx="${idx}">💾 Save</button>
-      </div>`;
-    resultGrid.appendChild(card);
+    card.innerHTML = `    
+      <div class="comparison-slider" id="slider-${idx}">    
+        <img src="${origUrl}" alt="before" class="img-before">    
+        <img src="${currUrl}" alt="after" class="img-after">    
+        <div class="slider-handle"><div class="handle-circle">⇔</div></div>    
+      </div>    
+      <div style="padding:8px; text-align:center;">    
+        <button class="btn-outline download-single" data-idx="${idx}">💾 Save</button>    
+      </div>`;    
+    resultGrid.appendChild(card);    
 
-    // before / after slider
-    const slider = card.querySelector('.comparison-slider');
-    const handle = slider.querySelector('.slider-handle');
-    const afterImg = slider.querySelector('.img-after');
-    let dragging = false;
-    function updateSlider(clientX) {
-      const rect = slider.getBoundingClientRect();
-      let pos = (clientX - rect.left) / rect.width;
-      pos = Math.min(1, Math.max(0, pos));
-      afterImg.style.clipPath = `inset(0 ${(1-pos)*100}% 0 0)`;
-      handle.style.left = `${pos*100}%`;
-    }
-    handle.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
-    window.addEventListener('mousemove', e => { if (dragging) updateSlider(e.clientX); });
-    window.addEventListener('mouseup', () => { dragging = false; });
-    handle.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); });
-    window.addEventListener('touchmove', e => { if (dragging) updateSlider(e.touches[0].clientX); });
-    window.addEventListener('touchend', () => { dragging = false; });
+    const slider = card.querySelector('.comparison-slider');    
+    const handle = slider.querySelector('.slider-handle');    
+    const afterImg = slider.querySelector('.img-after');    
+    let dragging = false;    
+
+    function updateSlider(clientX) {    
+      const rect = slider.getBoundingClientRect();    
+      let pos = (clientX - rect.left) / rect.width;    
+      pos = Math.min(1, Math.max(0, pos));    
+      afterImg.style.clipPath = `inset(0 ${(1-pos)*100}% 0 0)`;    
+      handle.style.left = `${pos*100}%`;    
+    }    
+    handle.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });    
+    window.addEventListener('mousemove', e => { if (dragging) updateSlider(e.clientX); });    
+    window.addEventListener('mouseup', () => { dragging = false; });    
+    handle.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); });    
+    window.addEventListener('touchmove', e => { if (dragging) updateSlider(e.touches.clientX); });    
+    window.addEventListener('touchend', () => { dragging = false; });    
 
     card.querySelector('.download-single').addEventListener('click', () => downloadSingle(result.currentBlob, result.file.name));
   });
@@ -319,8 +316,9 @@ bgType.addEventListener('change', () => {
 });
 blurAmount.addEventListener('input', () => blurValue.textContent = blurAmount.value + 'px');
 feather.addEventListener('input', () => featherValue.textContent = feather.value);
+
 customBgFile.addEventListener('change', e => {
-  const file = e.target.files[0];
+  const file = e.target.files;
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
@@ -346,43 +344,43 @@ applyBgBtn.addEventListener('click', async () => {
     canvas.height = cutoutImg.height;
     const ctx = canvas.getContext('2d');
 
-    if (type === 'solid') {
-      ctx.fillStyle = solidColor.value;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    } else if (type === 'gradient') {
-      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      grad.addColorStop(0, gradStart.value);
-      grad.addColorStop(1, gradEnd.value);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    } else if (type === 'blur') {
-      const orig = await blobToImage(result.originalBlob);
-      ctx.filter = `blur(${blurAmount.value}px)`;
-      ctx.drawImage(orig, 0, 0, canvas.width, canvas.height);
-      ctx.filter = 'none';
-    } else if (type === 'custom' && customBackgroundImage) {
-      ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
-    } else if (type !== 'transparent') {
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    if (type === 'solid') {    
+      ctx.fillStyle = solidColor.value;    
+      ctx.fillRect(0, 0, canvas.width, canvas.height);    
+    } else if (type === 'gradient') {    
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);    
+      grad.addColorStop(0, gradStart.value);    
+      grad.addColorStop(1, gradEnd.value);    
+      ctx.fillStyle = grad;    
+      ctx.fillRect(0, 0, canvas.width, canvas.height);    
+    } else if (type === 'blur') {    
+      const orig = await blobToImage(result.originalBlob);    
+      ctx.filter = `blur(${blurAmount.value}px)`;    
+      ctx.drawImage(orig, 0, 0, canvas.width, canvas.height);    
+      ctx.filter = 'none';    
+    } else if (type === 'custom' && customBackgroundImage) {    
+      ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);    
+    } else if (type !== 'transparent') {    
+      ctx.fillStyle = '#fff';    
+      ctx.fillRect(0, 0, canvas.width, canvas.height);    
+    }    
 
-    if (featherPx > 0 && type !== 'transparent') {
-      const mask = document.createElement('canvas');
-      mask.width = canvas.width;
-      mask.height = canvas.height;
-      const mCtx = mask.getContext('2d');
-      mCtx.drawImage(cutoutImg, 0, 0);
-      mCtx.filter = `blur(${featherPx}px)`;
-      mCtx.drawImage(cutoutImg, 0, 0);
-      mCtx.filter = 'none';
-      ctx.save();
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.drawImage(mask, 0, 0);
-      ctx.restore();
-    }
-    ctx.drawImage(cutoutImg, 0, 0);
-    result.currentBlob = await canvasToBlob(canvas, format, 0.95);
+    if (featherPx > 0 && type !== 'transparent') {    
+      const mask = document.createElement('canvas');    
+      mask.width = canvas.width;    
+      mask.height = canvas.height;    
+      const mCtx = mask.getContext('2d');    
+      mCtx.drawImage(cutoutImg, 0, 0);    
+      mCtx.filter = `blur(${featherPx}px)`;    
+      mCtx.drawImage(cutoutImg, 0, 0);    
+      mCtx.filter = 'none';    
+      ctx.save();    
+      ctx.globalCompositeOperation = 'destination-in';    
+      ctx.drawImage(mask, 0, 0);    
+      ctx.restore();    
+    }    
+    ctx.drawImage(cutoutImg, 0, 0);    
+    result.currentBlob = await canvasToBlob(canvas, format, 0.95);    
     result.appliedBg = type;
   }
 
@@ -393,7 +391,7 @@ applyBgBtn.addEventListener('click', async () => {
 
 // ── Download ──────────────────────────────────────────────
 function downloadSingle(blob, originalName) {
-  const ext = outputFormat.value.split('/')[1] || 'png';
+  const ext = outputFormat.value.split('/') || 'png';
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `nobg-${originalName.replace(/\.[^.]+$/, '')}.${ext}`;
@@ -404,7 +402,7 @@ downloadAllBtn.addEventListener('click', async () => {
   const zip = new JSZip();
   for (const res of processedResults) {
     if (res.error || !res.currentBlob) continue;
-    const ext = outputFormat.value.split('/')[1] || 'png';
+    const ext = outputFormat.value.split('/') || 'png';
     zip.file(`nobg-${res.file.name.replace(/\.[^.]+$/, '')}.${ext}`, res.currentBlob);
   }
   const content = await zip.generateAsync({ type: 'blob' });
@@ -419,7 +417,7 @@ function updateDownloadAllState() {
 }
 
 // ── Initial UI ────────────────────────────────────────────
-solidColorCard.style.display = 'block';
+solidColorCard.style.display = 'none'; // Default hidden unless 'solid' selected
 gradientCard.style.display = 'none';
 customBgCard.style.display = 'none';
 blurCard.style.display = 'none';

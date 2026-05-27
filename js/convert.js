@@ -1,55 +1,87 @@
-let convertOriginal = null;
-
 document.addEventListener('DOMContentLoaded', () => {
     const uploadZone = document.getElementById('convertUploadZone');
     const fileInput = document.getElementById('convertFileInput');
+    const convertBtn = document.getElementById('convertBtn');
+    const formatSelect = document.getElementById('formatSelect');
+    const convertedPreview = document.getElementById('convertedPreview');
+    const downloadConvertBtn = document.getElementById('downloadConvertBtn');
+
+    const uploadStep = document.getElementById('upload-step');
+    const settingsStep = document.getElementById('settings-step');
+    const processingStep = document.getElementById('processing-step');
+    const resultStep = document.getElementById('result-step');
+
+    let imgDataUrl = '';
+    let originalFileName = 'image';
+
+    function changeStep(stepId) {
+        uploadStep.classList.remove('active');
+        settingsStep.classList.remove('active');
+        processingStep.classList.remove('active');
+        resultStep.classList.remove('active');
+        document.getElementById(stepId).classList.add('active');
+    }
+
+    uploadZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files);
+    };
+
+    uploadZone.ondragover = (e) => { e.preventDefault(); uploadZone.style.borderColor = '#14b8a6'; };
+    uploadZone.ondragleave = () => { uploadZone.style.borderColor = '#cbd5e1'; };
+    uploadZone.ondrop = (e) => {
+        e.preventDefault();
+        uploadZone.style.borderColor = '#cbd5e1';
+        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files);
+    };
 
     function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload a valid image file!');
+            return;
+        }
+        originalFileName = file.name.substring(0, file.name.lastIndexOf('.')) || 'image';
         const reader = new FileReader();
-        reader.onload = e => {
-            const img = new Image();
-            img.onload = () => {
-                convertOriginal = img;
-                document.getElementById('upload-step').style.display = 'none';
-                document.getElementById('settings-step').style.display = 'block';
-            };
-            img.src = e.target.result;
+        reader.onload = (event) => {
+            imgDataUrl = event.target.result;
+            changeStep('settings-step');
         };
         reader.readAsDataURL(file);
     }
 
-    uploadZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => e.target.files[0] && handleFile(e.target.files[0]));
-
-    document.getElementById('convertBtn').addEventListener('click', () => {
-        if (!convertOriginal) return;
-
-        document.getElementById('settings-step').style.display = 'none';
-        document.getElementById('processing-step').style.display = 'block';
-
-        setTimeout(() => {
+    convertBtn.onclick = () => {
+        changeStep('processing-step');
+        
+        const img = new Image();
+        img.src = imgDataUrl;
+        img.onload = () => {
             const canvas = document.createElement('canvas');
-            canvas.width = convertOriginal.width;
-            canvas.height = convertOriginal.height;
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(convertOriginal, 0, 0);
 
-            const format = document.getElementById('formatSelect').value;
-            const quality = format === 'image/jpeg' || format === 'image/webp' ? 0.92 : 1;
+            const format = formatSelect.value;
+            if (format === 'image/jpeg') {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            ctx.drawImage(img, 0, 0);
 
-            canvas.toBlob(blob => {
-                const url = URL.createObjectURL(blob);
-                document.getElementById('convertedPreview').src = url;
-                document.getElementById('processing-step').style.display = 'none';
-                document.getElementById('result-step').style.display = 'block';
+            convertedPreview.src = canvas.toDataURL(format, 0.92);
+            
+            setTimeout(() => {
+                changeStep('result-step');
+            }, 400);
+        };
+    };
 
-                document.getElementById('downloadConvertBtn').onclick = () => {
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `converted.${format.split('/')[1]}`;
-                    a.click();
-                };
-            }, format, quality);
-        }, 100);
-    });
+    downloadConvertBtn.onclick = () => {
+        if (!convertedPreview.src) return;
+        const format = formatSelect.value;
+        const ext = format === 'image/jpeg' ? 'jpg' : format.split('/');
+        const link = document.createElement('a');
+        link.download = `${originalFileName}_pixelpress.${ext}`;
+        link.href = convertedPreview.src;
+        link.click();
+    };
 });

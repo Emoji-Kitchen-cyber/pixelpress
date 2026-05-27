@@ -1,50 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Remove Background – PixelPress</title>
   <link rel="stylesheet" href="./css/style.css">
   <style>
     .tool-page { max-width: 1000px; margin: 40px auto; padding: 20px; }
     .workflow-step { background: #fff; border-radius: 16px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
-    .upload-zone {
-      border: 2px dashed #d1d5db; border-radius: 12px; padding: 48px 24px; text-align: center;
-      cursor: pointer; transition: border-color 0.2s; color: #6b7280;
-    }
+    .upload-zone { border: 2px dashed #d1d5db; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: 0.2s; color: #6b7280; }
     .upload-zone:hover, .upload-zone.dragover { border-color: #2563eb; background: rgba(37,99,235,0.03); }
-    .progress-container { margin-top: 15px; display: none; }
+    .progress-container { display: none; margin-top: 20px; }
     progress { width: 100%; height: 12px; border-radius: 6px; }
-    .result-card { width: 220px; border-radius: 12px; overflow: hidden; background: #f8fafc; margin-bottom: 15px; }
+    .result-card { width: 220px; border-radius: 12px; overflow: hidden; background: #f8fafc; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
     .comparison-slider { position: relative; width: 100%; height: 200px; overflow: hidden; }
     .comparison-slider img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
     .comparison-slider .img-after { clip-path: inset(0 50% 0 0); }
     .slider-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; background: #fff; cursor: ew-resize; z-index: 2; }
-    .handle-circle {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 32px; height: 32px; background: #fff; border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
-      font-size: 14px; z-index: 3;
-    }
+    .handle-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; background: #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 3; }
     .bg-options { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
     .bg-option-card { background: #f1f5f9; padding: 12px; border-radius: 12px; flex: 1 1 180px; }
     .bg-option-card label { display: block; font-weight: 600; margin-bottom: 6px; }
     .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-    @media (max-width: 600px) {
-      .result-card { width: 100%; }
-    }
+    @media (max-width: 600px) { .result-card { width: 100%; } }
   </style>
 </head>
 <body>
   <div class="tool-page">
     <h1>🫥 Advanced Background Remover</h1>
-    <p style="margin-bottom:20px; color:#64748b;">Remove backgrounds in seconds, then replace with colours, gradients, custom images, or blur.</p>
+    <p style="margin-bottom:20px; color:#64748b;">Remove backgrounds in seconds. Replace with colours, gradients, blur, or custom images.</p>
 
     <div class="workflow-step">
-      <h2>Upload Images</h2>
+      <h2>1. Upload Images</h2>
       <div class="upload-zone" id="dropZone">
         <p>📁 Drop up to 10 images here or click to browse</p>
-        <small>JPG, PNG, WEBP supported</small>
+        <small>JPG, PNG, WEBP</small>
       </div>
       <input type="file" id="fileInput" accept="image/*" multiple hidden>
       <div class="progress-container" id="progressContainer">
@@ -54,14 +44,14 @@
     </div>
 
     <div class="workflow-step" id="resultsSection" style="display:none;">
-      <h2>Processed Images</h2>
-      <div class="bg-options" id="bgOptionsPanel">
+      <h2>2. Customize & Download</h2>
+      <div class="bg-options">
         <div class="bg-option-card">
           <label>Background Type</label>
           <select id="bgType">
-            <option value="transparent">Transparent</option>
+            <option value="transparent">Transparent (PNG)</option>
             <option value="solid">Solid Colour</option>
-            <option value="gradient">Gradient</option>
+            <option value="gradient">Gradient (2 colours)</option>
             <option value="blur">Blur Original</option>
             <option value="custom">Custom Image</option>
           </select>
@@ -71,8 +61,12 @@
           <input type="color" id="solidColor" value="#ffffff">
         </div>
         <div class="bg-option-card" id="gradientCard" style="display:none;">
-          <label>Gradient (CSS)</label>
-          <input type="text" id="gradientValue" value="linear-gradient(45deg, #ff9a9e, #fad0c4)" placeholder="e.g., linear-gradient(...)">
+          <label>Gradient From / To</label>
+          <div style="display:flex; gap:5px; align-items:center;">
+            <input type="color" id="gradStart" value="#ff9a9e">
+            <span>→</span>
+            <input type="color" id="gradEnd" value="#fad0c4">
+          </div>
         </div>
         <div class="bg-option-card" id="customBgCard" style="display:none;">
           <label>Background Image</label>
@@ -97,6 +91,7 @@
           </select>
         </div>
       </div>
+
       <div id="resultGrid" style="display:flex; flex-wrap:wrap; gap:20px; margin-top:20px;"></div>
       <div class="btn-group" style="justify-content:center;">
         <button id="applyBgBtn" class="btn-primary">Apply Background to All</button>
@@ -105,6 +100,7 @@
     </div>
   </div>
 
+  <!-- Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
   <script src="./js/remove-bg.js"></script>

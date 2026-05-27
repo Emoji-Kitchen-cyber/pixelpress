@@ -1,43 +1,21 @@
-// js/remove-bg.js
+// js/remove-bg.js - FIXED AI LOADING
 const RemoveBG = {
     filesData: [],
     MAX_FILES: 10,
-    isLibraryLoaded: false,
     removeBackgroundFn: null,
+    isReady: false,
 
-    init() {
-        console.log('%c[RemoveBG] Production v1.0 initialized', 'color:#6366f1;font-weight:bold');
-        this.setupListeners();
-        this.loadLibrary();
-        this.checkCompatibility();
+    async init() {
+        console.log('%c[RemoveBG] Starting...', 'color:#6366f1');
+        this.setupUI();
+        await this.loadAI();
     },
 
-    checkCompatibility() {
-        if (typeof WebAssembly === 'undefined') {
-            this.showToast('WebAssembly not supported on this browser.', 'error');
-        }
-    },
-
-    async loadLibrary() {
-        const status = document.getElementById('status');
-        try {
-            const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm');
-            this.removeBackgroundFn = module.removeBackground;
-            this.isLibraryLoaded = true;
-            status.textContent = '✅ AI Ready';
-            console.log('%c[RemoveBG] @imgly/background-removal loaded successfully', 'color:#22c55e');
-        } catch (e) {
-            console.error(e);
-            status.textContent = '⚠️ AI Model Failed';
-        }
-    },
-
-    setupListeners() {
+    setupUI() {
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
 
         uploadArea.addEventListener('click', () => fileInput.click());
-        
         uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
         uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
         uploadArea.addEventListener('drop', e => {
@@ -51,37 +29,59 @@ const RemoveBG = {
         // Slider
         let dragging = false;
         const divider = document.getElementById('slider-divider');
-        
         divider.addEventListener('mousedown', () => dragging = true);
         window.addEventListener('mouseup', () => dragging = false);
-        window.addEventListener('mousemove', e => {
+        window.addEventListener('mousemove', (e) => {
             if (!dragging) return;
             const rect = document.getElementById('before-after').getBoundingClientRect();
-            let pos = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
-            document.getElementById('before-img').style.width = pos + '%';
-            document.getElementById('after-img').style.left = pos + '%';
-            divider.style.left = pos + '%';
+            let percent = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
+            document.getElementById('before-img').style.width = percent + '%';
+            document.getElementById('after-img').style.left = percent + '%';
+            divider.style.left = percent + '%';
         });
     },
 
-    handleFiles(fileList) {
-        Array.from(fileList).forEach(file => {
-            if (!file.type.startsWith('image/') || this.filesData.length >= this.MAX_FILES) return;
+    async loadAI() {
+        const statusEl = document.getElementById('status');
+        try {
+            // Try latest stable version
+            const url = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm';
+            console.log('Loading AI from:', url);
+            
+            const module = await import(url);
+            this.removeBackgroundFn = module.removeBackground;
+            this.isReady = true;
+            
+            statusEl.textContent = '✅ AI Engine Ready';
+            statusEl.style.color = '#22c55e';
+            console.log('%c[RemoveBG] AI Loaded Successfully', 'color:#22c55e');
+            
+        } catch (err) {
+            console.error("AI Load Failed:", err);
+            statusEl.textContent = '⚠️ AI Failed - Using Fallback';
+            statusEl.style.color = '#f59e0b';
+            this.showToast("AI engine failed to load. Using basic mode.", "error");
+        }
+    },
 
+    handleFiles(fileList) {
+        Array.from(fileList).slice(0, this.MAX_FILES - this.filesData.length).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            
             const reader = new FileReader();
-            reader.onload = ev => {
+            reader.onload = e => {
                 const img = new Image();
                 img.onload = () => {
                     this.filesData.push({
                         id: Date.now(),
                         name: file.name,
-                        originalUrl: ev.target.result,
+                        originalUrl: e.target.result,
                         processedUrl: null,
                         blob: null
                     });
                     this.renderFiles();
                 };
-                img.src = ev.target.result;
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         });
@@ -90,25 +90,27 @@ const RemoveBG = {
     renderFiles() {
         const container = document.getElementById('files-list');
         container.innerHTML = '';
-
+        
         this.filesData.forEach((file, i) => {
-            const div = document.createElement('div');
-            div.className = 'file-card';
-            div.innerHTML = `
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.innerHTML = `
                 <div class="preview-container">
                     <img src="${file.originalUrl}" class="preview">
                     <div class="processing-overlay" id="overlay-${file.id}">
-                        <div>Processing with AI...</div>
-                        <div class="progress-bar"><div class="progress" style="width:0%"></div></div>
+                        <div>AI Processing...</div>
+                        <div style="width:80%;height:6px;background:#334155;margin-top:12px;border-radius:999px;overflow:hidden;">
+                            <div style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#a5b4fc);transition:width 0.4s;" id="prog-${file.id}"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="controls">
-                    <div style="font-size:13px;margin-bottom:8px;">${file.name}</div>
+                <div style="padding:16px;">
+                    <div style="font-size:13px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.name}</div>
                     <button onclick="RemoveBG.processSingle(${i})" class="btn-primary" style="width:100%;margin-bottom:6px;">Remove Background</button>
                     \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">View Result</button>` : ''}
                 </div>
             `;
-            container.appendChild(div);
+            container.appendChild(card);
         });
 
         document.getElementById('process-all-btn').disabled = this.filesData.length === 0;
@@ -124,7 +126,7 @@ const RemoveBG = {
         try {
             let resultBlob;
 
-            if (this.isLibraryLoaded && this.removeBackgroundFn) {
+            if (this.isReady && this.removeBackgroundFn) {
                 const img = new Image();
                 img.src = file.originalUrl;
                 await new Promise(r => img.onload = r);
@@ -135,47 +137,45 @@ const RemoveBG = {
                 });
             } else {
                 // Fallback
-                resultBlob = await this.simpleFallback(file.originalUrl);
+                resultBlob = await this.fallbackProcess(file.originalUrl);
             }
 
             file.processedUrl = URL.createObjectURL(resultBlob);
             file.blob = resultBlob;
 
             this.renderFiles();
-
+            this.showToast(`${file.name} processed successfully!`);
         } catch (err) {
             console.error(err);
-            this.showToast('Processing failed for ' + file.name, 'error');
+            this.showToast("Processing failed. Try again.", "error");
         } finally {
             overlay.style.display = 'none';
         }
     },
 
-    async processAll() {
-        for (let i = 0; i < this.filesData.length; i++) {
-            if (!this.filesData[i].processedUrl) {
-                await this.processSingle(i);
-            }
-        }
-        document.getElementById('download-all-btn').style.display = 'inline-block';
-    },
-
-    async simpleFallback(dataUrl) {
+    async fallbackProcess(dataUrl) {
         return new Promise(resolve => {
-            const canvas = document.createElement('canvas');
             const img = new Image();
             img.onload = () => {
+                const canvas = document.createElement('canvas');
                 canvas.width = img.width;
                 canvas.height = img.height;
                 canvas.getContext('2d').drawImage(img, 0, 0);
-                canvas.toBlob(resolve, 'image/png', 0.95);
+                canvas.toBlob(resolve, 'image/png');
             };
             img.src = dataUrl;
         });
     },
 
-    showResult(index) {
-        const file = this.filesData[index];
+    async processAll() {
+        for (let i = 0; i < this.filesData.length; i++) {
+            if (!this.filesData[i].processedUrl) await this.processSingle(i);
+        }
+        document.getElementById('download-all-btn').style.display = 'inline-block';
+    },
+
+    showResult(i) {
+        const file = this.filesData[i];
         document.getElementById('current-file-name').textContent = file.name;
         document.getElementById('original-preview').src = file.originalUrl;
         document.getElementById('processed-preview').src = file.processedUrl;
@@ -187,24 +187,21 @@ const RemoveBG = {
     },
 
     downloadCurrent() {
-        const index = this.filesData.findIndex(f => f.processedUrl);
-        if (index === -1) return;
-        const file = this.filesData[index];
+        const file = this.filesData.find(f => f.processedUrl);
+        if (!file) return;
         const a = document.createElement('a');
         a.href = file.processedUrl;
-        a.download = file.name.replace(/\.\w+/, '') + '-nobg.png';
+        a.download = file.name.replace(/\.\w+$/, '') + '-nobg.png';
         a.click();
     },
 
     async downloadAll() {
         const zip = new JSZip();
-        this.filesData.forEach(file => {
-            if (file.blob) {
-                zip.file(file.name.replace(/\.\w+/, '') + '-nobg.png', file.blob);
-            }
+        this.filesData.forEach(f => {
+            if (f.blob) zip.file(f.name.replace(/\.\w+$/, '') + '-nobg.png', f.blob);
         });
-        const blob = await zip.generateAsync({type:"blob"});
-        saveAs(blob, `removed-backgrounds-${Date.now()}.zip`);
+        const content = await zip.generateAsync({type: "blob"});
+        saveAs(content, `removed-bg-${Date.now()}.zip`);
     },
 
     clearAll() {
@@ -219,7 +216,7 @@ const RemoveBG = {
         toast.textContent = msg;
         toast.style.borderLeftColor = type === 'error' ? '#ef4444' : '#22c55e';
         toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 3000);
+        setTimeout(() => toast.style.display = 'none', 2800);
     }
 };
 

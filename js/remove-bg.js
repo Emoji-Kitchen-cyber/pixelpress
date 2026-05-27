@@ -3,7 +3,7 @@
 // Improvements: GPU Acceleration, Memory Leaks Patched, Aspect Correct Maps
 // ============================================================================
 
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.1';
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
 // ── DOM References ──────────────────────────────────────
 const dropZone          = document.getElementById('dropZone');
@@ -146,7 +146,6 @@ async function startProcessingChain(files) {
 
 // ── Hardware Accelerated Alpha Matte Extraction ───────────
 async function executeAlphaExtraction(originalBlob) {
-  // Production safe optimization: Smart downscale for ultra-smooth rendering performance
   const scaledBlob = await runDownscaleOptimizer(originalBlob, 1200);
   const sourceImg = await blobToImageElement(scaledBlob);
 
@@ -181,6 +180,7 @@ async function executeAlphaExtraction(originalBlob) {
       }    
       bCtx.putImageData(imgData, 0, 0);    
       lCtx.drawImage(bufferCanvas, 0, 0, sourceImg.width, sourceImg.height);
+      bufferCanvas.width = 0;
     }    
 
     // Step 2: Extract Alpha Channels directly into GPU Compositor Context
@@ -189,18 +189,15 @@ async function executeAlphaExtraction(originalBlob) {
     productionCanvas.height = sourceImg.height;    
     const pCtx = productionCanvas.getContext('2d');    
     
-    // Draw raw image stream
     pCtx.drawImage(sourceImg, 0, 0);    
-    
-    // Apply hardware-accelerated destination layer masking
     pCtx.globalCompositeOperation = 'destination-in';    
     pCtx.drawImage(layerCanvas, 0, 0);    
     pCtx.globalCompositeOperation = 'source-over';    
 
     const cleanResult = await canvasToBlobData(productionCanvas, 'image/png', 1.0);
     
-    // Explicit GC release
-    layerCanvas.width = bufferCanvas.width = productionCanvas.width = 0; 
+    layerCanvas.width = 0; 
+    productionCanvas.width = 0; 
     return cleanResult;
   } else {
     return await runLegacyChromaKey(sourceImg);
@@ -281,22 +278,22 @@ function canvasToBlobData(canvas, layout, precision) {
 function renderOutputStage() {
   resultGrid.innerHTML = '';
   processedResults.forEach((result, idx) => {
-    const card = document.createElement('div');
-    card.className = 'result-card';
-
     if (result.error) {    
+      const card = document.createElement('div');
+      card.className = 'result-card';
       card.innerHTML = `<p style="padding:12px; text-align:center; font-size:13px; color:#ef4444;">⚠️ ${result.errorMsg}</p>`;    
       resultGrid.appendChild(card);    
       return;    
     }    
 
-    // Clean historical allocations
     if (result.origUrl) URL.revokeObjectURL(result.origUrl);
     if (result.currUrl) URL.revokeObjectURL(result.currUrl);
 
     result.origUrl = URL.createObjectURL(result.originalBlob);    
     result.currUrl = URL.createObjectURL(result.currentBlob);    
 
+    const card = document.createElement('div');
+    card.className = 'result-card';
     card.innerHTML = `    
       <div class="comparison-slider" id="slider-${idx}">    
         <img src="${result.origUrl}" alt="Source Stage" class="img-before">    
@@ -308,7 +305,6 @@ function renderOutputStage() {
       </div>`;    
     resultGrid.appendChild(card);    
 
-    // Interactivity engine hooks
     const slider    = card.querySelector('.comparison-slider');    
     const handle    = slider.querySelector('.slider-handle');    
     const transform = slider.querySelector('.img-after');    
@@ -350,7 +346,7 @@ feather.addEventListener('input', () => featherValue.textContent = feather.value
 
 customBgFile.addEventListener('change', e => {
   const target = e.target.files;
-  if (!target) return;
+  if (!target || target.length === 0) return;
   const reader = new FileReader();
   reader.onload = ev => {
     const obj = new Image();
@@ -377,7 +373,6 @@ applyBgBtn.addEventListener('click', async () => {
     canvas.height = compoundObject.height;
     const ctx = canvas.getContext('2d');
 
-    // Layer 1: Construct Target Environment Backgrounds
     if (mode === 'solid') {    
       ctx.fillStyle = solidColor.value;    
       ctx.fillRect(0, 0, canvas.width, canvas.height);    
@@ -401,7 +396,6 @@ applyBgBtn.addEventListener('click', async () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);    
     }    
 
-    // Layer 2: Compute Edge Refinement Feather Subsystem
     if (featherVal > 0) {    
       const shadowBuffer = document.createElement('canvas');    
       shadowBuffer.width = canvas.width;    
@@ -416,7 +410,6 @@ applyBgBtn.addEventListener('click', async () => {
       shadowBuffer.width = 0; 
     }    
 
-    // Layer 3: Render Foreground Subject Alpha
     ctx.drawImage(compoundObject, 0, 0);    
     item.currentBlob = await canvasToBlobData(canvas, standardExt, 0.96);    
     canvas.width = 0; 
@@ -429,7 +422,8 @@ applyBgBtn.addEventListener('click', async () => {
 
 // ── Export/Download Processing Block ─────────────────────
 function downloadSingle(blob, baselineName) {
-  const extensionType = outputFormat.value.split('/') || 'png';
+  const currentFormat = outputFormat.value;
+  const extensionType = currentFormat === 'image/jpeg' ? 'jpg' : (currentFormat.split('/') || 'png');
   const cleanName = baselineName.replace(/\.[^.]+$/, '');
   
   const element = document.createElement('a');
@@ -442,7 +436,8 @@ function downloadSingle(blob, baselineName) {
 
 downloadAllBtn.addEventListener('click', async () => {
   const bundle = new JSZip();
-  const targetedExt = outputFormat.value.split('/') || 'png';
+  const currentFormat = outputFormat.value;
+  const targetedExt = currentFormat === 'image/jpeg' ? 'jpg' : (currentFormat.split('/') || 'png');
   
   for (const res of processedResults) {
     if (res.error || !res.currentBlob) continue;
@@ -469,4 +464,3 @@ gradientCard.style.display   = 'none';
 customBgCard.style.display   = 'none';
 blurCard.style.display       = 'none';
 outputFormat.value           = 'image/png';
-

@@ -1,50 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convert Image – PixelPress</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body {font-family:'Segoe UI',sans-serif; background:#f9fafb; margin:0; padding:20px;}
-        .container {max-width:1100px; margin:auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1);}
-        .header {background:linear-gradient(135deg, #14b8a6, #0f766e); color:white; padding:25px; text-align:center;}
-        .step {display:none; padding:30px;}
-        .step.active {display:block;}
-        .upload-zone {border:4px dashed #cbd5e1; border-radius:16px; padding:80px 20px; text-align:center; cursor:pointer;}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convert Image Format — PixelPress</title>
+  <style>
+    :root { --primary: #14b8a6; --primary-hover: #0f766e; --text-dark: #0f172a; --text-muted: #64748b; --bg-main: #f8fafc; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-main); color: var(--text-dark); padding: 10px; }
+    .container { width: 100%; max-width: 800px; margin: auto; padding: 15px 10px; }
+
+    /* Header & Sidebar Menu */
+    .brand-header { display: flex; align-items: center; justify-content: center; position: relative; margin-top: 15px; margin-bottom: 25px; }
+    .menu-btn { position: absolute; left: 10px; background: none; border: none; font-size: 26px; color: var(--text-dark); cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s; }
+    .menu-btn:hover { background: #e2e8f0; }
+    .brand-logo { font-size: 24px; font-weight: 800; text-decoration: none; color: var(--text-dark); }
+    .brand-logo span { color: var(--primary); }
+
+    .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 9998; display: none; opacity: 0; transition: 0.3s; }
+    .menu-overlay.show { display: block; opacity: 1; }
+    .side-menu { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 9999; transition: 0.3s; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+    .side-menu.open { left: 0; }
+    .menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
+    .close-btn { background: #f1f5f9; border: none; font-size: 18px; color: #64748b; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; }
+    .menu-links { display: flex; flex-direction: column; gap: 10px; }
+    .menu-links a { text-decoration: none; color: var(--text-dark); font-size: 15px; font-weight: 500; padding: 12px 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+    .menu-links a:hover { background: #f0fdfa; color: var(--primary); }
+
+    /* Tool Area */
+    .tool-header { text-align: center; margin-bottom: 20px; }
+    .tool-header h1 { font-size: 26px; margin-bottom: 8px; }
+    .tool-header p { color: var(--text-muted); font-size: 15px; }
+
+    /* Drag & Drop Box */
+    .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 50px 20px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; position: relative; }
+    .upload-area:hover, .upload-area.dragover { border-color: var(--primary); background: #f0fdfa; }
+    .upload-icon { font-size: 40px; margin-bottom: 15px; }
+    .upload-text { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+    
+    /* Controls */
+    .controls { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 20px; display: none; }
+    .controls.active { display: block; }
+    select { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px; outline: none; }
+    
+    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; transition: 0.2s; width: 100%; text-align: center; display: inline-block; text-decoration: none; }
+    .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    
+    .preview-container { margin-top: 20px; text-align: center; display: none; }
+    .preview-container img { max-width: 100%; max-height: 300px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; transition: 0.3s; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .toast.show { bottom: 30px; }
+    .toast.error { background: #ef4444; }
+    .toast.success { background: #10b981; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header"><h1>🔄 Convert Image Format</h1></div>
 
-        <div id="upload-step" class="step active">
-            <h2 style="text-align:center;">Upload Image</h2>
-            <div id="convertUploadZone" class="upload-zone">Drop or Click</div>
-            <input type="file" id="convertFileInput" accept="image/*" style="display:none;">
-        </div>
+  <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
 
-        <div id="settings-step" class="step">
-            <h2>Choose Output Format</h2>
-            <select id="formatSelect" style="width:100%; padding:14px; font-size:18px; border-radius:10px;">
-                <option value="image/png">PNG</option>
-                <option value="image/jpeg">JPG</option>
-                <option value="image/webp">WEBP</option>
-            </select><br><br>
-            <button id="convertBtn" style="width:100%; padding:16px; background:#14b8a6; color:white; border:none; border-radius:12px; font-size:18px;">Convert Now</button>
-        </div>
+  <div class="side-menu" id="sideMenu">
+    <div class="menu-header">
+      <div class="brand-logo">PIXEL<span>PRESS</span></div>
+      <button class="close-btn" onclick="toggleMenu(false)">✕</button>
+    </div>
+    <div class="menu-links">
+      <a href="./index.html">🏠 Home</a>
+      <a href="./compress.html">📦 Compress Image</a>
+      <a href="./resize.html">📐 Resize Image</a>
+      <a href="./photo-editor.html">✨ Photo Editor</a>
+      <a href="./convert.html">🔄 Convert Format</a>
+      <a href="./watermark.html">💧 Watermark Image</a>
+    </div>
+  </div>
 
-        <div id="processing-step" class="step"><h2 style="text-align:center;">⏳ Converting...</h2></div>
+  <div class="container">
+    <header class="brand-header">
+      <button class="menu-btn" onclick="toggleMenu(true)">☰</button>
+      <a href="./index.html" class="brand-logo">PIXEL<span>PRESS</span></a>
+    </header>
 
-        <div id="result-step" class="step">
-            <h2 style="text-align:center; color:#10b981;">✅ Conversion Complete!</h2>
-            <img id="convertedPreview" style="max-width:100%; border-radius:12px;">
-            <div style="text-align:center; margin-top:25px;">
-                <button id="downloadConvertBtn" style="background:#10b981; color:white; padding:16px 40px; border:none; border-radius:12px;">Download Converted Image</button>
-            </div>
-        </div>
+    <div class="tool-header">
+      <h1>Convert Image Format</h1>
+      <p>Transform your images to PNG, JPG, or WEBP instantly.</p>
     </div>
 
-    <script src="../js/convert.js"></script>
+    <div class="upload-area" id="dropZone">
+      <div class="upload-icon">🔄</div>
+      <div class="upload-text">Choose an image or drop it here</div>
+      <input type="file" id="fileInput" accept="image/*" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" />
+    </div>
+
+    <div class="controls" id="controlsPanel">
+      <select id="formatSelect">
+        <option value="image/png">Convert to PNG</option>
+        <option value="image/jpeg">Convert to JPG</option>
+        <option value="image/webp">Convert to WEBP</option>
+      </select>
+      <button class="btn" id="convertBtn">Convert & Download</button>
+    </div>
+
+    <div class="preview-container" id="previewContainer">
+      <img id="previewImg" src="" alt="Preview">
+    </div>
+  </div>
+
+  <div class="toast" id="toastBox"></div>
+
+  <script>
+    function toggleMenu(show) {
+      document.getElementById('sideMenu').classList.toggle('open', show);
+      document.getElementById('menuOverlay').classList.toggle('show', show);
+    }
+
+    function showToast(message, type = 'normal') {
+      const toast = document.getElementById('toastBox');
+      toast.innerText = message;
+      toast.className = 'toast show';
+      if (type === 'error') toast.classList.add('error');
+      if (type === 'success') toast.classList.add('success');
+      setTimeout(() => toast.className = 'toast', 3000);
+    }
+
+    let loadedImgSrc = null;
+    let originalName = "image";
+    const fileInput = document.getElementById('fileInput');
+    const controlsPanel = document.getElementById('controlsPanel');
+
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files;
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('Please upload a valid image file!', 'error');
+        return;
+      }
+      originalName = file.name.substring(0, file.name.lastIndexOf('.')) || "converted";
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        loadedImgSrc = event.target.result;
+        document.getElementById('previewImg').src = loadedImgSrc;
+        document.getElementById('previewContainer').style.display = 'block';
+        controlsPanel.classList.add('active');
+        showToast('Image uploaded successfully!', 'success');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('convertBtn').addEventListener('click', function() {
+      if (!loadedImgSrc) return;
+      
+      try {
+        const format = document.getElementById('formatSelect').value;
+        const ext = format.split('/') === 'jpeg' ? 'jpg' : format.split('/');
+        const img = new Image();
+        img.src = loadedImgSrc;
+        
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          
+          // Background handling for transparent PNGs turning to JPG
+          if (format === 'image/jpeg') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          }
+          
+          ctx.drawImage(img, 0, 0);
+          
+          const link = document.createElement('a');
+          link.download = `${originalName}.${ext}`;
+          link.href = canvas.toDataURL(format, 0.9);
+          link.click();
+          showToast('Conversion complete! Download started.', 'success');
+        };
+      } catch (err) {
+        showToast('Error during conversion!', 'error');
+        console.error(err);
+      }
+    });
+
+    // Drag & Drop visual helpers
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+  </script>
 </body>
 </html>

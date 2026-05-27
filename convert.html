@@ -1,50 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convert Image – PixelPress</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body {font-family:'Segoe UI',sans-serif; background:#f9fafb; margin:0; padding:20px;}
-        .container {max-width:1100px; margin:auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1);}
-        .header {background:linear-gradient(135deg, #14b8a6, #0f766e); color:white; padding:25px; text-align:center;}
-        .step {display:none; padding:30px;}
-        .step.active {display:block;}
-        .upload-zone {border:4px dashed #cbd5e1; border-radius:16px; padding:80px 20px; text-align:center; cursor:pointer;}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convert Image — PixelPress</title>
+  <style>
+    :root { --primary: #14b8a6; --primary-hover: #0f766e; --text-dark: #0f172a; --bg-main: #f8fafc; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg-main); color: var(--text-dark); padding: 10px; }
+    .container { max-width: 800px; margin: auto; padding: 20px; }
+    
+    /* Header & Sidebar (Standardized) */
+    .brand-header { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 25px; }
+    .menu-btn { position: absolute; left: 10px; background: none; border: none; font-size: 26px; cursor: pointer; padding: 5px; }
+    .side-menu { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: white; z-index: 9999; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); transition: 0.3s; }
+    .side-menu.open { left: 0; }
+    .menu-links a { display: block; padding: 12px; text-decoration: none; color: #334; border-radius: 8px; }
+    .menu-links a:hover { background: #f0fdfa; color: var(--primary); }
+
+    /* Tool UI */
+    .tool-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .upload-zone { border: 2px dashed #cbd5e1; padding: 50px; text-align: center; border-radius: 12px; cursor: pointer; margin-bottom: 20px; }
+    .btn { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
+    #previewImg { max-width: 100%; margin-top: 20px; border-radius: 8px; display: none; }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #334; color: white; padding: 10px 20px; border-radius: 20px; display: none; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header"><h1>🔄 Convert Image Format</h1></div>
 
-        <div id="upload-step" class="step active">
-            <h2 style="text-align:center;">Upload Image</h2>
-            <div id="convertUploadZone" class="upload-zone">Drop or Click</div>
-            <input type="file" id="convertFileInput" accept="image/*" style="display:none;">
-        </div>
-
-        <div id="settings-step" class="step">
-            <h2>Choose Output Format</h2>
-            <select id="formatSelect" style="width:100%; padding:14px; font-size:18px; border-radius:10px;">
-                <option value="image/png">PNG</option>
-                <option value="image/jpeg">JPG</option>
-                <option value="image/webp">WEBP</option>
-            </select><br><br>
-            <button id="convertBtn" style="width:100%; padding:16px; background:#14b8a6; color:white; border:none; border-radius:12px; font-size:18px;">Convert Now</button>
-        </div>
-
-        <div id="processing-step" class="step"><h2 style="text-align:center;">⏳ Converting...</h2></div>
-
-        <div id="result-step" class="step">
-            <h2 style="text-align:center; color:#10b981;">✅ Conversion Complete!</h2>
-            <img id="convertedPreview" style="max-width:100%; border-radius:12px;">
-            <div style="text-align:center; margin-top:25px;">
-                <button id="downloadConvertBtn" style="background:#10b981; color:white; padding:16px 40px; border:none; border-radius:12px;">Download Converted Image</button>
-            </div>
-        </div>
+  <div class="side-menu" id="sideMenu">
+    <div style="text-align:right"><button onclick="toggleMenu(false)" style="border:none; background:none; font-size:20px;">✕</button></div>
+    <div class="menu-links">
+      <a href="./index.html">🏠 Home</a>
+      <a href="./compress.html">📦 Compress</a>
+      <a href="./resize.html">📐 Resize</a>
+      <a href="./convert.html">🔄 Convert Format</a>
+      <a href="./watermark.html">💧 Watermark</a>
     </div>
+  </div>
 
-    <script src="../js/convert.js"></script>
+  <div class="container">
+    <header class="brand-header">
+      <button class="menu-btn" onclick="toggleMenu(true)">☰</button>
+      <h1 style="font-size: 22px;">Convert Format</h1>
+    </header>
+
+    <div class="tool-box">
+      <div class="upload-zone" id="dropZone">Drop or Click to Upload</div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      
+      <div id="controls" style="display:none">
+        <select id="formatSelect" style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px;">
+          <option value="image/png">Convert to PNG</option>
+          <option value="image/jpeg">Convert to JPG</option>
+          <option value="image/webp">Convert to WEBP</option>
+        </select>
+        <button class="btn" id="convertBtn">Convert & Download</button>
+      </div>
+      <img id="previewImg">
+    </div>
+  </div>
+
+  <div class="toast" id="toastBox"></div>
+
+  <script>
+    function toggleMenu(s) { document.getElementById('sideMenu').classList.toggle('open', s); }
+    const dropZone = document.getElementById('dropZone'), fileInput = document.getElementById('fileInput');
+    let selectedFile = null;
+
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+      selectedFile = e.target.files;
+      if(!selectedFile) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('previewImg').style.display = 'block';
+        document.getElementById('controls').style.display = 'block';
+      };
+      reader.readAsDataURL(selectedFile);
+    };
+
+    document.getElementById('convertBtn').onclick = () => {
+      try {
+        const format = document.getElementById('formatSelect').value;
+        const img = new Image();
+        img.src = document.getElementById('previewImg').src;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width; canvas.height = img.height;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          
+          const link = document.createElement('a');
+          link.download = `converted-image.${format.split('/')}`;
+          link.href = canvas.toDataURL(format);
+          link.click();
+          showToast('Conversion Success!');
+        };
+      } catch(e) { showToast('Error in conversion!'); }
+    };
+
+    function showToast(msg) {
+      const t = document.getElementById('toastBox');
+      t.innerText = msg; t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
+  </script>
 </body>
 </html>

@@ -35,6 +35,7 @@
       background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center;
       z-index: 9999; flex-direction: column; gap: 15px; font-size: 18px; font-weight: 600;
     }
+    .fallback-btn { margin-top: 10px; background: #e2e8f0; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
     @media (max-width: 600px) { .result-card { width: 100%; } }
   </style>
 </head>
@@ -45,11 +46,12 @@
     <p id="loadingMsg">Loading AI model…</p>
     <progress id="modelProgress" max="100" value="0"></progress>
     <p id="loadingSubMsg" style="font-size:14px; color:#64748b;"></p>
+    <button id="fallbackBtn" class="fallback-btn" style="display:none;">Try Manual Removal</button>
   </div>
 
   <div class="tool-page">
     <h1>🫥 Advanced Background Remover</h1>
-    <p style="margin-bottom:20px; color:#64748b;">Remove backgrounds instantly. Replace with colours, gradients, blur, or custom images.</p>
+    <p style="margin-bottom:20px; color:#64748b;">Remove backgrounds in seconds. Replace with colours, gradients, blur, or custom images.</p>
 
     <div class="workflow-step">
       <h2>1. Upload Images</h2>
@@ -121,8 +123,9 @@
     </div>
   </div>
 
-  <!-- Libraries: JSZip + img.ly background removal (ESM) -->
+  <!-- JSZip for ZIP download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- New background remover script -->
   <script type="module" src="./js/remove-bg.js"></script>
 </body>
 </html>

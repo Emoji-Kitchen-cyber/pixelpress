@@ -1,222 +1,332 @@
-// Variable settings for image state
-let originalImg = null;
-let currentRotation = 0; // 0, 90, 180, 270
-let isFlipH = false;
-let isFlipV = false;
-let zoomScale = 1.0;
-
-// Filter States
-const filters = {
-  brightness: 100,
-  contrast: 100,
-  saturation: 100,
-  grayscale: 0,
-  sepia: 0,
-  blur: 0
-};
-
-// DOM Elements
-const fileInput = document.getElementById('fileInput');
 const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
 const uploadSection = document.getElementById('uploadSection');
 const editorSection = document.getElementById('editorSection');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const mainCanvas = document.getElementById('mainCanvas');
+const mainCtx = mainCanvas.getContext('2d');
+const layersList = document.getElementById('layersList');
+const statusBar = document.getElementById('statusBar');
+const layerOpacity = document.getElementById('layerOpacity');
+const layerBlend = document.getElementById('layerBlend');
+const brushSize = document.getElementById('brushSize');
+const colorPicker = document.getElementById('colorPicker');
 
-// Sliders
-const brightnessSlider = document.getElementById('brightness');
-const contrastSlider = document.getElementById('contrast');
-const saturationSlider = document.getElementById('saturation');
+let layerManager;
+let originalImage = null;
+let history = [];
+let historyIndex = -1;
+const MAX_HISTORY = 50;
 
-// --- 1. Upload Logic ---
+let currentTool = null;
+let isDrawing = false;
+let drawStart = { x:0, y:0 };
+let cropRect = null;
+
+// Upload
 dropZone.addEventListener('click', () => fileInput.click());
-
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.style.borderColor = '#ec4899';
-  dropZone.style.background = '#fdf4ff';
-});
-
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.borderColor = '#94a3b8';
-  dropZone.style.background = 'transparent';
-});
-
-dropZone.addEventListener('drop', (e) => {
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#ec4899'; });
+dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = '#94a3b8');
+dropZone.addEventListener('drop', e => {
   e.preventDefault();
   const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) {
-    loadImage(file);
-  }
+  if(file && file.type.startsWith('image/')) loadImage(file);
 });
-
-fileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) loadImage(file);
-});
+fileInput.addEventListener('change', e => { if(e.target.files[0]) loadImage(e.target.files[0]); });
 
 function loadImage(file) {
   const reader = new FileReader();
-  reader.onload = function(event) {
-    originalImg = new Image();
-    originalImg.onload = function() {
-      // Hide upload zone and show editor
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      originalImage = img;
+      mainCanvas.width = img.width;
+      mainCanvas.height = img.height;
+      layerManager = new LayerManager(mainCanvas);
+      layerManager.reset(img);
+      history = [mainCanvas.toDataURL()];
+      historyIndex = 0;
       uploadSection.style.display = 'none';
       editorSection.style.display = 'block';
-      
-      // Reset states
-      resetToDefault();
+      renderLayerList();
+      updateStatus('Image loaded');
     };
-    originalImg.src = event.target.result;
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-// --- 2. Canvas Rendering Engine (Handles everything dynamically) ---
-function applyEdits() {
-  if (!originalImg) return;
-
-  // Determine standard size based on rotation
-  const is90or270 = currentRotation === 90 || currentRotation === 270;
-  const targetWidth = (is90or270 ? originalImg.height : originalImg.width) * zoomScale;
-  const targetHeight = (is90or270 ? originalImg.width : originalImg.height) * zoomScale;
-
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-
-  // Apply CSS-like Filters directly on Canvas Context
-  ctx.filter = `
-    brightness(${filters.brightness}%)
-    contrast(${filters.contrast}%)
-    saturate(${filters.saturation}%)
-    grayscale(${filters.grayscale}%)
-    sepia(${filters.sepia}%)
-    blur(${filters.blur}px)
-  `;
-
-  // Move origin to center for rotation and scaling
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-
-  // Apply Rotations
-  ctx.rotate((currentRotation * Math.PI) / 180);
-
-  // Apply Flips
-  const scaleX = isFlipH ? -1 : 1;
-  const scaleY = isFlipV ? -1 : 1;
-  ctx.scale(scaleX, scaleY);
-
-  // Draw the image centered
-  ctx.drawImage(
-    originalImg, 
-    -originalImg.width * zoomScale / 2, 
-    -originalImg.height * zoomScale / 2, 
-    originalImg.width * zoomScale, 
-    originalImg.height * zoomScale
-  );
-
-  ctx.restore();
+function renderLayerList() {
+  layersList.innerHTML = layerManager.layers.map((layer,i) => `
+    <li class="layer-item${i===layerManager.activeLayerIndex?' active':''}" data-index="${i}">
+      <img class="layer-thumb" src="${layer.getDataURL()}" alt="thumb">
+      <span>${layer.name}</span>
+    </li>
+  `).join('');
+  document.querySelectorAll('.layer-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.dataset.index);
+      layerManager.setActiveLayer(idx);
+      renderLayerList();
+      updateStatus(`Active layer: ${layerManager.getActiveLayer().name}`);
+    });
+  });
 }
 
-// --- 3. Event Listeners for Filters ---
-brightnessSlider.addEventListener('input', (e) => {
-  filters.brightness = e.target.value;
-  applyEdits();
+document.getElementById('addLayerBtn').addEventListener('click', () => {
+  layerManager.addLayer(`Layer ${layerManager.layers.length+1}`);
+  renderLayerList();
+  pushHistory();
+  compositeAndRender();
 });
-
-contrastSlider.addEventListener('input', (e) => {
-  filters.contrast = e.target.value;
-  applyEdits();
+document.getElementById('deleteLayerBtn').addEventListener('click', () => {
+  if(layerManager.removeLayer(layerManager.activeLayerIndex)) {
+    renderLayerList();
+    pushHistory();
+    compositeAndRender();
+  }
 });
-
-saturationSlider.addEventListener('input', (e) => {
-  filters.saturation = e.target.value;
-  applyEdits();
+layerOpacity.addEventListener('input', () => {
+  if(layerManager.getActiveLayer()) {
+    layerManager.getActiveLayer().opacity = parseFloat(layerOpacity.value);
+    compositeAndRender();
+  }
 });
-
-// One-click Effects Buttons
-document.getElementById('grayscaleBtn').addEventListener('click', () => {
-  filters.grayscale = filters.grayscale === 100 ? 0 : 100;
-  applyEdits();
-});
-
-document.getElementById('sepiaBtn').addEventListener('click', () => {
-  filters.sepia = filters.sepia === 100 ? 0 : 100;
-  applyEdits();
-});
-
-document.getElementById('blurBtn').addEventListener('click', () => {
-  filters.blur = filters.blur === 5 ? 0 : 5; // Toggles 5px blur
-  applyEdits();
-});
-
-// --- 4. Transformations (Rotate, Flip, Zoom) ---
-document.getElementById('rotateLeft').addEventListener('click', () => {
-  currentRotation = (currentRotation - 90 + 360) % 360;
-  applyEdits();
-});
-
-document.getElementById('rotateRight').addEventListener('click', () => {
-  currentRotation = (currentRotation + 90) % 360;
-  applyEdits();
-});
-
-document.getElementById('flipH').addEventListener('click', () => {
-  isFlipH = !isFlipH;
-  applyEdits();
-});
-
-document.getElementById('flipV').addEventListener('click', () => {
-  isFlipV = !isFlipV;
-  applyEdits();
-});
-
-document.getElementById('zoomInBtn').addEventListener('click', () => {
-  if (zoomScale < 3.0) {
-    zoomScale += 0.1;
-    applyEdits();
+layerBlend.addEventListener('change', () => {
+  if(layerManager.getActiveLayer()) {
+    layerManager.getActiveLayer().blendMode = layerBlend.value;
+    compositeAndRender();
   }
 });
 
-document.getElementById('zoomOutBtn').addEventListener('click', () => {
-  if (zoomScale > 0.3) {
-    zoomScale -= 0.1;
-    applyEdits();
+function pushHistory() {
+  const data = mainCanvas.toDataURL();
+  if(historyIndex < history.length-1) history = history.slice(0, historyIndex+1);
+  history.push(data);
+  if(history.length > MAX_HISTORY) history.shift();
+  historyIndex = history.length-1;
+}
+function undo() {
+  if(historyIndex > 0) {
+    historyIndex--;
+    restoreFromHistory();
+  }
+}
+function redo() {
+  if(historyIndex < history.length-1) {
+    historyIndex++;
+    restoreFromHistory();
+  }
+}
+function restoreFromHistory() {
+  const img = new Image();
+  img.onload = () => {
+    mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+    mainCtx.drawImage(img,0,0);
+    layerManager.getActiveLayer().clear();
+    layerManager.getActiveLayer().drawImage(img);
+    layerManager.composite();
+    renderLayerList();
+    updateStatus('Undo/Redo');
+  };
+  img.src = history[historyIndex];
+}
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('redoBtn').addEventListener('click', redo);
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key==='z') {
+    e.preventDefault();
+    if(e.shiftKey) redo(); else undo();
   }
 });
 
-// --- 5. Reset & Download ---
-function resetToDefault() {
-  currentRotation = 0;
-  isFlipH = false;
-  isFlipV = false;
-  zoomScale = 1.0;
-  
-  filters.brightness = 100;
-  filters.contrast = 100;
-  filters.saturation = 100;
-  filters.grayscale = 0;
-  filters.sepia = 0;
-  filters.blur = 0;
+// Tools
+const toolbarButtons = { cropBtn:'crop', drawBtn:'draw', textBtn:'text', shapeBtn:'shape', watermarkBtn:'watermark' };
+Object.entries(toolbarButtons).forEach(([id, tool]) => {
+  document.getElementById(id).addEventListener('click', () => {
+    currentTool = currentTool===tool ? null : tool;
+    document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+    if(currentTool) document.getElementById(id).classList.add('active');
+    updateStatus(`Tool: ${currentTool||'none'}`);
+  });
+});
 
-  // Sync back to sliders
-  brightnessSlider.value = 100;
-  contrastSlider.value = 100;
-  saturationSlider.value = 100;
+// Canvas interaction
+mainCanvas.addEventListener('mousedown', onMouseDown);
+mainCanvas.addEventListener('mousemove', onMouseMove);
+mainCanvas.addEventListener('mouseup', onMouseUp);
+mainCanvas.addEventListener('touchstart', onTouchStart);
+mainCanvas.addEventListener('touchmove', onTouchMove);
+mainCanvas.addEventListener('touchend', onTouchEnd);
 
-  applyEdits();
+function getCanvasCoords(e) {
+  const rect = mainCanvas.getBoundingClientRect();
+  const scaleX = mainCanvas.width / rect.width;
+  const scaleY = mainCanvas.height / rect.height;
+  return { x: (e.clientX - rect.left)*scaleX, y: (e.clientY - rect.top)*scaleY };
+}
+function onMouseDown(e) { handleStart(getCanvasCoords(e)); }
+function onMouseMove(e) { if(isDrawing) handleMove(getCanvasCoords(e)); }
+function onMouseUp(e) { handleEnd(); }
+function onTouchStart(e) { e.preventDefault(); const t = e.touches[0]; handleStart(getCanvasCoords(t)); }
+function onTouchMove(e) { e.preventDefault(); if(isDrawing) { const t = e.touches[0]; handleMove(getCanvasCoords(t)); } }
+function onTouchEnd(e) { handleEnd(); }
+
+function handleStart(pos) {
+  if(!currentTool) return;
+  const activeLayer = layerManager.getActiveLayer();
+  if(!activeLayer) return;
+  if(currentTool==='draw') {
+    isDrawing = true;
+    drawStart = pos;
+    activeLayer.ctx.beginPath();
+    activeLayer.ctx.moveTo(pos.x, pos.y);
+    activeLayer.ctx.strokeStyle = colorPicker.value;
+    activeLayer.ctx.lineWidth = brushSize.value;
+  } else if(currentTool==='crop') {
+    cropRect = { x:pos.x, y:pos.y, w:0, h:0 };
+  }
+}
+function handleMove(pos) {
+  if(currentTool==='draw' && isDrawing) {
+    const activeLayer = layerManager.getActiveLayer();
+    activeLayer.ctx.lineTo(pos.x, pos.y);
+    activeLayer.ctx.stroke();
+    compositeAndRender();
+  } else if(currentTool==='crop' && cropRect) {
+    cropRect.w = pos.x - cropRect.x;
+    cropRect.h = pos.y - cropRect.y;
+    compositeAndRender();
+    mainCtx.save();
+    mainCtx.strokeStyle = '#ec4899';
+    mainCtx.lineWidth = 2;
+    mainCtx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+    mainCtx.restore();
+  }
+}
+function handleEnd() {
+  if(currentTool==='draw') {
+    isDrawing = false;
+    pushHistory();
+  } else if(currentTool==='crop' && cropRect) {
+    applyCrop(cropRect);
+    cropRect = null;
+    currentTool = null;
+    document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+  }
+}
+function applyCrop(rect) {
+  const w = Math.abs(rect.w), h = Math.abs(rect.h);
+  if(w<5||h<5) return;
+  const x = Math.min(rect.x, rect.x+rect.w);
+  const y = Math.min(rect.y, rect.y+rect.h);
+  const cropped = mainCtx.getImageData(x,y,w,h);
+  mainCanvas.width = w; mainCanvas.height = h;
+  mainCtx.putImageData(cropped,0,0);
+  layerManager.reset(mainCanvas);
+  pushHistory();
+  compositeAndRender();
+  renderLayerList();
 }
 
-document.getElementById('resetBtn').addEventListener('click', resetToDefault);
+document.getElementById('textBtn').addEventListener('click', () => {
+  if(currentTool==='text') {
+    const text = prompt('Enter text:');
+    if(text) {
+      const activeLayer = layerManager.getActiveLayer();
+      activeLayer.ctx.font = '40px sans-serif';
+      activeLayer.ctx.fillStyle = colorPicker.value;
+      activeLayer.ctx.fillText(text,50,50);
+      compositeAndRender();
+      pushHistory();
+    }
+    currentTool=null;
+    document.getElementById('textBtn').classList.remove('active');
+  }
+});
+document.getElementById('shapeBtn').addEventListener('click', () => {
+  if(currentTool==='shape') {
+    const shape = prompt('Shape (rect/circle):','rect');
+    const activeLayer = layerManager.getActiveLayer();
+    activeLayer.ctx.fillStyle = colorPicker.value;
+    if(shape==='rect') activeLayer.ctx.fillRect(50,50,150,100);
+    else { activeLayer.ctx.beginPath(); activeLayer.ctx.arc(100,100,50,0,Math.PI*2); activeLayer.ctx.fill(); }
+    compositeAndRender();
+    pushHistory();
+    currentTool=null;
+    document.getElementById('shapeBtn').classList.remove('active');
+  }
+});
+document.getElementById('watermarkBtn').addEventListener('click', () => {
+  const text = prompt('Watermark text:');
+  if(text) {
+    const activeLayer = layerManager.getActiveLayer();
+    activeLayer.ctx.save();
+    activeLayer.ctx.globalAlpha = 0.5;
+    activeLayer.ctx.font = '30px sans-serif';
+    activeLayer.ctx.fillStyle = '#ffffff';
+    activeLayer.ctx.fillText(text,20,mainCanvas.height-20);
+    activeLayer.ctx.restore();
+    compositeAndRender();
+    pushHistory();
+  }
+});
+document.getElementById('bgRemoveBtn').addEventListener('click', async () => {
+  if(!window.removeBackground) { alert('Background removal library not loaded.'); return; }
+  updateStatus('Removing background...');
+  const imageBlob = await fetch(mainCanvas.toDataURL()).then(r=>r.blob());
+  try {
+    const resultBlob = await removeBackground(imageBlob, { model:'medium', output:{ format:'image/png' } });
+    const url = URL.createObjectURL(resultBlob);
+    const img = new Image();
+    img.onload = () => {
+      layerManager.addLayer('Background Removed', img.width, img.height);
+      layerManager.getActiveLayer().drawImage(img);
+      compositeAndRender();
+      pushHistory();
+      renderLayerList();
+      updateStatus('Background removed');
+    };
+    img.src = url;
+  } catch(err) { alert('Background removal failed: '+err.message); updateStatus('Error'); }
+});
+document.getElementById('autoEnhanceBtn').addEventListener('click', () => {
+  if(!originalImage) return;
+  const imageData = mainCtx.getImageData(0,0,mainCanvas.width,mainCanvas.height);
+  const data = imageData.data;
+  let min=255, max=0;
+  for(let i=0;i<data.length;i+=4) {
+    const gray = 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
+    if(gray<min) min=gray;
+    if(gray>max) max=gray;
+  }
+  if(max===min) return;
+  const range = max-min;
+  for(let i=0;i<data.length;i+=4) {
+    data[i] = ((data[i]-min)/range)*255;
+    data[i+1] = ((data[i+1]-min)/range)*255;
+    data[i+2] = ((data[i+2]-min)/range)*255;
+  }
+  mainCtx.putImageData(imageData,0,0);
+  layerManager.getActiveLayer().clear();
+  layerManager.getActiveLayer().drawImage(mainCanvas);
+  compositeAndRender();
+  pushHistory();
+  updateStatus('Auto enhanced');
+});
 
+function compositeAndRender() { layerManager.composite(); renderLayerList(); }
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+  if(originalImage) { layerManager.reset(originalImage); pushHistory(); compositeAndRender(); renderLayerList(); updateStatus('Reset'); }
+});
+document.getElementById('flattenBtn').addEventListener('click', () => {
+  layerManager.flatten(); pushHistory(); compositeAndRender(); renderLayerList(); updateStatus('Flattened');
+});
 document.getElementById('downloadBtn').addEventListener('click', () => {
-  if (!originalImg) return;
-  
-  // Create a temporary anchor element to trigger high quality download
+  const format = prompt('Format (png/jpeg/webp):','png');
   const link = document.createElement('a');
-  link.download = 'pixelpress-edited-photo.png';
-  link.href = canvas.toDataURL('image/png', 1.0);
+  link.download = `pixelpress-edited.${format}`;
+  link.href = mainCanvas.toDataURL(`image/${format}`,0.92);
   link.click();
 });
+function updateStatus(msg) { statusBar.textContent = msg; }
+setInterval(() => { if(mainCanvas.width>0) localStorage.setItem('photoEditorState', mainCanvas.toDataURL()); }, 30000);

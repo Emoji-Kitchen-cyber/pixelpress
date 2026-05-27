@@ -35,16 +35,14 @@
       background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center;
       z-index: 9999; flex-direction: column; gap: 15px; font-size: 18px; font-weight: 600;
     }
-    @media (max-width: 600px) {
-      .result-card { width: 100%; }
-    }
+    @media (max-width: 600px) { .result-card { width: 100%; } }
   </style>
 </head>
 <body>
 
   <!-- Loading overlay -->
   <div class="loading-overlay" id="loadingOverlay" style="display:none;">
-    <p id="loadingMsg">Loading AI model...</p>
+    <p id="loadingMsg">Loading AI model…</p>
     <progress id="modelProgress" max="100" value="0"></progress>
     <p id="loadingSubMsg" style="font-size:14px; color:#64748b;"></p>
   </div>
@@ -123,10 +121,8 @@
     </div>
   </div>
 
-  <!-- Self‑hosted model files in public/ folder -->
+  <!-- Libraries: JSZip + img.ly background removal (ESM) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- Load img.ly background removal library – UMD, no module issues -->
-  <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
-  <script src="./js/remove-bg.js"></script>
+  <script type="module" src="./js/remove-bg.js"></script>
 </body>
 </html>

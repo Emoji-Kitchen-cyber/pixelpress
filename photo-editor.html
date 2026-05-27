@@ -1,310 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Photo Editor — PixelPress</title>
-
   <style>
-
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#f1f5f9; font-family:system-ui,-apple-system,sans-serif; color:#0f172a; padding:15px; }
+    .container { max-width:1400px; margin:auto; background:white; border-radius:24px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.12); }
+    .header { background:linear-gradient(135deg,#ec4899,#7e22ce); color:white; text-align:center; padding:30px 20px; }
+    .header h1 { font-size:36px; }
+    .top-back { display:inline-block; margin-top:15px; text-decoration:none; color:white; background:rgba(255,255,255,0.15); padding:10px 18px; border-radius:12px; }
+    .upload-area { margin:30px; border:4px dashed #94a3b8; border-radius:20px; padding:60px 20px; text-align:center; cursor:pointer; transition:0.3s; }
+    .upload-area:hover { border-color:#ec4899; background:#fdf4ff; }
+    .editor { display:none; padding:20px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px; background:#f1f5f9; padding:10px; border-radius:12px; }
+    .toolbar button, .toolbar select, .toolbar input { padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; background:white; cursor:pointer; font-size:14px; }
+    .toolbar button.active { background:#ec4899; color:white; }
+    .workspace { display:flex; gap:15px; flex-wrap:wrap; }
+    .canvas-container { flex:3; min-width:300px; text-align:center; background:#e2e8f0; border-radius:16px; padding:20px; position:relative; overflow:hidden; }
+    canvas { max-width:100%; height:auto; border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.2); }
+    .side-panel { flex:1; min-width:250px; background:#f8fafc; border-radius:16px; padding:15px; display:flex; flex-direction:column; gap:12px; }
+    .layers-list { list-style:none; max-height:200px; overflow-y:auto; }
+    .layer-item { display:flex; align-items:center; gap:8px; padding:6px; border-radius:8px; cursor:pointer; }
+    .layer-item.active { background:#e0f2fe; }
+    .layer-thumb { width:40px; height:40px; object-fit:cover; border-radius:4px; }
+    .slider-group label { display:block; font-weight:600; margin-bottom:4px; }
+    input[type="range"] { width:100%; }
+    .status { font-size:13px; color:#64748b; margin-top:5px; }
+    @media(max-width:768px) {
+      .workspace { flex-direction:column; }
+      .toolbar { justify-content:center; }
     }
-
-    body{
-      background:#f1f5f9;
-      font-family:system-ui,-apple-system,sans-serif;
-      color:#0f172a;
-      padding:15px;
-    }
-
-    .container{
-      max-width:1200px;
-      margin:auto;
-      background:white;
-      border-radius:24px;
-      overflow:hidden;
-      box-shadow:0 15px 40px rgba(0,0,0,0.12);
-    }
-
-    .header{
-      background:linear-gradient(135deg,#ec4899,#7e22ce);
-      color:white;
-      text-align:center;
-      padding:40px 20px;
-    }
-
-    .header h1{
-      font-size:42px;
-      margin-bottom:10px;
-    }
-
-    .header p{
-      opacity:0.95;
-    }
-
-    .top-back{
-      display:inline-block;
-      margin-top:20px;
-      text-decoration:none;
-      color:white;
-      background:rgba(255,255,255,0.15);
-      padding:10px 18px;
-      border-radius:12px;
-    }
-
-    .upload-area{
-      margin:30px;
-      border:4px dashed #94a3b8;
-      border-radius:20px;
-      padding:90px 20px;
-      text-align:center;
-      cursor:pointer;
-      transition:0.3s;
-    }
-
-    .upload-area:hover{
-      border-color:#ec4899;
-      background:#fdf4ff;
-    }
-
-    .editor{
-      display:none;
-      padding:20px;
-    }
-
-    .controls{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:15px;
-      margin-bottom:20px;
-    }
-
-    .control-box{
-      background:#f8fafc;
-      padding:15px;
-      border-radius:16px;
-    }
-
-    .control-box label{
-      display:block;
-      margin-bottom:10px;
-      font-weight:600;
-    }
-
-    input[type="range"]{
-      width:100%;
-    }
-
-    .buttons{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:20px;
-    }
-
-    button{
-      border:none;
-      padding:12px 18px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:600;
-      background:#ec4899;
-      color:white;
-      transition:0.3s;
-    }
-
-    button:hover{
-      background:#db2777;
-    }
-
-    .canvas-wrapper{
-      overflow:auto;
-      text-align:center;
-      margin-top:25px;
-      background:#e2e8f0;
-      padding:20px;
-      border-radius:18px;
-    }
-
-    canvas{
-      max-width:100%;
-      border-radius:18px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.15);
-      background:white;
-    }
-
-    @media(max-width:600px){
-
-      .header h1{
-        font-size:32px;
-      }
-
-      button{
-        width:100%;
-      }
-
-    }
-
   </style>
-
 </head>
 <body>
-
 <div class="container">
-
   <div class="header">
-
-    <h1>✨ Photo Editor</h1>
-
-    <p>
-      Advanced Browser Based Image Editor
-    </p>
-
-    <a href="./index.html" class="top-back">
-      ← Back Home
-    </a>
-
+    <h1>✨ Advanced Photo Editor</h1>
+    <p>Layers • AI Tools • Non‑destructive</p>
+    <a href="./index.html" class="top-back">← Back Home</a>
   </div>
 
   <div id="uploadSection">
-
     <div class="upload-area" id="dropZone">
-
       <h2>📸 Upload Photo</h2>
-
-      <p>
-        Click or Drag & Drop Image Here
-      </p>
-
-      <small>
-        JPG, PNG, WEBP Supported
-      </small>
-
+      <p>Click or Drag & Drop Image Here</p>
+      <small>JPG, PNG, WEBP, AVIF supported</small>
     </div>
-
-    <input
-      type="file"
-      id="fileInput"
-      accept="image/*"
-      hidden
-    >
-
+    <input type="file" id="fileInput" accept="image/*" hidden>
   </div>
 
   <div class="editor" id="editorSection">
-
-    <div class="controls">
-
-      <div class="control-box">
-
-        <label>Brightness</label>
-
-        <input
-          type="range"
-          id="brightness"
-          min="50"
-          max="200"
-          value="100"
-        >
-
-      </div>
-
-      <div class="control-box">
-
-        <label>Contrast</label>
-
-        <input
-          type="range"
-          id="contrast"
-          min="50"
-          max="200"
-          value="100"
-        >
-
-      </div>
-
-      <div class="control-box">
-
-        <label>Saturation</label>
-
-        <input
-          type="range"
-          id="saturation"
-          min="0"
-          max="200"
-          value="100"
-        >
-
-      </div>
-
+    <div class="toolbar" id="toolbar">
+      <button id="cropBtn" title="Crop">✂️ Crop</button>
+      <button id="drawBtn" title="Draw">🖌 Draw</button>
+      <button id="textBtn" title="Text">🔤 Text</button>
+      <button id="shapeBtn" title="Shapes">⏺ Shapes</button>
+      <button id="watermarkBtn" title="Watermark">💧 Watermark</button>
+      <button id="bgRemoveBtn" title="Remove Background">🫥 Remove BG</button>
+      <button id="autoEnhanceBtn" title="Auto Enhance">✨ Enhance</button>
+      <button id="undoBtn" title="Undo">↩️</button>
+      <button id="redoBtn" title="Redo">↪️</button>
+      <select id="layerBlend" style="width:auto;">
+        <option value="normal">Normal</option>
+        <option value="multiply">Multiply</option>
+        <option value="screen">Screen</option>
+      </select>
+      <input type="color" id="colorPicker" value="#000000" title="Color">
+      <input type="range" id="brushSize" min="1" max="50" value="5" title="Brush Size">
     </div>
 
-    <div class="buttons">
-
-      <button id="rotateLeft">
-        ↩ Rotate Left
-      </button>
-
-      <button id="rotateRight">
-        ↪ Rotate Right
-      </button>
-
-      <button id="flipH">
-        ↔ Flip Horizontal
-      </button>
-
-      <button id="flipV">
-        ↕ Flip Vertical
-      </button>
-
-      <button id="grayscaleBtn">
-        ⚫ Grayscale
-      </button>
-
-      <button id="sepiaBtn">
-        🟤 Sepia
-      </button>
-
-      <button id="blurBtn">
-        🌫 Blur
-      </button>
-
-      <button id="zoomInBtn">
-        ➕ Zoom In
-      </button>
-
-      <button id="zoomOutBtn">
-        ➖ Zoom Out
-      </button>
-
-      <button id="resetBtn">
-        🔄 Reset
-      </button>
-
-      <button id="downloadBtn">
-        📥 Download
-      </button>
-
+    <div class="workspace">
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="mainCanvas"></canvas>
+      </div>
+      <div class="side-panel">
+        <div>
+          <h4>Layers</h4>
+          <ul class="layers-list" id="layersList"></ul>
+          <button id="addLayerBtn" style="margin-top:5px;">+ Add Layer</button>
+          <button id="deleteLayerBtn">🗑 Delete</button>
+        </div>
+        <div class="slider-group">
+          <label>Opacity</label>
+          <input type="range" id="layerOpacity" min="0" max="1" step="0.01" value="1">
+        </div>
+        <div>
+          <button id="flattenBtn">Flatten Image</button>
+          <button id="resetAllBtn">🔄 Reset All</button>
+          <button id="downloadBtn">📥 Download</button>
+        </div>
+        <div class="status" id="statusBar">Ready</div>
+      </div>
     </div>
-
-    <div class="canvas-wrapper">
-      <canvas id="canvas"></canvas>
-    </div>
-
   </div>
-
 </div>
 
+<script src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
+<script src="./js/photo-editor-layers.js"></script>
 <script src="./js/photo-editor.js"></script>
-
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remove BG</title>
+    <title>Remove BG - PixelPress</title>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style>
@@ -95,16 +95,16 @@
     <div class="remove-bg-container">
         <div class="header">
             <div>
-                <h1 class="title">✂️ Background Remover</h1>
-                <p class="subtitle">Stable Browser Version</p>
+                <h1 class="title">✂️ AI Background Remover</h1>
+                <p class="subtitle">Modern • Fast • Browser Only</p>
             </div>
             <div id="status" style="color:#22c55e;">✅ Ready</div>
         </div>
 
         <div id="upload-area" class="upload-area">
             <div style="font-size:52px;margin-bottom:16px;">📤</div>
-            <h3>Drop images here or click</h3>
-            <p style="color:#64748b;">JPG, PNG, WEBP • Max 10</p>
+            <h3>Drop images here or click to upload</h3>
+            <p style="color:#64748b;">JPG, PNG, WEBP • Max 10 images</p>
             <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
         </div>
 
@@ -121,7 +121,7 @@
                 <strong id="current-file-name"></strong>
                 <div>
                     <button onclick="RemoveBG.closeResult()" class="btn-secondary">Close</button>
-                    <button onclick="RemoveBG.downloadCurrent()" class="btn-primary" style="margin-left:8px;">Download</button>
+                    <button onclick="RemoveBG.downloadCurrent()" class="btn-primary" style="margin-left:8px;">Download PNG</button>
                 </div>
             </div>
             <div class="slider-container">

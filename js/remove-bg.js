@@ -1,10 +1,10 @@
-// js/remove-bg.js - IMPROVED BACKGROUND REMOVAL
+// js/remove-bg.js - MODERN IMPROVED VERSION
 const RemoveBG = {
     filesData: [],
     MAX_FILES: 10,
 
     init() {
-        console.log('%cBackground Remover v2.0 Loaded', 'color:#22c55e;font-weight:bold');
+        console.log('%c[PixelPress RemoveBG] Modern Version Loaded', 'color:#6366f1;font-weight:bold');
         this.setupUI();
     },
 
@@ -23,23 +23,24 @@ const RemoveBG = {
 
         fileInput.addEventListener('change', e => this.handleFiles(e.target.files));
 
-        // Slider
+        // Slider control
         let dragging = false;
         const divider = document.getElementById('slider-divider');
         divider.addEventListener('mousedown', () => dragging = true);
         window.addEventListener('mouseup', () => dragging = false);
         window.addEventListener('mousemove', (e) => {
             if (!dragging) return;
-            const rect = document.getElementById('before-after').getBounding percentage = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
-            document.getElementById('before-img').style.width = percent + '%';
-            spring document.getElementById('after-img').style慕.left = percent + '%';
+            const rect = document.getElementById('before-after').getBoundingClientRect();
+            let percent = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
+            document.getElementById('before-img').style.width = percent + '%';
+            document.getElementById('after-img').style.left = percent + '%';
             divider.style.left = percent + '%';
         });
     },
 
-    handleFiles(fileList) {
-        eins Array.from(fileList).forEach(file => spring {
-           | if (this.filesData.length >= thisroups.MAX_FILES || !file.type юрид.startsroupsWith('image/')) return;
+    handleFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            if (this.filesData.length >= this.MAX_FILES || !file.type.startsWith('image/')) return;
             const reader = new FileReader();
             reader.onload = e => {
                 this.filesData.push({
@@ -69,14 +70,14 @@ const RemoveBG = {
                     </div>
                 </div>
                 <div style="padding:16px;">
-                    <div style="font-size:13px;margin-bottom:8px;">${file.name}</div>
-                    <button onclick="RemoveBG.processSingle(${i})" class="btn-primary" style="widthnin:100%;margin-bottom:6px;">Remove Background</button>
-                    \( {file.processedUrl ? cam `<button onclick="RemoveBG.showResult( \){lerle i})" weight class="btn ر-secondary" styleү="width: sea100%">View</button>` : ''}
-                </ antic </div>
- uzysk            `;
-            instead container.appendChild(card);
+                    <div style="font-size:13px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.name}</div>
+                    <button onclick="RemoveBG.processSingle(${i})" class="btn-primary" style="width:100%;margin-bottom:6px;">✂️ Remove Background</button>
+                    \( {file.processedUrl ? `<button onclick="RemoveBG.showResult( \){i})" class="btn-secondary" style="width:100%">👁️ View Result</button>` : ''}
+                </div>
+            `;
+            container.appendChild(card);
         });
-        document.getElementById('process-allessay-btn').disabled = this.filesData.length === 0;
+        document.getElementById('process-all-btn').disabled = this.filesData.length === 0;
     },
 
     async processSingle(index) {
@@ -87,58 +88,56 @@ const RemoveBG = {
         overlay.style.display = 'flex';
 
         try {
-            const resultBlob = await this.removeBackground(file.originalUrl);
+            const resultBlob = await this.removeBackgroundImproved(file.originalUrl);
             file.processedUrl = URL.createObjectURL(resultBlob);
             file.blob = resultBlob;
             this.renderFiles();
-            this.showToast(`${file.name} processed!`);
-        }var catch (err)erg {
-            console.error区(err);
-            thisfl.showToast('Failed to process', 'error');
+            this.showToast('✅ Background removed successfully');
+        } catch (err) {
+            console.error(err);
+            this.showToast('❌ Processing failed. Try another image.', 'error');
         } finally {
-            overlay.style.display = 'erg none';
+            overlay.style.display = 'none';
         }
- cap    },
+    },
 
-    async cap removeBackground(dataUrlся) {
-       erg return new Promise(resolve => {
-           var const img = new.set Image();
-            imgfl.onload = () => {
-                const canvas =.set document.createElement(' equ canvas');
-               .setusett canvas.width = img.width;
+    async removeBackgroundImproved(dataUrl) {
+        return new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
                 canvas.height = img.height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
 
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imagelowuseData.data;
+                const data = imageData.data;
 
-               .set // Improved Algorithm
-                for (let iся = 0ся; i < data.length; i += 4) {
-                    const r =区 data[i];
-                    const g vis = data[i cap+1];
-                   ся const b =Who data[i+2];
-                    const brightness = (r + g + b) / 3;
+                // Modern improved algorithm (better edge detection)
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const avg = (r + g + b) / 3;
 
-                    // Better background detection
- lieu                    if (brightness > 240 || 
-                        ( equMath.abs(r -از g) <  cap40 && Math.abs(g - b) < 40 && brightness > 200) || 
-                        (r > 235 && g > dere 235 && b > 235)) {
-                        data[i+3] = 0; // Transparent
-                    } else if (brightness > 210 && Math.abs(r escrita - g) < 50 && Math.abs(g - b) < 50) {
-                        data[i+3] = 80; // Semi transparent edges
+                    // Strong background detection for common cases
+                    if (avg > 235 || (Math.abs(r - g) < 35 && Math.abs(g - b) < 35 && avg > 200)) {
+                        data[i + 3] = 0;
+                    } else if (avg > 180 && Math.abs(r - g) < 55 && Math.abs(g - b) < 55) {
+                        data[i + 3] = 60; // Soft edges
                     }
                 }
 
-                ctx vis.putImageData(imageoub Data, 0debug, 0);
-ся                canvas.toBlob equ(resolve, 'image区/png', 0 vis.95);
+                ctx.putImageData(imageData, 0, 0);
+                canvas.toBlob(resolve, 'image/png', 0.95);
             };
-shaft            img.src = dataUrl;
+            img.src = dataUrl;
         });
     },
 
-از    async processAll() {
-        for (let i = 0; i < this.fileseur Data.length; i++) {
+    async processAll() {
+        for (let i = 0; i < this.filesData.length; i++) {
             if (!this.filesData[i].processedUrl) await this.processSingle(i);
         }
         document.getElementById('download-all-btn').style.display = 'inline-block';
@@ -171,7 +170,7 @@ shaft            img.src = dataUrl;
             if (f.blob) zip.file(f.name.replace(/\.\w+$/, '') + '-nobg.png', f.blob);
         });
         const content = await zip.generateAsync({type: "blob"});
-        saveAs(content, `removed-bg-${Date.now()}.zip`);
+        saveAs(content, `pixelpress-removed-${Date.now()}.zip`);
     },
 
     clearAll() {
@@ -186,7 +185,7 @@ shaft            img.src = dataUrl;
         toast.textContent = msg;
         toast.style.borderLeftColor = type === 'error' ? '#ef4444' : '#22c55e';
         toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 2800);
+        setTimeout(() => toast.style.display = 'none', 3000);
     }
 };
 

@@ -1,39 +1,30 @@
-/* ==========================================================================
-   PIXELPRESS REMOVE BG ENGINE
-   PRODUCTION READY
-   FULLY SCOPED
-   MEMORY SAFE
-   VERCEL SAFE
-   ========================================================================== */
+import {
+  removeBackground
+} from "https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm";
 
 (() => {
   "use strict";
 
-  /* ==========================================================================
-     SAFE DOM HELPERS
-     ========================================================================== */
+  /* =========================================================
+     DOM
+     ========================================================= */
 
   const $ = (id) => document.getElementById(id);
 
   const dom = {
-    tool: $("ppRbgTool"),
+    loader: $("ppRbgLoader"),
+    loaderText: $("ppRbgLoaderText"),
+    loaderProgress: $("ppRbgModelProgress"),
 
-    overlay: $("ppRbgOverlay"),
-    overlayTitle: $("ppRbgOverlayTitle"),
-    overlaySub: $("ppRbgOverlaySub"),
-    overlayFile: $("ppRbgOverlayFile"),
-    overlayProgress: $("ppRbgModelProgress"),
-    fallbackBtn: $("ppRbgFallbackBtn"),
+    dropzone: $("ppRbgDropzone"),
+    input: $("ppRbgInput"),
 
-    dropZone: $("ppRbgDropZone"),
-    fileInput: $("ppRbgFileInput"),
-
-    batchWrap: $("ppRbgBatchWrap"),
-    batchProgress: $("ppRbgBatchProgress"),
-    batchText: $("ppRbgBatchText"),
+    progressWrap: $("ppRbgProgressWrap"),
+    progress: $("ppRbgProgress"),
+    progressText: $("ppRbgProgressText"),
 
     resultsSection: $("ppRbgResultsSection"),
-    resultsGrid: $("ppRbgResults"),
+    results: $("ppRbgResults"),
 
     bgType: $("ppRbgBgType"),
 
@@ -41,94 +32,47 @@
     solidColor: $("ppRbgSolidColor"),
 
     gradientWrap: $("ppRbgGradientWrap"),
-    gradientStart: $("ppRbgGradientStart"),
-    gradientEnd: $("ppRbgGradientEnd"),
-
-    customWrap: $("ppRbgCustomWrap"),
-    customBgInput: $("ppRbgCustomBg"),
+    grad1: $("ppRbgGrad1"),
+    grad2: $("ppRbgGrad2"),
 
     blurWrap: $("ppRbgBlurWrap"),
-    blurAmount: $("ppRbgBlurAmount"),
+    blur: $("ppRbgBlur"),
     blurValue: $("ppRbgBlurValue"),
+
+    customWrap: $("ppRbgCustomWrap"),
+    customBg: $("ppRbgCustomBg"),
 
     feather: $("ppRbgFeather"),
     featherValue: $("ppRbgFeatherValue"),
 
-    outputFormat: $("ppRbgOutputFormat"),
+    format: $("ppRbgFormat"),
 
-    applyBtn: $("ppRbgApplyBtn"),
-    zipBtn: $("ppRbgZipBtn")
+    apply: $("ppRbgApply"),
+    zip: $("ppRbgZip")
   };
 
-  /* ==========================================================================
-     RUNTIME CONFIG
-     ========================================================================== */
-
-  const CONFIG = {
-    MAX_FILES: 10,
-    MAX_IMAGE_DIMENSION: 1400,
-    EXPORT_QUALITY: 0.95,
-    MAX_CANVAS_PIXELS: 4096 * 4096
-  };
-
-  /* ==========================================================================
-     ENGINE STATE
-     ========================================================================== */
+  /* =========================================================
+     STATE
+     ========================================================= */
 
   const state = {
-    segmenter: null,
-    modelReady: false,
-    manualMode: false,
-    customBackgroundImage: null,
-    processing: false,
-    results: []
+    results: [],
+    customImage: null,
+    processing: false
   };
 
-  /* ==========================================================================
-     TRANSFORMERS CONFIG
-     ========================================================================== */
+  /* =========================================================
+     HELPERS
+     ========================================================= */
 
-  const transformers = window.transformers;
-
-  if (transformers && transformers.env) {
-    transformers.env.allowLocalModels = false;
-    transformers.env.useBrowserCache = true;
-    transformers.env.backends.onnx.wasm.numThreads = 1;
+  function delay(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
   }
 
-  /* ==========================================================================
-     UTILITIES
-     ========================================================================== */
-
-  function showOverlay() {
-    dom.overlay.style.display = "flex";
-  }
-
-  function hideOverlay() {
-    dom.overlay.style.display = "none";
-  }
-
-  function updateOverlay(title, sub, file, progress) {
-    dom.overlayTitle.textContent = title || "";
-    dom.overlaySub.textContent = sub || "";
-    dom.overlayFile.textContent = file || "";
-
-    if (typeof progress === "number") {
-      dom.overlayProgress.value = Math.max(
-        0,
-        Math.min(100, progress)
-      );
-    }
-  }
-
-  function safeFileName(name) {
-    return name.replace(/\.[^/.]+$/, "").replace(/[^\w-]/g, "_");
-  }
-
-  function revokeObjectURL(url) {
-    if (url && typeof url === "string") {
-      URL.revokeObjectURL(url);
-    }
+  function revoke(url) {
+    if (url) URL.revokeObjectURL(url);
   }
 
   function cleanupCanvas(canvas) {
@@ -137,144 +81,112 @@
     const ctx = canvas.getContext("2d");
 
     if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
     }
 
     canvas.width = 1;
     canvas.height = 1;
   }
 
-  function delay(ms) {
-    return new Promise((resolve) => {
-      window.setTimeout(resolve, ms);
-    });
+  function getExtension(type) {
+    if (type === "image/jpeg") return "jpg";
+    if (type === "image/webp") return "webp";
+    return "png";
   }
 
-  /* ==========================================================================
-     MEMORY CLEANUP
-     ========================================================================== */
-
-  function purgeResults() {
-    state.results.forEach((item) => {
-      revokeObjectURL(item.originalURL);
-      revokeObjectURL(item.processedURL);
-    });
-
-    state.results.length = 0;
-
-    dom.resultsGrid.innerHTML = "";
+  function safeName(name) {
+    return name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^\w-]/g, "_");
   }
 
-  /* ==========================================================================
-     FILE HELPERS
-     ========================================================================== */
+  /* =========================================================
+     IMAGE HELPERS
+     ========================================================= */
 
   async function fileToImage(file) {
     return new Promise((resolve, reject) => {
-      const objectURL = URL.createObjectURL(file);
+      const url = URL.createObjectURL(file);
 
-      const image = new Image();
+      const img = new Image();
 
-      image.onload = () => {
-        revokeObjectURL(objectURL);
-        resolve(image);
+      img.onload = () => {
+        revoke(url);
+        resolve(img);
       };
 
-      image.onerror = () => {
-        revokeObjectURL(objectURL);
-        reject(new Error("Failed to load image."));
+      img.onerror = () => {
+        revoke(url);
+        reject(new Error("Image load failed"));
       };
 
-      image.src = objectURL;
+      img.src = url;
     });
   }
 
   async function blobToImage(blob) {
     return new Promise((resolve, reject) => {
-      const objectURL = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
 
-      const image = new Image();
+      const img = new Image();
 
-      image.onload = () => {
-        revokeObjectURL(objectURL);
-        resolve(image);
+      img.onload = () => {
+        revoke(url);
+        resolve(img);
       };
 
-      image.onerror = () => {
-        revokeObjectURL(objectURL);
-        reject(new Error("Failed to decode image blob."));
+      img.onerror = () => {
+        revoke(url);
+        reject(new Error("Blob image failed"));
       };
 
-      image.src = objectURL;
+      img.src = url;
     });
   }
 
   async function canvasToBlob(canvas, type, quality) {
     return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error("Canvas export failed."));
-            return;
-          }
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Canvas export failed"));
+          return;
+        }
 
-          resolve(blob);
-        },
-        type,
-        quality
-      );
+        resolve(blob);
+      }, type, quality);
     });
   }
 
-  /* ==========================================================================
+  /* =========================================================
      IMAGE OPTIMIZER
-     PREVENTS TAB CRASHES
-     ========================================================================== */
+     ========================================================= */
 
   async function optimizeImage(file) {
-    const image = await fileToImage(file);
+    const img = await fileToImage(file);
 
-    const originalWidth = image.width;
-    const originalHeight = image.height;
+    const MAX = 1024;
 
-    let targetWidth = originalWidth;
-    let targetHeight = originalHeight;
+    let width = img.width;
+    let height = img.height;
 
-    const maxDimension = CONFIG.MAX_IMAGE_DIMENSION;
+    if (width > MAX || height > MAX) {
+      const ratio = Math.min(MAX / width, MAX / height);
 
-    if (
-      originalWidth > maxDimension ||
-      originalHeight > maxDimension
-    ) {
-      const ratio = Math.min(
-        maxDimension / originalWidth,
-        maxDimension / originalHeight
-      );
-
-      targetWidth = Math.round(originalWidth * ratio);
-      targetHeight = Math.round(originalHeight * ratio);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
     }
 
     const canvas = document.createElement("canvas");
 
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    const ctx = canvas.getContext("2d", {
-      alpha: true,
-      willReadFrequently: false
-    });
+    const ctx = canvas.getContext("2d");
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    ctx.drawImage(
-      image,
-      0,
-      0,
-      targetWidth,
-      targetHeight
-    );
+    ctx.drawImage(img,0,0,width,height);
 
     const blob = await canvasToBlob(
       canvas,
@@ -287,416 +199,152 @@
     return blob;
   }
 
-  /* ==========================================================================
-     AI ENGINE INIT
-     ========================================================================== */
+  /* =========================================================
+     REMOVE BG
+     ========================================================= */
 
-  async function initializeAI() {
-    showOverlay();
+  async function processImage(blob) {
+    const arrayBuffer = await blob.arrayBuffer();
 
-    updateOverlay(
-      "Initializing AI Engine",
-      "Preparing browser-safe segmentation runtime...",
-      "Loading dependencies...",
-      5
-    );
+    const resultBlob = await removeBackground(
+      arrayBuffer,
+      {
+        progress: (key, current, total) => {
+          const value = total
+            ? Math.round((current / total) * 100)
+            : 0;
 
-    if (!transformers || !transformers.pipeline) {
-      throw new Error("Transformers runtime not available.");
-    }
+          dom.loaderProgress.value = value;
 
-    try {
-      const { pipeline } = transformers;
-
-      state.segmenter = await pipeline(
-        "image-segmentation",
-        "Xenova/modnet-onnx",
-        {
-          device: "wasm",
-
-          progress_callback: (progress) => {
-            if (!progress) return;
-
-            if (progress.status === "progress") {
-              updateOverlay(
-                "Downloading AI Model",
-                "Fetching neural weights...",
-                progress.file || "Preparing...",
-                Math.round(progress.progress || 0)
-              );
-            }
-
-            if (progress.status === "done") {
-              updateOverlay(
-                "Finalizing",
-                "Optimizing runtime...",
-                "Almost ready...",
-                100
-              );
-            }
-          }
+          dom.loaderText.textContent =
+            `${key} ${value}%`;
         }
-      );
-
-      state.modelReady = true;
-
-      updateOverlay(
-        "AI Engine Ready",
-        "Background remover initialized successfully.",
-        "Ready to process images.",
-        100
-      );
-
-      await delay(700);
-
-      hideOverlay();
-    } catch (error) {
-      console.error("AI initialization failed:", error);
-
-      state.manualMode = true;
-
-      updateOverlay(
-        "AI Engine Failed",
-        "Falling back to manual compatibility mode.",
-        error.message || "Unknown error.",
-        100
-      );
-
-      dom.fallbackBtn.classList.remove("pp-rbg-hidden");
-    }
-  }
-
-  /* ==========================================================================
-     FALLBACK MODE
-     ========================================================================== */
-
-  function activateManualMode() {
-    state.manualMode = true;
-    hideOverlay();
-
-    window.alert(
-      "AI model could not load. Manual fallback mode enabled."
-    );
-  }
-
-  /* ==========================================================================
-     LEGACY CHROMA KEY
-     ========================================================================== */
-
-  async function chromaKeyFallback(imageBlob) {
-    const image = await blobToImage(imageBlob);
-
-    const hex = window.prompt(
-      "Enter background color hex to remove:",
-      "#ffffff"
-    );
-
-    if (!hex) {
-      throw new Error("Operation cancelled.");
-    }
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = image.width;
-    canvas.height = image.height;
-
-    const ctx = canvas.getContext("2d", {
-      willReadFrequently: true
-    });
-
-    ctx.drawImage(image, 0, 0);
-
-    const imageData = ctx.getImageData(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    const data = imageData.data;
-
-    const clean = hex.replace("#", "");
-
-    const targetR = parseInt(clean.substring(0, 2), 16);
-    const targetG = parseInt(clean.substring(2, 4), 16);
-    const targetB = parseInt(clean.substring(4, 6), 16);
-
-    const tolerance = 45;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-
-      if (
-        Math.abs(r - targetR) < tolerance &&
-        Math.abs(g - targetG) < tolerance &&
-        Math.abs(b - targetB) < tolerance
-      ) {
-        data[i + 3] = 0;
       }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-
-    const blob = await canvasToBlob(
-      canvas,
-      "image/png",
-      1
     );
 
-    cleanupCanvas(canvas);
-
-    return blob;
+    return resultBlob;
   }
 
-  /* ==========================================================================
-     AI REMOVE BG
-     ========================================================================== */
-
-  async function removeBackground(imageBlob) {
-    if (state.manualMode || !state.segmenter) {
-      return chromaKeyFallback(imageBlob);
-    }
-
-    const image = await blobToImage(imageBlob);
-
-    const result = await state.segmenter(image);
-
-    let mask = null;
-
-    if (Array.isArray(result) && result.length > 0) {
-      mask = result[0].mask || result[0];
-    } else {
-      mask = result.mask || result;
-    }
-
-    if (!mask) {
-      throw new Error("Invalid AI segmentation output.");
-    }
-
-    const outputCanvas = document.createElement("canvas");
-
-    outputCanvas.width = image.width;
-    outputCanvas.height = image.height;
-
-    const outputCtx = outputCanvas.getContext("2d");
-
-    outputCtx.drawImage(image, 0, 0);
-
-    const maskCanvas = document.createElement("canvas");
-
-    maskCanvas.width = image.width;
-    maskCanvas.height = image.height;
-
-    const maskCtx = maskCanvas.getContext("2d");
-
-    if (typeof mask.toCanvas === "function") {
-      const generatedMask = mask.toCanvas();
-
-      maskCtx.drawImage(
-        generatedMask,
-        0,
-        0,
-        image.width,
-        image.height
-      );
-    } else if (mask.data) {
-      const width = mask.width;
-      const height = mask.height;
-
-      const tempCanvas = document.createElement("canvas");
-
-      tempCanvas.width = width;
-      tempCanvas.height = height;
-
-      const tempCtx = tempCanvas.getContext("2d");
-
-      const imgData = tempCtx.createImageData(width, height);
-
-      for (let i = 0; i < mask.data.length; i++) {
-        const value = Math.round(mask.data[i] * 255);
-
-        const index = i * 4;
-
-        imgData.data[index] = value;
-        imgData.data[index + 1] = value;
-        imgData.data[index + 2] = value;
-        imgData.data[index + 3] = 255;
-      }
-
-      tempCtx.putImageData(imgData, 0, 0);
-
-      maskCtx.drawImage(
-        tempCanvas,
-        0,
-        0,
-        image.width,
-        image.height
-      );
-
-      cleanupCanvas(tempCanvas);
-    } else {
-      throw new Error("Unsupported mask output.");
-    }
-
-    outputCtx.globalCompositeOperation =
-      "destination-in";
-
-    outputCtx.drawImage(maskCanvas, 0, 0);
-
-    outputCtx.globalCompositeOperation = "source-over";
-
-    const blob = await canvasToBlob(
-      outputCanvas,
-      "image/png",
-      1
-    );
-
-    cleanupCanvas(maskCanvas);
-    cleanupCanvas(outputCanvas);
-
-    return blob;
-  }
-
-  /* ==========================================================================
+  /* =========================================================
      PROCESS FILES
-     ========================================================================== */
+     ========================================================= */
 
-  async function processFiles(files) {
+  async function handleFiles(files) {
     if (state.processing) return;
 
     state.processing = true;
 
-    purgeResults();
+    dom.results.innerHTML = "";
 
-    dom.batchWrap.style.display = "block";
+    state.results = [];
 
-    dom.resultsSection.classList.add("pp-rbg-hidden");
+    const valid = Array.from(files)
+      .filter(file => file.type.startsWith("image/"))
+      .slice(0,10);
 
-    const validFiles = Array.from(files)
-      .filter((file) => file.type.startsWith("image/"))
-      .slice(0, CONFIG.MAX_FILES);
-
-    if (validFiles.length === 0) {
-      window.alert("Please select valid images.");
+    if (!valid.length) {
       state.processing = false;
       return;
     }
 
-    for (let i = 0; i < validFiles.length; i++) {
-      const file = validFiles[i];
+    dom.progressWrap.style.display = "block";
 
-      const progress = Math.round(
-        (i / validFiles.length) * 100
-      );
+    for (let i=0; i<valid.length; i++) {
 
-      dom.batchProgress.value = progress;
+      const file = valid[i];
 
-      dom.batchText.textContent =
-        `Processing ${i + 1} of ${validFiles.length}: ${file.name}`;
+      dom.progress.value =
+        Math.round((i / valid.length) * 100);
+
+      dom.progressText.textContent =
+        `Processing ${i+1} / ${valid.length}`;
 
       try {
-        const optimizedBlob = await optimizeImage(file);
+        dom.loader.style.display = "flex";
 
-        await delay(30);
+        const optimized =
+          await optimizeImage(file);
 
-        const processedBlob =
-          await removeBackground(optimizedBlob);
+        const removed =
+          await processImage(optimized);
 
-        const result = {
+        dom.loader.style.display = "none";
+
+        state.results.push({
           file,
-          originalBlob: optimizedBlob,
-          cutoutBlob: processedBlob,
-          currentBlob: processedBlob,
-          originalURL: "",
-          processedURL: ""
-        };
+          originalBlob: optimized,
+          cutoutBlob: removed,
+          currentBlob: removed
+        });
 
-        state.results.push(result);
-      } catch (error) {
-        console.error("Processing failed:", error);
+      } catch (err) {
+        console.error(err);
 
         state.results.push({
           file,
           error: true,
-          errorMessage:
-            error.message || "Unknown processing error."
+          message: err.message
         });
+
+        dom.loader.style.display = "none";
       }
 
       await delay(50);
     }
 
-    dom.batchProgress.value = 100;
+    dom.progress.value = 100;
 
-    dom.batchText.textContent =
-      "Processing completed.";
+    dom.progressText.textContent =
+      "Processing completed";
 
     renderResults();
 
-    dom.resultsSection.classList.remove("pp-rbg-hidden");
+    dom.resultsSection.classList.remove(
+      "pp-rbg-hidden"
+    );
 
     state.processing = false;
   }
 
-  /* ==========================================================================
-     RENDER RESULTS
-     ========================================================================== */
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
   function renderResults() {
-    dom.resultsGrid.innerHTML = "";
 
-    state.results.forEach((item, index) => {
+    dom.results.innerHTML = "";
+
+    state.results.forEach((item,index) => {
+
       if (item.error) {
-        const errorCard = document.createElement("div");
-
-        errorCard.className = "pp-rbg-item";
-
-        errorCard.innerHTML = `
-          <div class="pp-rbg-error">
-            ⚠️ ${item.errorMessage}
-          </div>
-        `;
-
-        dom.resultsGrid.appendChild(errorCard);
-
         return;
       }
 
-      revokeObjectURL(item.originalURL);
-      revokeObjectURL(item.processedURL);
+      const originalURL =
+        URL.createObjectURL(item.originalBlob);
 
-      item.originalURL = URL.createObjectURL(
-        item.originalBlob
-      );
-
-      item.processedURL = URL.createObjectURL(
-        item.currentBlob
-      );
+      const processedURL =
+        URL.createObjectURL(item.currentBlob);
 
       const card = document.createElement("div");
 
-      card.className = "pp-rbg-item";
+      card.className = "pp-rbg-result-card";
 
       card.innerHTML = `
-        <div class="pp-rbg-name">
+        <div class="pp-rbg-file-name">
           ${item.file.name}
         </div>
 
         <div class="pp-rbg-compare">
+
           <img
             class="pp-rbg-before"
-            src="${item.originalURL}"
-            alt="Original"
-            loading="lazy"
+            src="${originalURL}"
           />
 
           <img
             class="pp-rbg-after"
-            src="${item.processedURL}"
-            alt="Processed"
-            loading="lazy"
+            src="${processedURL}"
           />
 
           <div class="pp-rbg-divider"></div>
@@ -704,299 +352,261 @@
           <div class="pp-rbg-handle">
             ⇆
           </div>
+
         </div>
 
-        <div class="pp-rbg-item-footer">
+        <div class="pp-rbg-result-actions">
+
           <button
-            class="pp-rbg-btn pp-rbg-btn-outline pp-rbg-save"
+            class="pp-rbg-btn pp-rbg-btn-outline pp-save-btn"
             data-index="${index}"
           >
             Save
           </button>
+
         </div>
       `;
 
-      dom.resultsGrid.appendChild(card);
+      dom.results.appendChild(card);
 
-      initializeSlider(card);
+      initSlider(card);
+
+      item.originalURL = originalURL;
+      item.processedURL = processedURL;
     });
 
-    updateZipButton();
+    dom.zip.disabled = false;
   }
 
-  /* ==========================================================================
+  /* =========================================================
      SLIDER
-     ========================================================================== */
+     ========================================================= */
 
-  function initializeSlider(card) {
-    const compare = card.querySelector(".pp-rbg-compare");
+  function initSlider(card) {
 
-    const after = card.querySelector(".pp-rbg-after");
+    const compare =
+      card.querySelector(".pp-rbg-compare");
 
-    const divider = card.querySelector(".pp-rbg-divider");
+    const after =
+      card.querySelector(".pp-rbg-after");
+
+    const divider =
+      card.querySelector(".pp-rbg-divider");
 
     let dragging = false;
 
-    function update(clientX) {
-      const rect = compare.getBoundingClientRect();
+    function update(x) {
 
-      let ratio = (clientX - rect.left) / rect.width;
+      const rect =
+        compare.getBoundingClientRect();
+
+      let ratio =
+        (x - rect.left) / rect.width;
 
       ratio = Math.max(0, Math.min(1, ratio));
 
       const percent = ratio * 100;
 
       after.style.clipPath =
-        `inset(0 ${100 - percent}% 0 0)`;
+        `inset(0 ${100-percent}% 0 0)`;
 
       divider.style.left = `${percent}%`;
     }
 
-    compare.addEventListener("pointerdown", (event) => {
+    compare.addEventListener("pointerdown", e => {
       dragging = true;
-
-      update(event.clientX);
-
-      compare.setPointerCapture(event.pointerId);
+      update(e.clientX);
     });
 
-    compare.addEventListener("pointermove", (event) => {
+    window.addEventListener("pointermove", e => {
       if (!dragging) return;
-
-      update(event.clientX);
+      update(e.clientX);
     });
 
-    compare.addEventListener("pointerup", () => {
-      dragging = false;
-    });
-
-    compare.addEventListener("pointercancel", () => {
+    window.addEventListener("pointerup", () => {
       dragging = false;
     });
   }
 
-  /* ==========================================================================
-     BACKGROUND OPTIONS
-     ========================================================================== */
-
-  function updateBackgroundControls() {
-    const mode = dom.bgType.value;
-
-    dom.solidWrap.classList.toggle(
-      "pp-rbg-hidden",
-      mode !== "solid"
-    );
-
-    dom.gradientWrap.classList.toggle(
-      "pp-rbg-hidden",
-      mode !== "gradient"
-    );
-
-    dom.customWrap.classList.toggle(
-      "pp-rbg-hidden",
-      mode !== "custom"
-    );
-
-    dom.blurWrap.classList.toggle(
-      "pp-rbg-hidden",
-      mode !== "blur"
-    );
-
-    if (mode === "transparent") {
-      dom.outputFormat.value = "image/png";
-    }
-  }
-
-  /* ==========================================================================
-     CUSTOM BG
-     ========================================================================== */
-
-  async function loadCustomBackground(file) {
-    if (!file) return;
-
-    state.customBackgroundImage =
-      await fileToImage(file);
-  }
-
-  /* ==========================================================================
+  /* =========================================================
      APPLY BACKGROUND
-     ========================================================================== */
+     ========================================================= */
 
   async function applyBackgrounds() {
-    if (state.processing) return;
 
-    state.processing = true;
+    const type = dom.bgType.value;
 
-    dom.applyBtn.disabled = true;
+    const feather =
+      parseFloat(dom.feather.value);
 
-    dom.applyBtn.textContent = "Applying...";
+    const format =
+      dom.format.value;
 
-    const bgType = dom.bgType.value;
+    dom.apply.disabled = true;
 
-    const feather = parseFloat(dom.feather.value);
+    dom.apply.textContent =
+      "Applying...";
 
-    const exportFormat = dom.outputFormat.value;
+    for (const item of state.results) {
 
-    try {
-      for (const item of state.results) {
-        if (item.error) continue;
+      if (item.error) continue;
 
-        const cutoutImage = await blobToImage(
-          item.cutoutBlob
+      const cutout =
+        await blobToImage(item.cutoutBlob);
+
+      const original =
+        await blobToImage(item.originalBlob);
+
+      const canvas =
+        document.createElement("canvas");
+
+      canvas.width = cutout.width;
+      canvas.height = cutout.height;
+
+      const ctx =
+        canvas.getContext("2d");
+
+      /* BACKGROUND */
+
+      if (type === "solid") {
+
+        ctx.fillStyle =
+          dom.solidColor.value;
+
+        ctx.fillRect(
+          0,0,
+          canvas.width,
+          canvas.height
         );
-
-        const originalImage = await blobToImage(
-          item.originalBlob
-        );
-
-        const canvas = document.createElement("canvas");
-
-        canvas.width = cutoutImage.width;
-        canvas.height = cutoutImage.height;
-
-        const ctx = canvas.getContext("2d");
-
-        /* ==============================================================
-           BACKGROUND
-           ============================================================== */
-
-        if (bgType === "solid") {
-          ctx.fillStyle = dom.solidColor.value;
-
-          ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-        }
-
-        if (bgType === "gradient") {
-          const gradient =
-            ctx.createLinearGradient(
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            );
-
-          gradient.addColorStop(
-            0,
-            dom.gradientStart.value
-          );
-
-          gradient.addColorStop(
-            1,
-            dom.gradientEnd.value
-          );
-
-          ctx.fillStyle = gradient;
-
-          ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-        }
-
-        if (bgType === "blur") {
-          ctx.filter =
-            `blur(${dom.blurAmount.value}px)`;
-
-          ctx.drawImage(
-            originalImage,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-
-          ctx.filter = "none";
-        }
-
-        if (
-          bgType === "custom" &&
-          state.customBackgroundImage
-        ) {
-          ctx.drawImage(
-            state.customBackgroundImage,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-        }
-
-        /* ==============================================================
-           FEATHER
-           ============================================================== */
-
-        if (feather > 0) {
-          const featherCanvas =
-            document.createElement("canvas");
-
-          featherCanvas.width = canvas.width;
-          featherCanvas.height = canvas.height;
-
-          const featherCtx =
-            featherCanvas.getContext("2d");
-
-          featherCtx.filter = `blur(${feather}px)`;
-
-          featherCtx.drawImage(cutoutImage, 0, 0);
-
-          featherCtx.filter = "none";
-
-          ctx.drawImage(featherCanvas, 0, 0);
-
-          cleanupCanvas(featherCanvas);
-        }
-
-        /* ==============================================================
-           FOREGROUND
-           ============================================================== */
-
-        ctx.drawImage(cutoutImage, 0, 0);
-
-        item.currentBlob = await canvasToBlob(
-          canvas,
-          exportFormat,
-          CONFIG.EXPORT_QUALITY
-        );
-
-        cleanupCanvas(canvas);
-
-        await delay(20);
       }
 
-      renderResults();
-    } catch (error) {
-      console.error(error);
+      if (type === "gradient") {
 
-      window.alert(
-        "Failed to apply background changes."
-      );
+        const gradient =
+          ctx.createLinearGradient(
+            0,0,
+            canvas.width,
+            canvas.height
+          );
+
+        gradient.addColorStop(
+          0,
+          dom.grad1.value
+        );
+
+        gradient.addColorStop(
+          1,
+          dom.grad2.value
+        );
+
+        ctx.fillStyle = gradient;
+
+        ctx.fillRect(
+          0,0,
+          canvas.width,
+          canvas.height
+        );
+      }
+
+      if (type === "blur") {
+
+        ctx.filter =
+          `blur(${dom.blur.value}px)`;
+
+        ctx.drawImage(
+          original,
+          0,0,
+          canvas.width,
+          canvas.height
+        );
+
+        ctx.filter = "none";
+      }
+
+      if (
+        type === "custom" &&
+        state.customImage
+      ) {
+        ctx.drawImage(
+          state.customImage,
+          0,0,
+          canvas.width,
+          canvas.height
+        );
+      }
+
+      /* FEATHER */
+
+      if (feather > 0) {
+
+        const featherCanvas =
+          document.createElement("canvas");
+
+        featherCanvas.width =
+          canvas.width;
+
+        featherCanvas.height =
+          canvas.height;
+
+        const featherCtx =
+          featherCanvas.getContext("2d");
+
+        featherCtx.filter =
+          `blur(${feather}px)`;
+
+        featherCtx.drawImage(
+          cutout,
+          0,
+          0
+        );
+
+        featherCtx.filter = "none";
+
+        ctx.drawImage(
+          featherCanvas,
+          0,
+          0
+        );
+
+        cleanupCanvas(featherCanvas);
+      }
+
+      /* FOREGROUND */
+
+      ctx.drawImage(cutout,0,0);
+
+      item.currentBlob =
+        await canvasToBlob(
+          canvas,
+          format,
+          0.95
+        );
+
+      cleanupCanvas(canvas);
     }
 
-    dom.applyBtn.disabled = false;
+    renderResults();
 
-    dom.applyBtn.textContent = "Apply Background";
+    dom.apply.disabled = false;
 
-    state.processing = false;
+    dom.apply.textContent =
+      "Apply Background";
   }
 
-  /* ==========================================================================
-     DOWNLOAD SINGLE
-     ========================================================================== */
+  /* =========================================================
+     DOWNLOAD
+     ========================================================= */
 
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
+  function downloadBlob(blob,name) {
 
-    const a = document.createElement("a");
+    const url =
+      URL.createObjectURL(blob);
+
+    const a =
+      document.createElement("a");
 
     a.href = url;
-    a.download = filename;
+    a.download = name;
 
     document.body.appendChild(a);
 
@@ -1004,139 +614,135 @@
 
     a.remove();
 
-    window.setTimeout(() => {
-      revokeObjectURL(url);
-    }, 500);
+    setTimeout(() => {
+      revoke(url);
+    },300);
   }
 
-  function getExportExtension() {
-    const format = dom.outputFormat.value;
-
-    if (format === "image/jpeg") {
-      return "jpg";
-    }
-
-    if (format === "image/webp") {
-      return "webp";
-    }
-
-    return "png";
-  }
+  /* =========================================================
+     SAVE SINGLE
+     ========================================================= */
 
   function saveSingle(index) {
-    const item = state.results[index];
+
+    const item =
+      state.results[index];
 
     if (!item || item.error) return;
 
-    const ext = getExportExtension();
-
-    const filename =
-      `pixelpress-${safeFileName(item.file.name)}.${ext}`;
-
-    downloadBlob(item.currentBlob, filename);
-  }
-
-  /* ==========================================================================
-     ZIP DOWNLOAD
-     ========================================================================== */
-
-  async function downloadZip() {
-    if (!window.JSZip) {
-      window.alert("JSZip failed to load.");
-      return;
-    }
-
-    const zip = new window.JSZip();
-
-    const ext = getExportExtension();
-
-    for (const item of state.results) {
-      if (item.error) continue;
-
-      const filename =
-        `pixelpress-${safeFileName(item.file.name)}.${ext}`;
-
-      zip.file(filename, item.currentBlob);
-    }
-
-    const zipBlob = await zip.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: {
-        level: 6
-      }
-    });
+    const ext =
+      getExtension(dom.format.value);
 
     downloadBlob(
-      zipBlob,
-      "pixelpress-background-remover.zip"
+      item.currentBlob,
+      `pixelpress-${safeName(item.file.name)}.${ext}`
     );
   }
 
-  /* ==========================================================================
-     ZIP BUTTON
-     ========================================================================== */
+  /* =========================================================
+     ZIP
+     ========================================================= */
 
-  function updateZipButton() {
-    const hasResults = state.results.some(
-      (item) => !item.error
+  async function downloadZip() {
+
+    const zip = new JSZip();
+
+    const ext =
+      getExtension(dom.format.value);
+
+    for (const item of state.results) {
+
+      if (item.error) continue;
+
+      zip.file(
+        `pixelpress-${safeName(item.file.name)}.${ext}`,
+        item.currentBlob
+      );
+    }
+
+    const blob =
+      await zip.generateAsync({
+        type: "blob"
+      });
+
+    downloadBlob(
+      blob,
+      "pixelpress-backgrounds.zip"
     );
-
-    dom.zipBtn.disabled = !hasResults;
   }
 
-  /* ==========================================================================
+  /* =========================================================
+     CONTROLS
+     ========================================================= */
+
+  function updateControls() {
+
+    const type = dom.bgType.value;
+
+    dom.solidWrap.classList.toggle(
+      "pp-rbg-hidden",
+      type !== "solid"
+    );
+
+    dom.gradientWrap.classList.toggle(
+      "pp-rbg-hidden",
+      type !== "gradient"
+    );
+
+    dom.blurWrap.classList.toggle(
+      "pp-rbg-hidden",
+      type !== "blur"
+    );
+
+    dom.customWrap.classList.toggle(
+      "pp-rbg-hidden",
+      type !== "custom"
+    );
+
+    if (type === "transparent") {
+      dom.format.value = "image/png";
+    }
+  }
+
+  /* =========================================================
      EVENTS
-     ========================================================================== */
+     ========================================================= */
 
-  function bindEvents() {
-    dom.dropZone.addEventListener("click", () => {
-      dom.fileInput.click();
+  function bind() {
+
+    dom.dropzone.addEventListener("click", () => {
+      dom.input.click();
     });
 
-    dom.dropZone.addEventListener("keydown", (event) => {
-      if (
-        event.key === "Enter" ||
-        event.key === " "
-      ) {
-        event.preventDefault();
-
-        dom.fileInput.click();
-      }
+    dom.dropzone.addEventListener("dragover", e => {
+      e.preventDefault();
+      dom.dropzone.classList.add("dragging");
     });
 
-    dom.dropZone.addEventListener("dragover", (event) => {
-      event.preventDefault();
-
-      dom.dropZone.classList.add("pp-rbg-dragover");
+    dom.dropzone.addEventListener("dragleave", () => {
+      dom.dropzone.classList.remove("dragging");
     });
 
-    dom.dropZone.addEventListener("dragleave", () => {
-      dom.dropZone.classList.remove("pp-rbg-dragover");
+    dom.dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+
+      dom.dropzone.classList.remove("dragging");
+
+      handleFiles(e.dataTransfer.files);
     });
 
-    dom.dropZone.addEventListener("drop", (event) => {
-      event.preventDefault();
-
-      dom.dropZone.classList.remove("pp-rbg-dragover");
-
-      processFiles(event.dataTransfer.files);
-    });
-
-    dom.fileInput.addEventListener("change", (event) => {
-      processFiles(event.target.files);
-
-      event.target.value = "";
+    dom.input.addEventListener("change", e => {
+      handleFiles(e.target.files);
     });
 
     dom.bgType.addEventListener(
       "change",
-      updateBackgroundControls
+      updateControls
     );
 
-    dom.blurAmount.addEventListener("input", () => {
+    dom.blur.addEventListener("input", () => {
       dom.blurValue.textContent =
-        `${dom.blurAmount.value}px`;
+        `${dom.blur.value}px`;
     });
 
     dom.feather.addEventListener("input", () => {
@@ -1144,87 +750,52 @@
         `${dom.feather.value}px`;
     });
 
-    dom.customBgInput.addEventListener(
+    dom.customBg.addEventListener(
       "change",
-      async (event) => {
-        const file = event.target.files[0];
+      async e => {
+
+        const file =
+          e.target.files[0];
 
         if (!file) return;
 
-        try {
-          await loadCustomBackground(file);
-        } catch (error) {
-          console.error(error);
-
-          window.alert(
-            "Failed to load custom background."
-          );
-        }
+        state.customImage =
+          await fileToImage(file);
       }
     );
 
-    dom.applyBtn.addEventListener(
+    dom.apply.addEventListener(
       "click",
       applyBackgrounds
     );
 
-    dom.zipBtn.addEventListener(
+    dom.zip.addEventListener(
       "click",
       downloadZip
     );
 
-    dom.resultsGrid.addEventListener(
+    dom.results.addEventListener(
       "click",
-      (event) => {
-        const button =
-          event.target.closest(".pp-rbg-save");
+      e => {
 
-        if (!button) return;
+        const btn =
+          e.target.closest(".pp-save-btn");
 
-        const index = Number(
-          button.dataset.index
+        if (!btn) return;
+
+        saveSingle(
+          Number(btn.dataset.index)
         );
-
-        saveSingle(index);
       }
     );
-
-    dom.fallbackBtn.addEventListener(
-      "click",
-      activateManualMode
-    );
   }
 
-  /* ==========================================================================
-     STARTUP
-     ========================================================================== */
-
-  async function boot() {
-    try {
-      bindEvents();
-
-      updateBackgroundControls();
-
-      await initializeAI();
-    } catch (error) {
-      console.error("Boot failed:", error);
-
-      hideOverlay();
-
-      window.alert(
-        "Background remover failed to initialize."
-      );
-    }
-  }
-
-  /* ==========================================================================
+  /* =========================================================
      INIT
-     ========================================================================== */
+     ========================================================= */
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
+  bind();
+
+  updateControls();
 
 })();

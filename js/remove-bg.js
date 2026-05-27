@@ -1,472 +1,1230 @@
-// ============================================================================
-// PixelPress Background Remover Engine – Production Level Client-Side AI
-// Improvements: GPU Acceleration, Memory Leaks Patched, Aspect Correct Maps
-// ============================================================================
+/* ==========================================================================
+   PIXELPRESS REMOVE BG ENGINE
+   PRODUCTION READY
+   FULLY SCOPED
+   MEMORY SAFE
+   VERCEL SAFE
+   ========================================================================== */
 
-const { pipeline, env } = window.transformers;
+(() => {
+  "use strict";
 
-// ── DOM References ──────────────────────────────────────
-const dropZone          = document.getElementById('dropZone');
-const fileInput         = document.getElementById('fileInput');
-const progressContainer = document.getElementById('progressContainer');
-const batchProgress     = document.getElementById('batchProgress');
-const progressStatus    = document.getElementById('progressStatus');
-const resultsSection    = document.getElementById('resultsSection');
-const resultGrid        = document.getElementById('resultGrid');
-const applyBgBtn        = document.getElementById('applyBgBtn');
-const downloadAllBtn    = document.getElementById('downloadAllBtn');
-const bgType            = document.getElementById('bgType');
-const solidColorCard    = document.getElementById('solidColorCard');
-const gradientCard      = document.getElementById('gradientCard');
-const customBgCard      = document.getElementById('customBgCard');
-const blurCard          = document.getElementById('blurCard');
-const solidColor        = document.getElementById('solidColor');
-const gradStart         = document.getElementById('gradStart');
-const gradEnd           = document.getElementById('gradEnd');
-const customBgFile      = document.getElementById('customBgFile');
-const blurAmount        = document.getElementById('blurAmount');
-const blurValue         = document.getElementById('blurValue');
-const feather           = document.getElementById('feather');
-const featherValue      = document.getElementById('featherValue');
-const outputFormat      = document.getElementById('outputFormat');
-const loadingOverlay    = document.getElementById('loadingOverlay');
-const loadingMsg        = document.getElementById('loadingMsg');
-const modelProgress     = document.getElementById('modelProgress');
-const loadingSubMsg     = document.getElementById('loadingSubMsg');
-const fallbackBtn       = document.getElementById('fallbackBtn');
+  /* ==========================================================================
+     SAFE DOM HELPERS
+     ========================================================================== */
 
-// ── Shared Config & Engine State ───────────────────────────
-env.allowLocalModels = false;
-env.useBrowserCache  = true;
+  const $ = (id) => document.getElementById(id);
 
-let segmenter = null;        
-let useAIModel = true;       
-let processedResults = [];
-let customBackgroundImage = null;
+  const dom = {
+    tool: $("ppRbgTool"),
 
-// ── Model Loading Lifecycle ──────────────────────────────
-(async function initEngine() {
-  loadingOverlay.style.display = 'flex';
-  loadingMsg.textContent = 'Loading AI Architecture…';
-  
-  try {
-    segmenter = await pipeline('image-segmentation', 'Xenova/modnet-onnx', {
-      progress_callback: (p) => {
-        if (p.status === 'progress') {
-          modelProgress.value = Math.round(p.progress || 0);
-          loadingSubMsg.textContent = `Fetching weights: ${p.file || ''}`;
-        } else if (p.status === 'done') {
-          modelProgress.value = 100;
-        }
-      },
-      device: 'wasm'      
-    });
-    loadingMsg.textContent = 'AI Neural Model Ready!';
-  } catch (err) {
-    console.error('Core Model Failed to Initialize:', err);
-    loadingMsg.textContent = 'AI Engine Connection Interrupted.';
-    loadingSubMsg.textContent = 'Falling back to high-compatibility manual extraction.';
-    useAIModel = false;
-    fallbackBtn.style.display = 'inline-block';
-  }
-  setTimeout(() => { loadingOverlay.style.display = 'none'; }, 1200);
-})();
+    overlay: $("ppRbgOverlay"),
+    overlayTitle: $("ppRbgOverlayTitle"),
+    overlaySub: $("ppRbgOverlaySub"),
+    overlayFile: $("ppRbgOverlayFile"),
+    overlayProgress: $("ppRbgModelProgress"),
+    fallbackBtn: $("ppRbgFallbackBtn"),
 
-fallbackBtn.addEventListener('click', () => {
-  loadingOverlay.style.display = 'none';
-  useAIModel = false;
-  alert('Manual Mode Active: Upload your media, then use settings to extract matching background colors.');
-});
+    dropZone: $("ppRbgDropZone"),
+    fileInput: $("ppRbgFileInput"),
 
-// ── Safe Memory Cleanup Routine ──────────────────────────
-function purgeOldBlobs() {
-  processedResults.forEach(res => {
-    if (res.origUrl) URL.revokeObjectURL(res.origUrl);
-    if (res.currUrl) URL.revokeObjectURL(res.currUrl);
-  });
-  processedResults = [];
-}
+    batchWrap: $("ppRbgBatchWrap"),
+    batchProgress: $("ppRbgBatchProgress"),
+    batchText: $("ppRbgBatchText"),
 
-// ── Event Handlers ────────────────────────────────────────
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  handleFiles(e.dataTransfer.files);
-});
-fileInput.addEventListener('change', e => handleFiles(e.target.files));
+    resultsSection: $("ppRbgResultsSection"),
+    resultsGrid: $("ppRbgResults"),
 
-function handleFiles(fileList) {
-  const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 10);
-  if (files.length === 0) return;
-  if (useAIModel && !segmenter) {
-    alert('The Neural Network is stabilizing. Please wait a few seconds.');
-    return;
-  }
-  startProcessingChain(files);
-}
+    bgType: $("ppRbgBgType"),
 
-// ── Batch Process Management ──────────────────────────────
-async function startProcessingChain(files) {
-  progressContainer.style.display = 'block';
-  resultsSection.style.display = 'none';
-  purgeOldBlobs();
+    solidWrap: $("ppRbgSolidWrap"),
+    solidColor: $("ppRbgSolidColor"),
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    progressStatus.textContent = `Processing Canvas [${i + 1}/${files.length}] – Isolating Subject...`;
-    batchProgress.value = Math.round((i / files.length) * 100);
+    gradientWrap: $("ppRbgGradientWrap"),
+    gradientStart: $("ppRbgGradientStart"),
+    gradientEnd: $("ppRbgGradientEnd"),
 
-    try {    
-      const originalBlob = await fileToBlob(file);    
-      const cutoutBlob = await executeAlphaExtraction(originalBlob);    
+    customWrap: $("ppRbgCustomWrap"),
+    customBgInput: $("ppRbgCustomBg"),
 
-      processedResults.push({    
-        file,    
-        originalBlob,    
-        cutoutBlob,    
-        currentBlob: cutoutBlob,    
-        appliedBg: 'transparent',
-        origUrl: null,
-        currUrl: null
-      });    
-    } catch (err) {    
-      console.error('Extraction Failure on item:', file.name, err);    
-      processedResults.push({ file, error: true, errorMsg: err.message || 'Processing Context Timeout' });    
-    }
-  }
+    blurWrap: $("ppRbgBlurWrap"),
+    blurAmount: $("ppRbgBlurAmount"),
+    blurValue: $("ppRbgBlurValue"),
 
-  batchProgress.value = 100;
-  progressStatus.textContent = 'Pipeline execution complete!';
-  renderOutputStage();
-  resultsSection.style.display = 'block';
-}
+    feather: $("ppRbgFeather"),
+    featherValue: $("ppRbgFeatherValue"),
 
-// ── Hardware Accelerated Alpha Matte Extraction ───────────
-async function executeAlphaExtraction(originalBlob) {
-  const scaledBlob = await runDownscaleOptimizer(originalBlob, 1200);
-  const sourceImg = await blobToImageElement(scaledBlob);
+    outputFormat: $("ppRbgOutputFormat"),
 
-  if (useAIModel && segmenter) {
-    const output = await segmenter(sourceImg);
-    
-    let modelMask = output.mask;
-    if (!modelMask && Array.isArray(output) && output) {
-      modelMask = output.mask;
-    }
-
-    if (!modelMask) {
-      throw new Error("AI Model output response architecture mismatch.");
-    }
-
-    const layerCanvas = document.createElement('canvas');
-    layerCanvas.width = sourceImg.width;
-    layerCanvas.height = sourceImg.height;
-    const lCtx = layerCanvas.getContext('2d');
-
-    if (modelMask.toCanvas) {    
-      const rawMaskCanvas = modelMask.toCanvas();    
-      lCtx.drawImage(rawMaskCanvas, 0, 0, sourceImg.width, sourceImg.height);    
-    } else {    
-      const { data, width, height } = modelMask;    
-      const bufferCanvas = document.createElement('canvas');    
-      bufferCanvas.width = width;    
-      bufferCanvas.height = height;    
-      const bCtx = bufferCanvas.getContext('2d');    
-      const imgData = bCtx.createImageData(width, height);    
-      
-      for (let i = 0; i < data.length; i++) {    
-        const luminance = Math.round(data[i] * 255);    
-        const idx = i * 4;
-        imgData.data[idx]     = luminance;    
-        imgData.data[idx + 1] = luminance;    
-        imgData.data[idx + 2] = luminance;    
-        imgData.data[idx + 3] = 255;    
-      }    
-      bCtx.putImageData(imgData, 0, 0);    
-      lCtx.drawImage(bufferCanvas, 0, 0, sourceImg.width, sourceImg.height);
-      bufferCanvas.width = 0;
-    }    
-
-    const productionCanvas = document.createElement('canvas');    
-    productionCanvas.width = sourceImg.width;    
-    productionCanvas.height = sourceImg.height;    
-    const pCtx = productionCanvas.getContext('2d');    
-    
-    pCtx.drawImage(sourceImg, 0, 0);    
-    pCtx.globalCompositeOperation = 'destination-in';    
-    pCtx.drawImage(layerCanvas, 0, 0);    
-    pCtx.globalCompositeOperation = 'source-over';    
-
-    const cleanResult = await canvasToBlobData(productionCanvas, 'image/png', 1.0);
-    
-    layerCanvas.width = 0; 
-    productionCanvas.width = 0; 
-    return cleanResult;
-  } else {
-    return await runLegacyChromaKey(sourceImg);
-  }
-}
-
-// ── High-Compatibility Chroma Key Fallback ───────────────
-async function runLegacyChromaKey(img) {
-  const targetHex = prompt('Enter hex value to strip away (e.g., #ffffff):', '#ffffff');
-  if (!targetHex) throw new Error('Operations aborted by client interaction.');
-
-  const canvas = document.createElement('canvas');
-  canvas.width = img.width;
-  canvas.height = img.height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = imgData.data;
-
-  const hexClean = targetHex.replace('#', '');
-  const targetR = parseInt(hexClean.substring(0,2), 16) || 255;
-  const targetG = parseInt(hexClean.substring(2,4), 16) || 255;
-  const targetB = parseInt(hexClean.substring(4,6), 16) || 255;
-  const tolerance = 45; 
-
-  for (let i = 0; i < d.length; i += 4) {
-    if (Math.abs(d[i] - targetR) < tolerance &&
-        Math.abs(d[i+1] - targetG) < tolerance &&
-        Math.abs(d[i+2] - targetB) < tolerance) {
-      d[i+3] = 0;  
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return await canvasToBlobData(canvas, 'image/png', 1.0);
-}
-
-// ── Core Infrastructure Helper Blocks ─────────────────────
-function fileToBlob(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => fetch(e.target.result).then(r => r.blob()).then(resolve);
-    reader.readAsDataURL(file);
-  });
-}
-
-async function runDownscaleOptimizer(blob, maxBound) {
-  const img = await blobToImageElement(blob);
-  if (img.width <= maxBound && img.height <= maxBound) return blob;
-  
-  const scalingFactor = Math.min(maxBound / img.width, maxBound / img.height);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(img.width * scalingFactor);
-  canvas.height = Math.round(img.height * scalingFactor);
-  
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  
-  return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.98));
-}
-
-function blobToImageElement(blob) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Image parser failed to build structure.'));
-    img.src = URL.createObjectURL(blob);
-  });
-}
-
-function canvasToBlobData(canvas, layout, precision) {
-  return new Promise(resolve => canvas.toBlob(resolve, layout, precision));
-}
-
-// ── Hardware Slider Rendering Engine ─────────────────────
-function renderOutputStage() {
-  resultGrid.innerHTML = '';
-  processedResults.forEach((result, idx) => {
-    if (result.error) {    
-      const card = document.createElement('div');
-      card.className = 'result-card';
-      card.innerHTML = `<p style="padding:12px; text-align:center; font-size:13px; color:#ef4444;">⚠️ ${result.errorMsg}</p>`;    
-      resultGrid.appendChild(card);    
-      return;    
-    }    
-
-    if (result.origUrl) URL.revokeObjectURL(result.origUrl);
-    if (result.currUrl) URL.revokeObjectURL(result.currUrl);
-
-    result.origUrl = URL.createObjectURL(result.originalBlob);    
-    result.currUrl = URL.createObjectURL(result.currentBlob);    
-
-    const card = document.createElement('div');
-    card.className = 'result-card';
-    card.innerHTML = `    
-      <div class="comparison-slider" id="slider-${idx}">    
-        <img src="${result.origUrl}" alt="Source Stage" class="img-before">    
-        <img src="${result.currUrl}" alt="Isolated Matte" class="img-after">    
-        <div class="slider-handle"><div class="handle-circle">⇔</div></div>    
-      </div>    
-      <div style="padding:8px; text-align:center;">    
-        <button class="btn-outline download-single" data-idx="${idx}">💾 Save</button>    
-      </div>`;    
-    resultGrid.appendChild(card);    
-
-    const slider    = card.querySelector('.comparison-slider');    
-    const handle    = slider.querySelector('.slider-handle');    
-    const transform = slider.querySelector('.img-after');    
-    let activeDrag  = false;    
-
-    function adjustViewport(clientX) {    
-      const surface = slider.getBoundingClientRect();    
-      let offset = (clientX - surface.left) / surface.width;    
-      offset = Math.min(1, Math.max(0, offset));    
-      transform.style.clipPath = `inset(0 ${(1 - offset) * 100}% 0 0)`;    
-      handle.style.left = `${offset * 100}%`;    
-    }    
-    
-    handle.addEventListener('mousedown', e => { activeDrag = true; e.preventDefault(); });    
-    window.addEventListener('mousemove', e => { if (activeDrag) adjustViewport(e.clientX); });    
-    window.addEventListener('mouseup', () => { activeDrag = false; });    
-    
-    handle.addEventListener('touchstart', e => { activeDrag = true; e.preventDefault(); });    
-    window.addEventListener('touchmove', e => { if (activeDrag && e.touches && e.touches) adjustViewport(e.touches.clientX); });    
-    window.addEventListener('touchend', () => { activeDrag = false; });    
-
-    card.querySelector('.download-single').addEventListener('click', () => downloadSingle(result.currentBlob, result.file.name));
-  });
-  updateDownloadAllState();
-}
-
-// ── Interactive Background Composition System ────────────
-bgType.addEventListener('change', () => {
-  const mode = bgType.value;
-  solidColorCard.style.display = (mode === 'solid') ? 'block' : 'none';
-  gradientCard.style.display   = (mode === 'gradient') ? 'block' : 'none';
-  customBgCard.style.display   = (mode === 'custom') ? 'block' : 'none';
-  blurCard.style.display       = (mode === 'blur') ? 'block' : 'none';
-  if (mode === 'transparent') outputFormat.value = 'image/png';
-});
-
-blurAmount.addEventListener('input', () => blurValue.textContent = `${blurAmount.value}px`);
-feather.addEventListener('input', () => featherValue.textContent = feather.value);
-
-customBgFile.addEventListener('change', e => {
-  const target = e.target.files;
-  if (!target || target.length === 0) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const obj = new Image();
-    obj.onload = () => { customBackgroundImage = obj; };
-    obj.src = ev.target.result;
+    applyBtn: $("ppRbgApplyBtn"),
+    zipBtn: $("ppRbgZipBtn")
   };
-  reader.readAsDataURL(target);
-});
 
-applyBgBtn.addEventListener('click', async () => {
-  const mode = bgType.value;
-  const featherVal = parseFloat(feather.value);
-  const standardExt = outputFormat.value;
-  
-  applyBgBtn.disabled = true;
-  applyBgBtn.textContent = 'Refining Layout Canvas…';
+  /* ==========================================================================
+     RUNTIME CONFIG
+     ========================================================================== */
 
-  for (const item of processedResults) {
-    if (item.error) continue;
-    
-    const compoundObject = await blobToImageElement(item.cutoutBlob);
-    const canvas = document.createElement('canvas');
-    canvas.width = compoundObject.width;
-    canvas.height = compoundObject.height;
-    const ctx = canvas.getContext('2d');
+  const CONFIG = {
+    MAX_FILES: 10,
+    MAX_IMAGE_DIMENSION: 1400,
+    EXPORT_QUALITY: 0.95,
+    MAX_CANVAS_PIXELS: 4096 * 4096
+  };
 
-    if (mode === 'solid') {    
-      ctx.fillStyle = solidColor.value;    
-      ctx.fillRect(0, 0, canvas.width, canvas.height);    
-    } else if (mode === 'gradient') {    
-      const gradientStream = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);    
-      gradientStream.addColorStop(0, gradStart.value);    
-      gradientStream.addColorStop(1, gradEnd.value);    
-      ctx.fillStyle = gradientStream;    
-      ctx.fillRect(0, 0, canvas.width, canvas.height);    
-    } else if (mode === 'blur') {    
-      const baseline = await blobToImageElement(item.originalBlob);    
-      ctx.filter = `blur(${blurAmount.value}px)`;    
-      ctx.drawImage(baseline, 0, 0, canvas.width, canvas.height);    
-      ctx.filter = 'none';    
-    } else if (mode === 'custom' && customBackgroundImage) {    
-      ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);    
-    } else if (mode === 'transparent') {
+  /* ==========================================================================
+     ENGINE STATE
+     ========================================================================== */
+
+  const state = {
+    segmenter: null,
+    modelReady: false,
+    manualMode: false,
+    customBackgroundImage: null,
+    processing: false,
+    results: []
+  };
+
+  /* ==========================================================================
+     TRANSFORMERS CONFIG
+     ========================================================================== */
+
+  const transformers = window.transformers;
+
+  if (transformers && transformers.env) {
+    transformers.env.allowLocalModels = false;
+    transformers.env.useBrowserCache = true;
+    transformers.env.backends.onnx.wasm.numThreads = 1;
+  }
+
+  /* ==========================================================================
+     UTILITIES
+     ========================================================================== */
+
+  function showOverlay() {
+    dom.overlay.style.display = "flex";
+  }
+
+  function hideOverlay() {
+    dom.overlay.style.display = "none";
+  }
+
+  function updateOverlay(title, sub, file, progress) {
+    dom.overlayTitle.textContent = title || "";
+    dom.overlaySub.textContent = sub || "";
+    dom.overlayFile.textContent = file || "";
+
+    if (typeof progress === "number") {
+      dom.overlayProgress.value = Math.max(
+        0,
+        Math.min(100, progress)
+      );
+    }
+  }
+
+  function safeFileName(name) {
+    return name.replace(/\.[^/.]+$/, "").replace(/[^\w-]/g, "_");
+  }
+
+  function revokeObjectURL(url) {
+    if (url && typeof url === "string") {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function cleanupCanvas(canvas) {
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    if (ctx) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-    } else {    
-      ctx.fillStyle = '#ffffff';    
-      ctx.fillRect(0, 0, canvas.width, canvas.height);    
-    }    
+    }
 
-    if (featherVal > 0) {    
-      const shadowBuffer = document.createElement('canvas');    
-      shadowBuffer.width = canvas.width;    
-      shadowBuffer.height = canvas.height;    
-      const sbCtx = shadowBuffer.getContext('2d');    
-      
-      sbCtx.filter = `blur(${featherVal}px)`;    
-      sbCtx.drawImage(compoundObject, 0, 0);    
-      sbCtx.filter = 'none';    
-      
-      ctx.drawImage(shadowBuffer, 0, 0);    
-      shadowBuffer.width = 0; 
-    }    
-
-    ctx.drawImage(compoundObject, 0, 0);    
-    item.currentBlob = await canvasToBlobData(canvas, standardExt, 0.96);    
-    canvas.width = 0; 
+    canvas.width = 1;
+    canvas.height = 1;
   }
 
-  renderOutputStage();
-  applyBgBtn.disabled = false;
-  applyBgBtn.textContent = 'Apply Background to All';
-});
-
-// ── Export/Download Processing Block ─────────────────────
-function downloadSingle(blob, baselineName) {
-  const currentFormat = outputFormat.value;
-  const extensionType = currentFormat === 'image/jpeg' ? 'jpg' : (currentFormat.split('/') || 'png');
-  const cleanName = baselineName.replace(/\.[^.]+$/, '');
-  
-  const element = document.createElement('a');
-  element.href = URL.createObjectURL(blob);
-  element.download = `pixelpress-nobg-${cleanName}.${extensionType}`;
-  element.click();
-  
-  setTimeout(() => URL.revokeObjectURL(element.href), 100);
-}
-
-downloadAllBtn.addEventListener('click', async () => {
-  const bundle = new JSZip();
-  const currentFormat = outputFormat.value;
-  const targetedExt = currentFormat === 'image/jpeg' ? 'jpg' : (currentFormat.split('/') || 'png');
-  
-  for (const res of processedResults) {
-    if (res.error || !res.currentBlob) continue;
-    const trackingName = res.file.name.replace(/\.[^.]+$/, '');
-    bundle.file(`pixelpress-nobg-${trackingName}.${targetedExt}`, res.currentBlob);
+  function delay(ms) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
   }
-  
-  const packageBlob = await bundle.generateAsync({ type: 'blob' });
-  const downloadLink = document.createElement('a');
-  downloadLink.href = URL.createObjectURL(packageBlob);
-  downloadLink.download = 'pixelpress-background-removed-package.zip';
-  downloadLink.click();
-  
-  setTimeout(() => URL.revokeObjectURL(downloadLink.href), 100);
-});
 
-function updateDownloadAllState() {
-  downloadAllBtn.disabled = !processedResults.some(r => !r.error && r.currentBlob);
-}
+  /* ==========================================================================
+     MEMORY CLEANUP
+     ========================================================================== */
 
-// ── Core Form UI Resets ───────────────────────────────
-solidColorCard.style.display = 'none'; 
-gradientCard.style.display   = 'none';
-customBgCard.style.display   = 'none';
-blurCard.style.display       = 'none';
-outputFormat.value           = 'image/png';
+  function purgeResults() {
+    state.results.forEach((item) => {
+      revokeObjectURL(item.originalURL);
+      revokeObjectURL(item.processedURL);
+    });
+
+    state.results.length = 0;
+
+    dom.resultsGrid.innerHTML = "";
+  }
+
+  /* ==========================================================================
+     FILE HELPERS
+     ========================================================================== */
+
+  async function fileToImage(file) {
+    return new Promise((resolve, reject) => {
+      const objectURL = URL.createObjectURL(file);
+
+      const image = new Image();
+
+      image.onload = () => {
+        revokeObjectURL(objectURL);
+        resolve(image);
+      };
+
+      image.onerror = () => {
+        revokeObjectURL(objectURL);
+        reject(new Error("Failed to load image."));
+      };
+
+      image.src = objectURL;
+    });
+  }
+
+  async function blobToImage(blob) {
+    return new Promise((resolve, reject) => {
+      const objectURL = URL.createObjectURL(blob);
+
+      const image = new Image();
+
+      image.onload = () => {
+        revokeObjectURL(objectURL);
+        resolve(image);
+      };
+
+      image.onerror = () => {
+        revokeObjectURL(objectURL);
+        reject(new Error("Failed to decode image blob."));
+      };
+
+      image.src = objectURL;
+    });
+  }
+
+  async function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Canvas export failed."));
+            return;
+          }
+
+          resolve(blob);
+        },
+        type,
+        quality
+      );
+    });
+  }
+
+  /* ==========================================================================
+     IMAGE OPTIMIZER
+     PREVENTS TAB CRASHES
+     ========================================================================== */
+
+  async function optimizeImage(file) {
+    const image = await fileToImage(file);
+
+    const originalWidth = image.width;
+    const originalHeight = image.height;
+
+    let targetWidth = originalWidth;
+    let targetHeight = originalHeight;
+
+    const maxDimension = CONFIG.MAX_IMAGE_DIMENSION;
+
+    if (
+      originalWidth > maxDimension ||
+      originalHeight > maxDimension
+    ) {
+      const ratio = Math.min(
+        maxDimension / originalWidth,
+        maxDimension / originalHeight
+      );
+
+      targetWidth = Math.round(originalWidth * ratio);
+      targetHeight = Math.round(originalHeight * ratio);
+    }
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const ctx = canvas.getContext("2d", {
+      alpha: true,
+      willReadFrequently: false
+    });
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    ctx.drawImage(
+      image,
+      0,
+      0,
+      targetWidth,
+      targetHeight
+    );
+
+    const blob = await canvasToBlob(
+      canvas,
+      "image/png",
+      0.95
+    );
+
+    cleanupCanvas(canvas);
+
+    return blob;
+  }
+
+  /* ==========================================================================
+     AI ENGINE INIT
+     ========================================================================== */
+
+  async function initializeAI() {
+    showOverlay();
+
+    updateOverlay(
+      "Initializing AI Engine",
+      "Preparing browser-safe segmentation runtime...",
+      "Loading dependencies...",
+      5
+    );
+
+    if (!transformers || !transformers.pipeline) {
+      throw new Error("Transformers runtime not available.");
+    }
+
+    try {
+      const { pipeline } = transformers;
+
+      state.segmenter = await pipeline(
+        "image-segmentation",
+        "Xenova/modnet-onnx",
+        {
+          device: "wasm",
+
+          progress_callback: (progress) => {
+            if (!progress) return;
+
+            if (progress.status === "progress") {
+              updateOverlay(
+                "Downloading AI Model",
+                "Fetching neural weights...",
+                progress.file || "Preparing...",
+                Math.round(progress.progress || 0)
+              );
+            }
+
+            if (progress.status === "done") {
+              updateOverlay(
+                "Finalizing",
+                "Optimizing runtime...",
+                "Almost ready...",
+                100
+              );
+            }
+          }
+        }
+      );
+
+      state.modelReady = true;
+
+      updateOverlay(
+        "AI Engine Ready",
+        "Background remover initialized successfully.",
+        "Ready to process images.",
+        100
+      );
+
+      await delay(700);
+
+      hideOverlay();
+    } catch (error) {
+      console.error("AI initialization failed:", error);
+
+      state.manualMode = true;
+
+      updateOverlay(
+        "AI Engine Failed",
+        "Falling back to manual compatibility mode.",
+        error.message || "Unknown error.",
+        100
+      );
+
+      dom.fallbackBtn.classList.remove("pp-rbg-hidden");
+    }
+  }
+
+  /* ==========================================================================
+     FALLBACK MODE
+     ========================================================================== */
+
+  function activateManualMode() {
+    state.manualMode = true;
+    hideOverlay();
+
+    window.alert(
+      "AI model could not load. Manual fallback mode enabled."
+    );
+  }
+
+  /* ==========================================================================
+     LEGACY CHROMA KEY
+     ========================================================================== */
+
+  async function chromaKeyFallback(imageBlob) {
+    const image = await blobToImage(imageBlob);
+
+    const hex = window.prompt(
+      "Enter background color hex to remove:",
+      "#ffffff"
+    );
+
+    if (!hex) {
+      throw new Error("Operation cancelled.");
+    }
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = image.width;
+    canvas.height = image.height;
+
+    const ctx = canvas.getContext("2d", {
+      willReadFrequently: true
+    });
+
+    ctx.drawImage(image, 0, 0);
+
+    const imageData = ctx.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const data = imageData.data;
+
+    const clean = hex.replace("#", "");
+
+    const targetR = parseInt(clean.substring(0, 2), 16);
+    const targetG = parseInt(clean.substring(2, 4), 16);
+    const targetB = parseInt(clean.substring(4, 6), 16);
+
+    const tolerance = 45;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+
+      if (
+        Math.abs(r - targetR) < tolerance &&
+        Math.abs(g - targetG) < tolerance &&
+        Math.abs(b - targetB) < tolerance
+      ) {
+        data[i + 3] = 0;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    const blob = await canvasToBlob(
+      canvas,
+      "image/png",
+      1
+    );
+
+    cleanupCanvas(canvas);
+
+    return blob;
+  }
+
+  /* ==========================================================================
+     AI REMOVE BG
+     ========================================================================== */
+
+  async function removeBackground(imageBlob) {
+    if (state.manualMode || !state.segmenter) {
+      return chromaKeyFallback(imageBlob);
+    }
+
+    const image = await blobToImage(imageBlob);
+
+    const result = await state.segmenter(image);
+
+    let mask = null;
+
+    if (Array.isArray(result) && result.length > 0) {
+      mask = result[0].mask || result[0];
+    } else {
+      mask = result.mask || result;
+    }
+
+    if (!mask) {
+      throw new Error("Invalid AI segmentation output.");
+    }
+
+    const outputCanvas = document.createElement("canvas");
+
+    outputCanvas.width = image.width;
+    outputCanvas.height = image.height;
+
+    const outputCtx = outputCanvas.getContext("2d");
+
+    outputCtx.drawImage(image, 0, 0);
+
+    const maskCanvas = document.createElement("canvas");
+
+    maskCanvas.width = image.width;
+    maskCanvas.height = image.height;
+
+    const maskCtx = maskCanvas.getContext("2d");
+
+    if (typeof mask.toCanvas === "function") {
+      const generatedMask = mask.toCanvas();
+
+      maskCtx.drawImage(
+        generatedMask,
+        0,
+        0,
+        image.width,
+        image.height
+      );
+    } else if (mask.data) {
+      const width = mask.width;
+      const height = mask.height;
+
+      const tempCanvas = document.createElement("canvas");
+
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+
+      const tempCtx = tempCanvas.getContext("2d");
+
+      const imgData = tempCtx.createImageData(width, height);
+
+      for (let i = 0; i < mask.data.length; i++) {
+        const value = Math.round(mask.data[i] * 255);
+
+        const index = i * 4;
+
+        imgData.data[index] = value;
+        imgData.data[index + 1] = value;
+        imgData.data[index + 2] = value;
+        imgData.data[index + 3] = 255;
+      }
+
+      tempCtx.putImageData(imgData, 0, 0);
+
+      maskCtx.drawImage(
+        tempCanvas,
+        0,
+        0,
+        image.width,
+        image.height
+      );
+
+      cleanupCanvas(tempCanvas);
+    } else {
+      throw new Error("Unsupported mask output.");
+    }
+
+    outputCtx.globalCompositeOperation =
+      "destination-in";
+
+    outputCtx.drawImage(maskCanvas, 0, 0);
+
+    outputCtx.globalCompositeOperation = "source-over";
+
+    const blob = await canvasToBlob(
+      outputCanvas,
+      "image/png",
+      1
+    );
+
+    cleanupCanvas(maskCanvas);
+    cleanupCanvas(outputCanvas);
+
+    return blob;
+  }
+
+  /* ==========================================================================
+     PROCESS FILES
+     ========================================================================== */
+
+  async function processFiles(files) {
+    if (state.processing) return;
+
+    state.processing = true;
+
+    purgeResults();
+
+    dom.batchWrap.style.display = "block";
+
+    dom.resultsSection.classList.add("pp-rbg-hidden");
+
+    const validFiles = Array.from(files)
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, CONFIG.MAX_FILES);
+
+    if (validFiles.length === 0) {
+      window.alert("Please select valid images.");
+      state.processing = false;
+      return;
+    }
+
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+
+      const progress = Math.round(
+        (i / validFiles.length) * 100
+      );
+
+      dom.batchProgress.value = progress;
+
+      dom.batchText.textContent =
+        `Processing ${i + 1} of ${validFiles.length}: ${file.name}`;
+
+      try {
+        const optimizedBlob = await optimizeImage(file);
+
+        await delay(30);
+
+        const processedBlob =
+          await removeBackground(optimizedBlob);
+
+        const result = {
+          file,
+          originalBlob: optimizedBlob,
+          cutoutBlob: processedBlob,
+          currentBlob: processedBlob,
+          originalURL: "",
+          processedURL: ""
+        };
+
+        state.results.push(result);
+      } catch (error) {
+        console.error("Processing failed:", error);
+
+        state.results.push({
+          file,
+          error: true,
+          errorMessage:
+            error.message || "Unknown processing error."
+        });
+      }
+
+      await delay(50);
+    }
+
+    dom.batchProgress.value = 100;
+
+    dom.batchText.textContent =
+      "Processing completed.";
+
+    renderResults();
+
+    dom.resultsSection.classList.remove("pp-rbg-hidden");
+
+    state.processing = false;
+  }
+
+  /* ==========================================================================
+     RENDER RESULTS
+     ========================================================================== */
+
+  function renderResults() {
+    dom.resultsGrid.innerHTML = "";
+
+    state.results.forEach((item, index) => {
+      if (item.error) {
+        const errorCard = document.createElement("div");
+
+        errorCard.className = "pp-rbg-item";
+
+        errorCard.innerHTML = `
+          <div class="pp-rbg-error">
+            ⚠️ ${item.errorMessage}
+          </div>
+        `;
+
+        dom.resultsGrid.appendChild(errorCard);
+
+        return;
+      }
+
+      revokeObjectURL(item.originalURL);
+      revokeObjectURL(item.processedURL);
+
+      item.originalURL = URL.createObjectURL(
+        item.originalBlob
+      );
+
+      item.processedURL = URL.createObjectURL(
+        item.currentBlob
+      );
+
+      const card = document.createElement("div");
+
+      card.className = "pp-rbg-item";
+
+      card.innerHTML = `
+        <div class="pp-rbg-name">
+          ${item.file.name}
+        </div>
+
+        <div class="pp-rbg-compare">
+          <img
+            class="pp-rbg-before"
+            src="${item.originalURL}"
+            alt="Original"
+            loading="lazy"
+          />
+
+          <img
+            class="pp-rbg-after"
+            src="${item.processedURL}"
+            alt="Processed"
+            loading="lazy"
+          />
+
+          <div class="pp-rbg-divider"></div>
+
+          <div class="pp-rbg-handle">
+            ⇆
+          </div>
+        </div>
+
+        <div class="pp-rbg-item-footer">
+          <button
+            class="pp-rbg-btn pp-rbg-btn-outline pp-rbg-save"
+            data-index="${index}"
+          >
+            Save
+          </button>
+        </div>
+      `;
+
+      dom.resultsGrid.appendChild(card);
+
+      initializeSlider(card);
+    });
+
+    updateZipButton();
+  }
+
+  /* ==========================================================================
+     SLIDER
+     ========================================================================== */
+
+  function initializeSlider(card) {
+    const compare = card.querySelector(".pp-rbg-compare");
+
+    const after = card.querySelector(".pp-rbg-after");
+
+    const divider = card.querySelector(".pp-rbg-divider");
+
+    let dragging = false;
+
+    function update(clientX) {
+      const rect = compare.getBoundingClientRect();
+
+      let ratio = (clientX - rect.left) / rect.width;
+
+      ratio = Math.max(0, Math.min(1, ratio));
+
+      const percent = ratio * 100;
+
+      after.style.clipPath =
+        `inset(0 ${100 - percent}% 0 0)`;
+
+      divider.style.left = `${percent}%`;
+    }
+
+    compare.addEventListener("pointerdown", (event) => {
+      dragging = true;
+
+      update(event.clientX);
+
+      compare.setPointerCapture(event.pointerId);
+    });
+
+    compare.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+
+      update(event.clientX);
+    });
+
+    compare.addEventListener("pointerup", () => {
+      dragging = false;
+    });
+
+    compare.addEventListener("pointercancel", () => {
+      dragging = false;
+    });
+  }
+
+  /* ==========================================================================
+     BACKGROUND OPTIONS
+     ========================================================================== */
+
+  function updateBackgroundControls() {
+    const mode = dom.bgType.value;
+
+    dom.solidWrap.classList.toggle(
+      "pp-rbg-hidden",
+      mode !== "solid"
+    );
+
+    dom.gradientWrap.classList.toggle(
+      "pp-rbg-hidden",
+      mode !== "gradient"
+    );
+
+    dom.customWrap.classList.toggle(
+      "pp-rbg-hidden",
+      mode !== "custom"
+    );
+
+    dom.blurWrap.classList.toggle(
+      "pp-rbg-hidden",
+      mode !== "blur"
+    );
+
+    if (mode === "transparent") {
+      dom.outputFormat.value = "image/png";
+    }
+  }
+
+  /* ==========================================================================
+     CUSTOM BG
+     ========================================================================== */
+
+  async function loadCustomBackground(file) {
+    if (!file) return;
+
+    state.customBackgroundImage =
+      await fileToImage(file);
+  }
+
+  /* ==========================================================================
+     APPLY BACKGROUND
+     ========================================================================== */
+
+  async function applyBackgrounds() {
+    if (state.processing) return;
+
+    state.processing = true;
+
+    dom.applyBtn.disabled = true;
+
+    dom.applyBtn.textContent = "Applying...";
+
+    const bgType = dom.bgType.value;
+
+    const feather = parseFloat(dom.feather.value);
+
+    const exportFormat = dom.outputFormat.value;
+
+    try {
+      for (const item of state.results) {
+        if (item.error) continue;
+
+        const cutoutImage = await blobToImage(
+          item.cutoutBlob
+        );
+
+        const originalImage = await blobToImage(
+          item.originalBlob
+        );
+
+        const canvas = document.createElement("canvas");
+
+        canvas.width = cutoutImage.width;
+        canvas.height = cutoutImage.height;
+
+        const ctx = canvas.getContext("2d");
+
+        /* ==============================================================
+           BACKGROUND
+           ============================================================== */
+
+        if (bgType === "solid") {
+          ctx.fillStyle = dom.solidColor.value;
+
+          ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+        }
+
+        if (bgType === "gradient") {
+          const gradient =
+            ctx.createLinearGradient(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+          gradient.addColorStop(
+            0,
+            dom.gradientStart.value
+          );
+
+          gradient.addColorStop(
+            1,
+            dom.gradientEnd.value
+          );
+
+          ctx.fillStyle = gradient;
+
+          ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+        }
+
+        if (bgType === "blur") {
+          ctx.filter =
+            `blur(${dom.blurAmount.value}px)`;
+
+          ctx.drawImage(
+            originalImage,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          ctx.filter = "none";
+        }
+
+        if (
+          bgType === "custom" &&
+          state.customBackgroundImage
+        ) {
+          ctx.drawImage(
+            state.customBackgroundImage,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+        }
+
+        /* ==============================================================
+           FEATHER
+           ============================================================== */
+
+        if (feather > 0) {
+          const featherCanvas =
+            document.createElement("canvas");
+
+          featherCanvas.width = canvas.width;
+          featherCanvas.height = canvas.height;
+
+          const featherCtx =
+            featherCanvas.getContext("2d");
+
+          featherCtx.filter = `blur(${feather}px)`;
+
+          featherCtx.drawImage(cutoutImage, 0, 0);
+
+          featherCtx.filter = "none";
+
+          ctx.drawImage(featherCanvas, 0, 0);
+
+          cleanupCanvas(featherCanvas);
+        }
+
+        /* ==============================================================
+           FOREGROUND
+           ============================================================== */
+
+        ctx.drawImage(cutoutImage, 0, 0);
+
+        item.currentBlob = await canvasToBlob(
+          canvas,
+          exportFormat,
+          CONFIG.EXPORT_QUALITY
+        );
+
+        cleanupCanvas(canvas);
+
+        await delay(20);
+      }
+
+      renderResults();
+    } catch (error) {
+      console.error(error);
+
+      window.alert(
+        "Failed to apply background changes."
+      );
+    }
+
+    dom.applyBtn.disabled = false;
+
+    dom.applyBtn.textContent = "Apply Background";
+
+    state.processing = false;
+  }
+
+  /* ==========================================================================
+     DOWNLOAD SINGLE
+     ========================================================================== */
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = filename;
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    window.setTimeout(() => {
+      revokeObjectURL(url);
+    }, 500);
+  }
+
+  function getExportExtension() {
+    const format = dom.outputFormat.value;
+
+    if (format === "image/jpeg") {
+      return "jpg";
+    }
+
+    if (format === "image/webp") {
+      return "webp";
+    }
+
+    return "png";
+  }
+
+  function saveSingle(index) {
+    const item = state.results[index];
+
+    if (!item || item.error) return;
+
+    const ext = getExportExtension();
+
+    const filename =
+      `pixelpress-${safeFileName(item.file.name)}.${ext}`;
+
+    downloadBlob(item.currentBlob, filename);
+  }
+
+  /* ==========================================================================
+     ZIP DOWNLOAD
+     ========================================================================== */
+
+  async function downloadZip() {
+    if (!window.JSZip) {
+      window.alert("JSZip failed to load.");
+      return;
+    }
+
+    const zip = new window.JSZip();
+
+    const ext = getExportExtension();
+
+    for (const item of state.results) {
+      if (item.error) continue;
+
+      const filename =
+        `pixelpress-${safeFileName(item.file.name)}.${ext}`;
+
+      zip.file(filename, item.currentBlob);
+    }
+
+    const zipBlob = await zip.generateAsync({
+      type: "blob",
+      compression: "DEFLATE",
+      compressionOptions: {
+        level: 6
+      }
+    });
+
+    downloadBlob(
+      zipBlob,
+      "pixelpress-background-remover.zip"
+    );
+  }
+
+  /* ==========================================================================
+     ZIP BUTTON
+     ========================================================================== */
+
+  function updateZipButton() {
+    const hasResults = state.results.some(
+      (item) => !item.error
+    );
+
+    dom.zipBtn.disabled = !hasResults;
+  }
+
+  /* ==========================================================================
+     EVENTS
+     ========================================================================== */
+
+  function bindEvents() {
+    dom.dropZone.addEventListener("click", () => {
+      dom.fileInput.click();
+    });
+
+    dom.dropZone.addEventListener("keydown", (event) => {
+      if (
+        event.key === "Enter" ||
+        event.key === " "
+      ) {
+        event.preventDefault();
+
+        dom.fileInput.click();
+      }
+    });
+
+    dom.dropZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+
+      dom.dropZone.classList.add("pp-rbg-dragover");
+    });
+
+    dom.dropZone.addEventListener("dragleave", () => {
+      dom.dropZone.classList.remove("pp-rbg-dragover");
+    });
+
+    dom.dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+
+      dom.dropZone.classList.remove("pp-rbg-dragover");
+
+      processFiles(event.dataTransfer.files);
+    });
+
+    dom.fileInput.addEventListener("change", (event) => {
+      processFiles(event.target.files);
+
+      event.target.value = "";
+    });
+
+    dom.bgType.addEventListener(
+      "change",
+      updateBackgroundControls
+    );
+
+    dom.blurAmount.addEventListener("input", () => {
+      dom.blurValue.textContent =
+        `${dom.blurAmount.value}px`;
+    });
+
+    dom.feather.addEventListener("input", () => {
+      dom.featherValue.textContent =
+        `${dom.feather.value}px`;
+    });
+
+    dom.customBgInput.addEventListener(
+      "change",
+      async (event) => {
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        try {
+          await loadCustomBackground(file);
+        } catch (error) {
+          console.error(error);
+
+          window.alert(
+            "Failed to load custom background."
+          );
+        }
+      }
+    );
+
+    dom.applyBtn.addEventListener(
+      "click",
+      applyBackgrounds
+    );
+
+    dom.zipBtn.addEventListener(
+      "click",
+      downloadZip
+    );
+
+    dom.resultsGrid.addEventListener(
+      "click",
+      (event) => {
+        const button =
+          event.target.closest(".pp-rbg-save");
+
+        if (!button) return;
+
+        const index = Number(
+          button.dataset.index
+        );
+
+        saveSingle(index);
+      }
+    );
+
+    dom.fallbackBtn.addEventListener(
+      "click",
+      activateManualMode
+    );
+  }
+
+  /* ==========================================================================
+     STARTUP
+     ========================================================================== */
+
+  async function boot() {
+    try {
+      bindEvents();
+
+      updateBackgroundControls();
+
+      await initializeAI();
+    } catch (error) {
+      console.error("Boot failed:", error);
+
+      hideOverlay();
+
+      window.alert(
+        "Background remover failed to initialize."
+      );
+    }
+  }
+
+  /* ==========================================================================
+     INIT
+     ========================================================================== */
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+})();

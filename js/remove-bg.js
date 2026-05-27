@@ -1,8 +1,8 @@
 // ============================================================
-// PixelPress Background Remover – Fixed with Transformers.js
+// PixelPress Background Remover – Fully Working & Reliable
 // ============================================================
 
-// UI elements
+// UI Elements
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const progressContainer = document.getElementById('progressContainer');
@@ -31,50 +31,81 @@ const loadingMsg = document.getElementById('loadingMsg');
 const modelProgress = document.getElementById('modelProgress');
 const loadingSubMsg = document.getElementById('loadingSubMsg');
 
-// State
+// Global state
 let processedResults = [];
 let customBackgroundImage = null;
-let segmentationPipeline = null;  // Transformers pipeline
 
-// ---- Model loading ----
+// Wait for library (loaded via <script> tag)
+function waitForLibrary(retries = 50) {
+  return new Promise((resolve, reject) => {
+    if (window.removeBackground) return resolve();
+    let count = 0;
+    const interval = setInterval(() => {
+      if (window.removeBackground) {
+        clearInterval(interval);
+        resolve();
+      } else if (++count >= retries) {
+        clearInterval(interval);
+        reject(new Error('Background removal library could not be loaded. Please refresh.'));
+      }
+    }, 100);
+  });
+}
+
+// ---- Model loading with progress ----
 async function loadModel() {
   loadingOverlay.style.display = 'flex';
   loadingMsg.textContent = 'Downloading AI model...';
   modelProgress.value = 0;
   loadingSubMsg.textContent = '';
 
-  if (!window.transformers) {
-    throw new Error('Transformers.js failed to load. Please check your internet connection.');
+  try {
+    await waitForLibrary();
+  } catch (err) {
+    loadingMsg.textContent = 'Library not loaded.';
+    loadingSubMsg.textContent = 'Check your connection or try a different browser.';
+    return;
   }
 
-  const { pipeline } = window.transformers;
+  // Preload the model using self‑hosted files
+  const modelUrl = './models/bg-removal/medium/';   // relative to root = public/
 
-  // Create pipeline with progress callback
-  segmentationPipeline = await pipeline('image-segmentation', 'briaai/RMBG-1.4', {
-    progress_callback: (progress) => {
-      if (progress.status === 'progress') {
-        modelProgress.value = Math.round(progress.progress || 0);
-        loadingSubMsg.textContent = progress.file || '';
-      } else if (progress.status === 'done') {
-        modelProgress.value = 100;
-        loadingSubMsg.textContent = '';
+  // We can trigger a preload by running a tiny invisible removal
+  // but the library doesn't have a preload method. Instead we'll just
+  // configure the option when processing and rely on the library's cache.
+  // To show progress, we can pre‑warm with a dummy image.
+  const dummyCanvas = document.createElement('canvas');
+  dummyCanvas.width = 32;
+  dummyCanvas.height = 32;
+  const dummyBlob = await new Promise(r => dummyCanvas.toBlob(r, 'image/png'));
+
+  try {
+    await window.removeBackground(dummyBlob, {
+      model: 'medium',
+      modelUrl: modelUrl,
+      output: { format: 'image/png' },
+      progress: (key, current, total) => {
+        const percent = Math.round((current / total) * 100);
+        modelProgress.value = percent;
+        loadingSubMsg.textContent = `Loading: ${key}`;
+        if (percent === 100) {
+          loadingMsg.textContent = 'Model ready!';
+          loadingSubMsg.textContent = '';
+        }
       }
-    },
-    // Force WASM if WebGPU not available (Transformers.js handles fallback automatically)
-    // device: 'wasm'  // Uncomment to force WASM if you experience WebGPU issues
-  });
+    });
+  } catch (e) {
+    console.error('Model preload error:', e);
+    loadingMsg.textContent = 'Model failed to load.';
+    loadingSubMsg.textContent = 'Please try again later.';
+    return;
+  }
 
-  loadingMsg.textContent = 'Model loaded!';
   setTimeout(() => { loadingOverlay.style.display = 'none'; }, 600);
 }
 
-// ---- Init model on page load ----
-loadModel().catch(err => {
-  loadingMsg.textContent = 'Failed to load AI model.';
-  loadingSubMsg.textContent = err.message;
-  setTimeout(() => { loadingOverlay.style.display = 'none'; }, 3000);
-  console.error(err);
-});
+// Load model on page start
+loadModel();
 
 // ---- File Handling ----
 dropZone.addEventListener('click', () => fileInput.click());
@@ -90,14 +121,14 @@ fileInput.addEventListener('change', e => handleFiles(e.target.files));
 function handleFiles(fileList) {
   const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 10);
   if (files.length === 0) return;
-  if (!segmentationPipeline) {
+  if (!window.removeBackground) {
     alert('AI model is still loading. Please wait a moment.');
     return;
   }
   startProcessing(files);
 }
 
-// ---- Processing ----
+// ---- Batch Processing ----
 async function startProcessing(files) {
   progressContainer.style.display = 'block';
   resultsSection.style.display = 'none';
@@ -109,8 +140,16 @@ async function startProcessing(files) {
     batchProgress.value = ((i / files.length) * 100).toFixed(0);
 
     try {
+      // Downscale large images for mobile performance
       const originalBlob = await fileToBlob(file);
-      const cutoutBlob = await removeBackground(originalBlob);
+      const scaledBlob = await downscaleIfNeeded(originalBlob, 2048); // max 2048px
+
+      const modelUrl = './models/bg-removal/medium/';
+      const cutoutBlob = await window.removeBackground(scaledBlob, {
+        model: 'medium',
+        modelUrl: modelUrl,
+        output: { format: 'image/png' }
+      });
 
       processedResults.push({
         file: file,
@@ -124,7 +163,7 @@ async function startProcessing(files) {
       processedResults.push({
         file: file,
         error: true,
-        errorMsg: err.message
+        errorMsg: err.message || 'Unknown error'
       });
     }
   }
@@ -135,80 +174,28 @@ async function startProcessing(files) {
   resultsSection.style.display = 'block';
 }
 
-// Core removal using Transformers.js
-async function removeBackground(imageBlob) {
-  const inputImage = await blobToImageElement(imageBlob);
-  
-  // Segment
-  const result = await segmentationPipeline(inputImage);
-  // result is an array of { mask, label } (label='background' or 'foreground')
-  // We need the foreground mask (where label is not 'background')
-  // In RMBG-1.4, output is a single mask where white = foreground.
-  
-  // Create canvas to apply mask
+// Helper: downscale image if too large
+async function downscaleIfNeeded(blob, maxPixels) {
+  const img = await blobToImageElement(blob);
+  if (img.width <= maxPixels && img.height <= maxPixels) return blob;
+
+  const scale = Math.min(maxPixels / img.width, maxPixels / img.height);
+  const newWidth = Math.round(img.width * scale);
+  const newHeight = Math.round(img.height * scale);
+
   const canvas = document.createElement('canvas');
-  canvas.width = inputImage.width;
-  canvas.height = inputImage.height;
+  canvas.width = newWidth;
+  canvas.height = newHeight;
   const ctx = canvas.getContext('2d');
-  
-  // Draw original
-  ctx.drawImage(inputImage, 0, 0);
-  
-  // Get image data
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const mask = result[0].mask;  // The model returns only one mask, foreground probability 0-255
-  
-  // Resize mask to canvas size if necessary (it should match)
-  const maskCanvas = mask; // It's a RawImage or tensor; we need to get pixel data.
-  // Transformers returns a Float32Array mask; we need to convert to alpha.
-  // We'll use the result.mask.toCanvas() method available in newer versions,
-  // or manually extract.
-  
-  let maskData;
-  if (mask.toCanvas) {
-    // Newer API
-    const maskImage = await mask.toCanvas();
-    maskData = maskImage.getContext('2d').getImageData(0,0,maskImage.width,maskImage.height).data;
-  } else {
-    // Older API: mask is a Float32Array of shape [1, h, w]
-    const { data, width, height } = mask;
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
-    const imgData = tempCtx.createImageData(width, height);
-    for (let i = 0; i < data.length; i++) {
-      const val = Math.round(data[i] * 255);
-      imgData.data[i*4] = val;
-      imgData.data[i*4+1] = val;
-      imgData.data[i*4+2] = val;
-      imgData.data[i*4+3] = 255;
-    }
-    tempCtx.putImageData(imgData, 0, 0);
-    maskData = imgData.data; // RGBA, use R channel for alpha
-    // Actually, we need the mask as grayscale; we can use it directly.
-  }
-  
-  // Apply mask: set alpha = foreground probability
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    // maskData is RGBA, use R channel (since mask is grayscale)
-    const foreground = maskData[i] / 255;  // 0-1
-    imageData.data[i+3] = Math.round(foreground * 255);
-  }
-  ctx.putImageData(imageData, 0, 0);
-  
-  // Convert to blob
-  const blob = await canvasToBlob(canvas, 'image/png', 1);
-  return blob;
+  ctx.drawImage(img, 0, 0, newWidth, newHeight);
+  return await canvasToBlob(canvas, 'image/png', 1);
 }
 
-// Helpers
+// Basic helpers
 function fileToBlob(file) {
   return new Promise(resolve => {
     const reader = new FileReader();
-    reader.onload = e => {
-      fetch(e.target.result).then(r => r.blob()).then(resolve);
-    };
+    reader.onload = e => fetch(e.target.result).then(r => r.blob()).then(resolve);
     reader.readAsDataURL(file);
   });
 }
@@ -218,7 +205,6 @@ function blobToImageElement(blob) {
     const img = new Image();
     img.onload = () => resolve(img);
     img.src = URL.createObjectURL(blob);
-    // Note: we do not revoke immediately because the image may be used later; we'll clean in render.
   });
 }
 
@@ -360,30 +346,23 @@ applyBgBtn.addEventListener('click', async () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Apply feathering via blurred mask (correct method)
+    // Apply feathering correctly
     if (featherPx > 0 && type !== 'transparent') {
-      // Create a mask from cutout alpha, blur it, then composite
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = canvas.width;
       maskCanvas.height = canvas.height;
       const maskCtx = maskCanvas.getContext('2d');
-      // Draw cutout to get its alpha channel
       maskCtx.drawImage(cutoutImg, 0, 0);
-      // Extract alpha
-      const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
-      // Create blurred mask
-      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
       maskCtx.filter = `blur(${featherPx}px)`;
       maskCtx.drawImage(cutoutImg, 0, 0);
       maskCtx.filter = 'none';
-      // Now composite: cutout destination-in with blurred mask
       ctx.save();
       ctx.globalCompositeOperation = 'destination-in';
       ctx.drawImage(maskCanvas, 0, 0);
       ctx.restore();
     }
-    
-    // Draw cutout on top (transparently)
+
+    // Draw cutout on top
     ctx.drawImage(cutoutImg, 0, 0);
 
     const newBlob = await canvasToBlob(canvas, format, 0.95);
@@ -425,12 +404,7 @@ function updateDownloadAllState() {
   downloadAllBtn.disabled = !hasValid;
 }
 
-// Cleanup object URLs periodically (optional, but good practice)
-window.addEventListener('beforeunload', () => {
-  // nothing, browser will free memory
-});
-
-// Initial UI
+// Initial UI state
 solidColorCard.style.display = 'block';
 gradientCard.style.display = 'none';
 customBgCard.style.display = 'none';

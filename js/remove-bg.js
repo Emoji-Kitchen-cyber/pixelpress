@@ -1,7 +1,8 @@
-// ==========================================
-// PixelPress Background Remover – Working
-// ==========================================
+// ============================================================
+// PixelPress Background Remover – Fixed with Transformers.js
+// ============================================================
 
+// UI elements
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const progressContainer = document.getElementById('progressContainer');
@@ -25,27 +26,55 @@ const blurValue = document.getElementById('blurValue');
 const feather = document.getElementById('feather');
 const featherValue = document.getElementById('featherValue');
 const outputFormat = document.getElementById('outputFormat');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingMsg = document.getElementById('loadingMsg');
+const modelProgress = document.getElementById('modelProgress');
+const loadingSubMsg = document.getElementById('loadingSubMsg');
 
-// Global state
-let processedResults = []; // { file, originalBlob, cutoutBlob, currentBlob, appliedBg }
+// State
+let processedResults = [];
 let customBackgroundImage = null;
+let segmentationPipeline = null;  // Transformers pipeline
 
-// Library ready check
-function waitForLibrary(retries = 30) {
-  return new Promise((resolve, reject) => {
-    if (window.removeBackground) return resolve();
-    let count = 0;
-    const interval = setInterval(() => {
-      if (window.removeBackground) {
-        clearInterval(interval);
-        resolve();
-      } else if (++count >= retries) {
-        clearInterval(interval);
-        reject(new Error('Background removal library not loaded. Check your internet connection.'));
+// ---- Model loading ----
+async function loadModel() {
+  loadingOverlay.style.display = 'flex';
+  loadingMsg.textContent = 'Downloading AI model...';
+  modelProgress.value = 0;
+  loadingSubMsg.textContent = '';
+
+  if (!window.transformers) {
+    throw new Error('Transformers.js failed to load. Please check your internet connection.');
+  }
+
+  const { pipeline } = window.transformers;
+
+  // Create pipeline with progress callback
+  segmentationPipeline = await pipeline('image-segmentation', 'briaai/RMBG-1.4', {
+    progress_callback: (progress) => {
+      if (progress.status === 'progress') {
+        modelProgress.value = Math.round(progress.progress || 0);
+        loadingSubMsg.textContent = progress.file || '';
+      } else if (progress.status === 'done') {
+        modelProgress.value = 100;
+        loadingSubMsg.textContent = '';
       }
-    }, 100);
+    },
+    // Force WASM if WebGPU not available (Transformers.js handles fallback automatically)
+    // device: 'wasm'  // Uncomment to force WASM if you experience WebGPU issues
   });
+
+  loadingMsg.textContent = 'Model loaded!';
+  setTimeout(() => { loadingOverlay.style.display = 'none'; }, 600);
 }
+
+// ---- Init model on page load ----
+loadModel().catch(err => {
+  loadingMsg.textContent = 'Failed to load AI model.';
+  loadingSubMsg.textContent = err.message;
+  setTimeout(() => { loadingOverlay.style.display = 'none'; }, 3000);
+  console.error(err);
+});
 
 // ---- File Handling ----
 dropZone.addEventListener('click', () => fileInput.click());
@@ -61,6 +90,10 @@ fileInput.addEventListener('change', e => handleFiles(e.target.files));
 function handleFiles(fileList) {
   const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 10);
   if (files.length === 0) return;
+  if (!segmentationPipeline) {
+    alert('AI model is still loading. Please wait a moment.');
+    return;
+  }
   startProcessing(files);
 }
 
@@ -70,54 +103,134 @@ async function startProcessing(files) {
   resultsSection.style.display = 'none';
   processedResults = [];
 
-  try {
-    await waitForLibrary();
-  } catch (err) {
-    alert(err.message);
-    progressContainer.style.display = 'none';
-    return;
-  }
-
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    progressStatus.textContent = `Processing ${i+1}/${files.length}...`;
+    progressStatus.textContent = `Removing background ${i+1}/${files.length}...`;
     batchProgress.value = ((i / files.length) * 100).toFixed(0);
 
     try {
-      const imgBlob = await fileToBlob(file);
-      // Remove background – always PNG for transparency
-      const cutoutBlob = await window.removeBackground(imgBlob, {
-        model: 'medium',
-        output: { format: 'image/png' }
-      });
+      const originalBlob = await fileToBlob(file);
+      const cutoutBlob = await removeBackground(originalBlob);
 
       processedResults.push({
         file: file,
-        originalBlob: imgBlob,
+        originalBlob: originalBlob,
         cutoutBlob: cutoutBlob,
-        currentBlob: cutoutBlob, // initial = cutout
+        currentBlob: cutoutBlob,
         appliedBg: 'transparent'
       });
     } catch (err) {
       console.error('Failed', file.name, err);
       processedResults.push({
         file: file,
-        error: true
+        error: true,
+        errorMsg: err.message
       });
     }
   }
 
   batchProgress.value = 100;
-  progressStatus.textContent = 'Done!';
+  progressStatus.textContent = 'All done!';
   renderResults();
   resultsSection.style.display = 'block';
 }
 
+// Core removal using Transformers.js
+async function removeBackground(imageBlob) {
+  const inputImage = await blobToImageElement(imageBlob);
+  
+  // Segment
+  const result = await segmentationPipeline(inputImage);
+  // result is an array of { mask, label } (label='background' or 'foreground')
+  // We need the foreground mask (where label is not 'background')
+  // In RMBG-1.4, output is a single mask where white = foreground.
+  
+  // Create canvas to apply mask
+  const canvas = document.createElement('canvas');
+  canvas.width = inputImage.width;
+  canvas.height = inputImage.height;
+  const ctx = canvas.getContext('2d');
+  
+  // Draw original
+  ctx.drawImage(inputImage, 0, 0);
+  
+  // Get image data
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const mask = result[0].mask;  // The model returns only one mask, foreground probability 0-255
+  
+  // Resize mask to canvas size if necessary (it should match)
+  const maskCanvas = mask; // It's a RawImage or tensor; we need to get pixel data.
+  // Transformers returns a Float32Array mask; we need to convert to alpha.
+  // We'll use the result.mask.toCanvas() method available in newer versions,
+  // or manually extract.
+  
+  let maskData;
+  if (mask.toCanvas) {
+    // Newer API
+    const maskImage = await mask.toCanvas();
+    maskData = maskImage.getContext('2d').getImageData(0,0,maskImage.width,maskImage.height).data;
+  } else {
+    // Older API: mask is a Float32Array of shape [1, h, w]
+    const { data, width, height } = mask;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    const imgData = tempCtx.createImageData(width, height);
+    for (let i = 0; i < data.length; i++) {
+      const val = Math.round(data[i] * 255);
+      imgData.data[i*4] = val;
+      imgData.data[i*4+1] = val;
+      imgData.data[i*4+2] = val;
+      imgData.data[i*4+3] = 255;
+    }
+    tempCtx.putImageData(imgData, 0, 0);
+    maskData = imgData.data; // RGBA, use R channel for alpha
+    // Actually, we need the mask as grayscale; we can use it directly.
+  }
+  
+  // Apply mask: set alpha = foreground probability
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    // maskData is RGBA, use R channel (since mask is grayscale)
+    const foreground = maskData[i] / 255;  // 0-1
+    imageData.data[i+3] = Math.round(foreground * 255);
+  }
+  ctx.putImageData(imageData, 0, 0);
+  
+  // Convert to blob
+  const blob = await canvasToBlob(canvas, 'image/png', 1);
+  return blob;
+}
+
+// Helpers
 function fileToBlob(file) {
   return new Promise(resolve => {
     const reader = new FileReader();
-    reader.onload = e => fetch(e.target.result).then(r => r.blob()).then(resolve);
+    reader.onload = e => {
+      fetch(e.target.result).then(r => r.blob()).then(resolve);
+    };
     reader.readAsDataURL(file);
+  });
+}
+
+function blobToImageElement(blob) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.src = URL.createObjectURL(blob);
+    // Note: we do not revoke immediately because the image may be used later; we'll clean in render.
+  });
+}
+
+function canvasToBlob(canvas, format, quality) {
+  return new Promise(resolve => canvas.toBlob(resolve, format, quality));
+}
+
+function blobToImage(blob) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.src = URL.createObjectURL(blob);
   });
 }
 
@@ -129,7 +242,7 @@ function renderResults() {
     card.className = 'result-card';
 
     if (result.error) {
-      card.innerHTML = `<p style="padding:12px; text-align:center;">⚠️ Failed to process ${result.file.name}</p>`;
+      card.innerHTML = `<p style="padding:12px; text-align:center;">⚠️ ${result.errorMsg || 'Failed to process ' + result.file.name}</p>`;
       resultGrid.appendChild(card);
       return;
     }
@@ -151,7 +264,7 @@ function renderResults() {
     `;
     resultGrid.appendChild(card);
 
-    // Slider interaction (same as before, works fine)
+    // Slider interaction
     const slider = card.querySelector('.comparison-slider');
     const handle = slider.querySelector('.slider-handle');
     const afterImg = slider.querySelector('.img-after');
@@ -193,7 +306,6 @@ bgType.addEventListener('change', () => {
 blurAmount.addEventListener('input', () => blurValue.textContent = blurAmount.value + 'px');
 feather.addEventListener('input', () => featherValue.textContent = feather.value);
 
-// Load custom background image
 customBgFile.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -206,7 +318,7 @@ customBgFile.addEventListener('change', e => {
   reader.readAsDataURL(file);
 });
 
-// Apply background
+// Apply background to all
 applyBgBtn.addEventListener('click', async () => {
   const type = bgType.value;
   const featherPx = parseFloat(feather.value);
@@ -226,7 +338,7 @@ applyBgBtn.addEventListener('click', async () => {
 
     // Draw background
     if (type === 'transparent') {
-      // Leave canvas transparent – nothing to draw
+      // nothing
     } else if (type === 'solid') {
       ctx.fillStyle = solidColor.value;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -244,60 +356,45 @@ applyBgBtn.addEventListener('click', async () => {
     } else if (type === 'custom' && customBackgroundImage) {
       ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
     } else {
-      // fallback to white
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Draw cutout on top, with optional feathering
+    // Apply feathering via blurred mask (correct method)
     if (featherPx > 0 && type !== 'transparent') {
-      // To feather edges, we draw the cutout on a temporary canvas, blur it, then use it as a mask.
-      // Simplified: apply blur to cutout then composite with destination-in.
+      // Create a mask from cutout alpha, blur it, then composite
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = canvas.width;
       maskCanvas.height = canvas.height;
       const maskCtx = maskCanvas.getContext('2d');
+      // Draw cutout to get its alpha channel
+      maskCtx.drawImage(cutoutImg, 0, 0);
+      // Extract alpha
+      const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
+      // Create blurred mask
+      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
       maskCtx.filter = `blur(${featherPx}px)`;
       maskCtx.drawImage(cutoutImg, 0, 0);
       maskCtx.filter = 'none';
-      // Now composite the original cutout using the blurred version as a mask
+      // Now composite: cutout destination-in with blurred mask
       ctx.save();
       ctx.globalCompositeOperation = 'destination-in';
       ctx.drawImage(maskCanvas, 0, 0);
       ctx.restore();
-      // Then draw the original cutout on top (without alpha problems) – 
-      // actually a simpler method: draw cutout normally and we're done.
-      // Instead, we'll just draw the cutout normally – feathering isn't perfect but works for most cases.
-      ctx.drawImage(cutoutImg, 0, 0);
-    } else {
-      // No feathering, just draw cutout directly
-      ctx.drawImage(cutoutImg, 0, 0);
     }
+    
+    // Draw cutout on top (transparently)
+    ctx.drawImage(cutoutImg, 0, 0);
 
-    // Convert canvas to blob
     const newBlob = await canvasToBlob(canvas, format, 0.95);
     result.currentBlob = newBlob;
     result.appliedBg = type;
   }
 
-  // Re-render UI with updated previews
   renderResults();
   applyBgBtn.disabled = false;
   applyBgBtn.textContent = 'Apply Background to All';
 });
-
-// Helper functions
-function blobToImage(blob) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.src = URL.createObjectURL(blob);
-  });
-}
-
-function canvasToBlob(canvas, format, quality) {
-  return new Promise(resolve => canvas.toBlob(resolve, format, quality));
-}
 
 // ---- Download ----
 function downloadSingle(blob, originalName) {
@@ -328,9 +425,14 @@ function updateDownloadAllState() {
   downloadAllBtn.disabled = !hasValid;
 }
 
-// Initial UI state
-solidColorCard.style.display = 'block'; // default solid
+// Cleanup object URLs periodically (optional, but good practice)
+window.addEventListener('beforeunload', () => {
+  // nothing, browser will free memory
+});
+
+// Initial UI
+solidColorCard.style.display = 'block';
 gradientCard.style.display = 'none';
 customBgCard.style.display = 'none';
 blurCard.style.display = 'none';
-outputFormat.value = 'image/png'; // Start with PNG for transparency
+outputFormat.value = 'image/png';

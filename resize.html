@@ -1,66 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resize Image – PixelPress</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <style>
-        body {font-family: 'Segoe UI', sans-serif; background: #f9fafb; margin:0; padding:20px;}
-        .container {max-width: 1100px; margin:0 auto; background:white; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.1); overflow:hidden;}
-        .header {background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:white; padding:25px; text-align:center;}
-        .step {display:none; padding:30px;}
-        .step.active {display:block;}
-        .upload-zone {border:4px dashed #cbd5e1; border-radius:16px; padding:80px 20px; text-align:center; cursor:pointer;}
-        .upload-zone:hover {border-color:#8b5cf6; background:#f3e8ff;}
-        .preview-img {max-width:100%; max-height:450px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.15);}
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resize Image — PixelPress</title>
+
+  <style>
+    :root { --primary: #ec4899; --primary-hover: #db2777; --text-dark: #0f172a; --text-muted: #64748b; --bg-main: #f8fafc; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-main); color: var(--text-dark); padding: 10px; }
+    .container { width: 100%; max-width: 800px; margin: auto; padding: 15px 10px; }
+
+    /* Header & Menu (Consistent) */
+    .brand-header { display: flex; align-items: center; justify-content: center; position: relative; margin-top: 15px; margin-bottom: 25px; }
+    .menu-btn { position: absolute; left: 10px; background: none; border: none; font-size: 26px; color: var(--text-dark); cursor: pointer; padding: 5px; border-radius: 8px; }
+    .brand-logo { font-size: 24px; font-weight: 800; text-decoration: none; color: var(--text-dark); }
+    .brand-logo span { color: var(--primary); }
+
+    /* Upload & Tool Style */
+    .upload-area { background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 40px 20px; text-align: center; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+    .upload-area:hover { border-color: var(--primary); background: #fdf4ff; }
+    
+    .controls { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: none; margin-bottom: 20px; }
+    .controls.active { display: block; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+    input[type="number"] { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
+    
+    .btn { background: var(--primary); color: white; border: none; padding: 12px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; }
+    .btn:hover { background: var(--primary-hover); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 30px; display: none; z-index: 10000; }
+    .toast.show { display: block; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header"><h1>📏 Resize Image</h1></div>
 
-        <!-- Upload -->
-        <div id="upload-step" class="step active">
-            <h2 style="text-align:center;">Upload Image</h2>
-            <div id="resizeUploadZone" class="upload-zone">
-                <h3>Drop Image Here</h3>
-                <p>or click to browse</p>
-            </div>
-            <input type="file" id="resizeFileInput" accept="image/*" style="display:none;">
-        </div>
+  <div class="container">
+    <header class="brand-header">
+      <button class="menu-btn" onclick="history.back()">←</button>
+      <a href="./index.html" class="brand-logo">PIXEL<span>PRESS</span></a>
+    </header>
 
-        <!-- Settings -->
-        <div id="settings-step" class="step">
-            <h2>Resize Settings</h2>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:20px 0;">
-                <div>
-                    <label>Width (px)</label>
-                    <input type="number" id="widthInput" style="width:100%; padding:12px; border-radius:8px;">
-                </div>
-                <div>
-                    <label>Height (px)</label>
-                    <input type="number" id="heightInput" style="width:100%; padding:12px; border-radius:8px;">
-                </div>
-            </div>
-            <label><input type="checkbox" id="aspectLock" checked> Maintain Aspect Ratio</label><br><br>
-            <button id="resizeBtn" style="width:100%; padding:16px; background:#8b5cf6; color:white; border:none; border-radius:12px; font-size:18px;">Resize Image</button>
-        </div>
-
-        <!-- Processing -->
-        <div id="processing-step" class="step"><h2 style="text-align:center;">⏳ Resizing...</h2></div>
-
-        <!-- Result -->
-        <div id="result-step" class="step">
-            <h2 style="text-align:center; color:#10b981;">✅ Resized Successfully!</h2>
-            <img id="resizedPreview" class="preview-img">
-            <div style="text-align:center; margin-top:25px;">
-                <button id="downloadResizeBtn" style="background:#10b981; color:white; padding:16px 40px; border:none; border-radius:12px; font-size:18px;">Download Image</button>
-                <button onclick="location.reload()" style="margin-left:10px; background:#6b7280; color:white; padding:16px 30px; border:none; border-radius:12px;">New Image</button>
-            </div>
-        </div>
+    <div class="tool-header" style="text-align: center; margin-bottom: 20px;">
+      <h1>Resize Image</h1>
+      <p>Enter custom dimensions for your image.</p>
     </div>
 
-    <script src="../js/resize.js"></script>
+    <div class="upload-area" id="dropZone">
+      <p>Click or Drop Image Here</p>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" />
+    </div>
+
+    <div class="controls" id="controlsPanel">
+      <div class="input-group">
+        <input type="number" id="widthInput" placeholder="Width (px)">
+        <input type="number" id="heightInput" placeholder="Height (px)">
+      </div>
+      <button class="btn" id="resizeBtn">Resize Image</button>
+    </div>
+
+    <div id="resultArea" style="text-align:center; display:none;">
+      <a id="downloadBtn" class="btn" style="background:#10b981; display:inline-block; max-width:200px;">Download Resized</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toastBox"></div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput'), dropZone = document.getElementById('dropZone');
+    const controls = document.getElementById('controlsPanel'), resizeBtn = document.getElementById('resizeBtn');
+    
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+    function handleFile(file) {
+      if (!file || !file.type.startsWith('image/')) return showToast('Upload a valid image!');
+      window.currentFile = file;
+      controls.classList.add('active');
+    }
+
+    resizeBtn.onclick = () => {
+      try {
+        const width = document.getElementById('widthInput').value;
+        const height = document.getElementById('heightInput').value;
+        if (!width || !height) return showToast('Enter valid dimensions!');
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.href = canvas.toDataURL(window.currentFile.type);
+            document.getElementById('resultArea').style.display = 'block';
+            showToast('Ready to download!', 'success');
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(window.currentFile);
+      } catch (err) { showToast('Error resizing image!'); }
+    };
+
+    function showToast(msg) {
+      const t = document.getElementById('toastBox');
+      t.innerText = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+  </script>
 </body>
 </html>

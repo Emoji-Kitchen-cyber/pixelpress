@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact PixelPress — Get Help & Support</title>
+  <meta name="description" content="Need help with PixelPress tools? Contact our support team for bug reports, feedback, or general inquiries.">
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/contact.html">
+  <meta property="og:title" content="Contact PixelPress">
+  <meta property="og:description" content="Reach out for support or feedback.">
+  <meta property="og:url" content="https://pixelpress-smoky.vercel.app/contact.html">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .contact-form { max-width:500px; margin:0 auto; }
+    .contact-form input, .contact-form textarea { width:100%; padding:12px; margin-bottom:16px; border:1px solid #d1d5db; border-radius:8px; font-family:inherit; }
+    .contact-method { background:#fff; padding:20px; border-radius:12px; border:1px solid #e5e7eb; margin-bottom:24px; }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
+    <button class="btn-outline" onclick="history.back()">← Back</button>
+  </header>
+
+  <main class="tool-page">
+    <h1>Contact Us</h1>
+
+    <div class="contact-method">
+      <h2 style="font-size:1.2rem;">📧 Send a Message</h2>
+      <p style="color:#6b7280; margin-bottom:16px;">We typically respond within 24 hours.</p>
+      <form class="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <input type="text" name="name" placeholder="Your Name" required>
+        <input type="email" name="email" placeholder="Your Email" required>
+        <select name="subject" style="width:100%; padding:12px; margin-bottom:16px; border:1px solid #d1d5db; border-radius:8px;">
+          <option value="support">General Support</option>
+          <option value="bug">Bug Report</option>
+          <option value="feedback">Feedback / Suggestion</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea name="message" rows="5" placeholder="Your message..." required></textarea>
+        <button type="submit" class="btn-primary" style="width:100%;">Send Message</button>
+      </form>
+      <p style="font-size:0.8rem; color:#9ca3af; margin-top:8px;">Powered by Formspree — no account needed.</p>
+    </div>
+
+    <div class="contact-method">
+      <h2 style="font-size:1.2rem;">🐛 Report a Bug</h2>
+      <p>If a tool isn't working as expected, please include your browser and device details in the message above. Screenshots are helpful but not required.</p>
+    </div>
+
+    <div class="contact-method">
+      <h2 style="font-size:1.2rem;">💬 Other Ways to Reach Us</h2>
+      <p>Email: <a href="mailto:support@pixelpress.app" style="color:#2563eb;">support@pixelpress.app</a> (this is a placeholder; set up your actual email)</p>
+    </div>
+  </main>
+
+  <footer style="text-align:center; padding:30px 20px; border-top:1px solid #e5e7eb; margin-top:40px; color:#6b7280; font-size:0.9rem;">
+    <p>© 2026 PixelPress. All rights reserved.</p>
+    <div style="margin-top:10px;">
+      <a href="./about.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">About</a>
+      <a href="./contact.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Contact</a>
+      <a href="./privacy-policy.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Privacy</a>
+      <a href="./terms.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Terms</a>
+      <a href="./faq.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">FAQ</a>
+      <a href="./blog/" style="color:#2563eb; text-decoration:none; margin:0 8px;">Blog</a>
+    </div>
+  </footer>
+</body>
+</html>

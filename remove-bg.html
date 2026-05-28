@@ -31,7 +31,7 @@
       <div class="upload-zone" id="upload-zone">
         <div class="icon">📤</div>
         <p>Click or drag & drop an image here</p>
-        <p style="font-size:0.8rem; color:#9ca3af;">JPG, PNG, WEBP (max 5MB recommended)</p>
+        <p style="font-size:0.8rem; color:#9ca3af;">JPG, PNG, WEBP (max 4MB)</p>
       </div>
       <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden>
     </div>
@@ -75,6 +75,15 @@
 
   <script src="js/common.js"></script>
   <script>
+    // Mobile error display helper
+    function showErrorOnScreen(msg) {
+      const errDiv = document.createElement('div');
+      errDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#b91c1c;color:#fff;padding:12px;z-index:99999;font-size:13px;text-align:center;';
+      errDiv.textContent = '❌ ' + msg;
+      document.body.appendChild(errDiv);
+      setTimeout(() => errDiv.remove(), 8000);
+    }
+
     (function() {
       let originalFile = null;
       let resultBlob = null;
@@ -112,11 +121,19 @@
         processBtn.disabled = false;
       });
 
+      // File size validation: max 4MB
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (file && file.size > 4 * 1024 * 1024) {
+          showToast('File too large. Max 4MB allowed.', true);
+          fileInput.value = '';
+        }
+      });
+
       bgType.addEventListener('change', () => {
         bgColor.style.display = bgType.value === 'color' ? 'inline-block' : 'none';
       });
 
-      // Client-side remover (with timeout)
       async function removeBackgroundClient(file, bgTypeVal, bgColorVal, timeoutMs) {
         const CDN_BASE = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/';
         if (!window.imglyBackgroundRemoval) {
@@ -144,7 +161,6 @@
         return Promise.race([removePromise, timeoutPromise]);
       }
 
-      // Server fallback
       async function removeBackgroundServer(file, bgTypeVal, bgColorVal) {
         const formData = new FormData();
         formData.append('image', file);
@@ -157,8 +173,12 @@
         });
 
         if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error || 'Server processing failed');
+          let errorMsg = 'Server processing failed';
+          try {
+            const err = await response.json();
+            errorMsg = err.error || errorMsg;
+          } catch (e) {}
+          throw new Error(errorMsg + ' (HTTP ' + response.status + ')');
         }
 
         return await response.blob();
@@ -186,7 +206,8 @@
             resultBlob = await removeBackgroundServer(originalFile, bgType.value, bgColor.value);
           } catch (serverErr) {
             console.error('Server fallback failed:', serverErr);
-            showToast('❌ Background removal failed. Please try a smaller image or check your connection.', true);
+            showErrorOnScreen(serverErr.message);  // show exact error on screen
+            showToast('❌ ' + serverErr.message, true);
             processingBar.style.display = 'none';
             processBtn.disabled = false;
             return;

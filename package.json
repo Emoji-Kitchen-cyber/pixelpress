@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@imgly/background-removal-node": "^1.4.5",
+    "busboy": "^1.6.0"
+  }
+}

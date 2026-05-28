@@ -24,7 +24,7 @@
 
   <main class="tool-page">
     <h1>🫥 Remove Background</h1>
-    <p style="color:#6b7280; margin-bottom: 24px;">AI-powered background removal. 100% client-side — your images never leave your device.</p>
+    <p style="color:#6b7280; margin-bottom: 24px;">AI-powered background removal. Your images stay private; cloud fallback only if needed.</p>
 
     <div class="workflow-step">
       <h2>1. Upload Image</h2>
@@ -48,7 +48,7 @@
       <button class="btn-primary" id="process-btn" style="margin-top:16px;">✨ Remove Background</button>
       <div class="processing-bar" id="processing-bar">
         <div class="spinner"></div>
-        <p id="processing-status">Preparing AI engine...</p>
+        <p id="processing-status">Initializing…</p>
       </div>
     </div>
 
@@ -73,21 +73,13 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="js/common.js"></script>
   <script>
     (function() {
-      // ============ CONSTANTS ============
-      const CDN_BASE = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/';
-      const ENGINE_SCRIPT_URL = CDN_BASE + 'index.umd.js';
-
-      // ============ STATE ============
-      let originalImage = null;
       let originalFile = null;
       let resultBlob = null;
-      let engineReady = false;
-      let engineInitPromise = null;
 
-      // ============ DOM ============
-      const $ = (id) => document.getElementById(id);
+      const $ = id => document.getElementById(id);
       const uploadZone = $('upload-zone');
       const fileInput = $('file-input');
       const settingsStep = $('settings-step');
@@ -103,7 +95,6 @@
       const newImageBtn = $('new-image-btn');
       const toast = $('toast');
 
-      // ============ TOAST ============
       function showToast(msg, isError = false) {
         toast.textContent = msg;
         toast.className = 'toast' + (isError ? ' error' : '');
@@ -112,180 +103,108 @@
         toast._timeout = setTimeout(() => toast.style.display = 'none', 4000);
       }
 
-      // ============ ENGINE LOADER (with publicPath fix) ============
-      async function initEngine() {
-        if (engineReady) return true;
-        if (engineInitPromise) return engineInitPromise;
-
-        engineInitPromise = new Promise((resolve, reject) => {
-          // If already loaded (e.g., from previous page), just resolve
-          if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
-            engineReady = true;
-            resolve(true);
-            return;
-          }
-
-          const script = document.createElement('script');
-          script.src = ENGINE_SCRIPT_URL;
-          script.onload = async () => {
-            try {
-              // The library is now available as window.imglyBackgroundRemoval
-              const lib = window.imglyBackgroundRemoval;
-              if (!lib || !lib.removeBackground) {
-                throw new Error('Function not exposed');
-              }
-
-              // ---- CRITICAL FIX: Configure publicPath so subresources load from CDN ----
-              // The library's config can be passed per-call, but we can also set a default
-              // by wrapping removeBackground to always include publicPath.
-              // Store the original function
-              const originalRemoveBg = lib.removeBackground;
-
-              // Replace with a wrapper that automatically sets publicPath
-              lib.removeBackground = function(image, config = {}) {
-                // Merge publicPath into config
-                const finalConfig = {
-                  ...config,
-                  publicPath: CDN_BASE, // This is the key fix
-                };
-                // Ensure model path is also correctly set
-                if (!finalConfig.model) finalConfig.model = 'small';
-                return originalRemoveBg(image, finalConfig);
-              };
-
-              // Pre-initialize the engine in the background (optional, speeds up first process)
-              // We call removeBackground with a tiny transparent image to warm up the engine
-              try {
-                const warmupCanvas = document.createElement('canvas');
-                warmupCanvas.width = 4;
-                warmupCanvas.height = 4;
-                const warmupBlob = await new Promise(r => warmupCanvas.toBlob(r, 'image/png'));
-                await lib.removeBackground(warmupBlob, { publicPath: CDN_BASE, model: 'small' });
-                console.log('Engine warm-up complete');
-              } catch (e) {
-                console.warn('Engine warm-up failed (non-critical):', e);
-              }
-
-              engineReady = true;
-              resolve(true);
-            } catch (err) {
-              reject(new Error('Engine initialization failed: ' + err.message));
-            }
-          };
-
-          script.onerror = () => {
-            reject(new Error('Failed to load engine script. Please check your internet connection.'));
-          };
-
-          document.head.appendChild(script);
-        });
-
-        engineInitPromise.catch(err => {
-          console.error(err);
-          engineInitPromise = null; // allow retry
-          showToast(err.message || 'Engine load failed. Try again.', true);
-        });
-
-        return engineInitPromise;
-      }
-
-      // Start engine loading immediately on page load
-      initEngine().catch(() => {});
-
-      // ============ UPLOAD ============
-      uploadZone.addEventListener('click', () => fileInput.click());
-      uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-      uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-      uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-        handleFile(e.dataTransfer.files[0]);
+      setupUpload('upload-zone', 'file-input', (img, file) => {
+        originalFile = file;
+        originalPreview.src = img.src;
+        settingsStep.classList.remove('hidden');
+        resultStep.classList.add('hidden');
+        processingBar.style.display = 'none';
+        processBtn.disabled = false;
       });
-      fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
-
-      function handleFile(file) {
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-          showToast('Please upload an image file (JPG, PNG, WEBP).', true);
-          return;
-        }
-        if (file.size > 10 * 1024 * 1024) {
-          showToast('File too large. Maximum 10MB allowed.', true);
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          const img = new Image();
-          img.onload = () => {
-            originalImage = img;
-            originalFile = file;
-            originalPreview.src = img.src;
-            settingsStep.classList.remove('hidden');
-            resultStep.classList.add('hidden');
-            processingBar.style.display = 'none';
-            processBtn.disabled = false;
-          };
-          img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      }
 
       bgType.addEventListener('change', () => {
         bgColor.style.display = bgType.value === 'color' ? 'inline-block' : 'none';
       });
 
-      // ============ PROCESS ============
+      // Client-side remover (with timeout)
+      async function removeBackgroundClient(file, bgTypeVal, bgColorVal, timeoutMs) {
+        const CDN_BASE = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/';
+        if (!window.imglyBackgroundRemoval) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = CDN_BASE + 'index.umd.js';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('Script load failed'));
+            document.head.appendChild(script);
+          });
+        }
+        const lib = window.imglyBackgroundRemoval;
+        if (!lib || !lib.removeBackground) throw new Error('Library not ready');
+
+        const removePromise = lib.removeBackground(file, {
+          model: 'small',
+          output: { format: 'image/png', ...(bgTypeVal === 'color' && { background: bgColorVal }) },
+          publicPath: CDN_BASE,
+        });
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Client-side timeout')), timeoutMs)
+        );
+
+        return Promise.race([removePromise, timeoutPromise]);
+      }
+
+      // Server fallback
+      async function removeBackgroundServer(file, bgTypeVal, bgColorVal) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('bgType', bgTypeVal);
+        if (bgTypeVal === 'color') formData.append('bgColor', bgColorVal);
+
+        const response = await fetch('/api/remove-bg', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || 'Server processing failed');
+        }
+
+        return await response.blob();
+      }
+
       processBtn.addEventListener('click', async () => {
-        if (!originalImage) {
+        if (!originalFile) {
           showToast('Please upload an image first.', true);
           return;
         }
 
         processBtn.disabled = true;
         processingBar.style.display = 'block';
-        processingStatus.textContent = 'Starting engine...';
         resultStep.classList.add('hidden');
 
+        processingStatus.textContent = 'Removing background on your device (20s timeout)…';
+        let clientSuccess = false;
         try {
-          await initEngine();
-
-          processingStatus.textContent = 'Removing background (15–30 seconds)...';
-
-          const config = {
-            model: 'small',
-            output: { format: 'image/png' },
-            publicPath: CDN_BASE, // already set in wrapper, but kept for safety
-          };
-          if (bgType.value === 'color') {
-            config.output.background = bgColor.value;
+          resultBlob = await removeBackgroundClient(originalFile, bgType.value, bgColor.value, 20000);
+          clientSuccess = true;
+        } catch (e) {
+          console.warn('Client-side failed:', e);
+          processingStatus.textContent = 'Switching to cloud backup…';
+          try {
+            resultBlob = await removeBackgroundServer(originalFile, bgType.value, bgColor.value);
+          } catch (serverErr) {
+            console.error('Server fallback failed:', serverErr);
+            showToast('❌ Background removal failed. Please try a smaller image or check your connection.', true);
+            processingBar.style.display = 'none';
+            processBtn.disabled = false;
+            return;
           }
-
-          // Use the wrapped function (which automatically adds publicPath)
-          resultBlob = await window.imglyBackgroundRemoval.removeBackground(originalFile, config);
-
-          const url = URL.createObjectURL(resultBlob);
-          resultPreview.src = url;
-          resultStep.classList.remove('hidden');
-          settingsStep.classList.add('hidden');
-          showToast('✅ Background removed successfully!');
-        } catch (err) {
-          console.error(err);
-          showToast('❌ Processing failed: ' + (err.message || 'Try a smaller image.'), true);
-          // If engine error, reset so user can retry
-          if (err.message.includes('engine') || err.message.includes('Engine')) {
-            engineReady = false;
-            engineInitPromise = null;
-          }
-        } finally {
-          processingBar.style.display = 'none';
-          processBtn.disabled = false;
         }
+
+        const url = URL.createObjectURL(resultBlob);
+        resultPreview.src = url;
+        resultStep.classList.remove('hidden');
+        settingsStep.classList.add('hidden');
+        showToast(`✅ Done ${clientSuccess ? '(on device)' : '(via cloud)'}`);
+        processingBar.style.display = 'none';
+        processBtn.disabled = false;
       });
 
-      // ============ DOWNLOAD ============
       downloadBtn.addEventListener('click', () => {
         if (!resultBlob) { showToast('Nothing to download.', true); return; }
-        const filename = (originalFile?.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
+        const filename = (originalFile.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
         const url = URL.createObjectURL(resultBlob);
         const a = document.createElement('a');
         a.href = url;
@@ -296,11 +215,9 @@
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       });
 
-      // ============ NEW IMAGE ============
       newImageBtn.addEventListener('click', () => {
         settingsStep.classList.add('hidden');
         resultStep.classList.add('hidden');
-        originalImage = null;
         originalFile = null;
         if (resultBlob && resultPreview.src.startsWith('blob:')) {
           URL.revokeObjectURL(resultPreview.src);
@@ -311,7 +228,6 @@
         fileInput.value = '';
         processingBar.style.display = 'none';
       });
-
     })();
   </script>
 </body>

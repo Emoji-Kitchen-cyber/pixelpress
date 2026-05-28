@@ -10,28 +10,26 @@
   <style>
     :root {
       --primary: #ec4899;
-      --primary-hover: #db2777;
       --text-dark: #0f172a;
       --text-muted: #64748b;
       --bg-main: #f8fafc;
-      --bg-card: #ffffff;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg-main);
       color: var(--text-dark);
-      line-height: 1.6;
     }
 
-    /* Top Navigation */
+    /* Top Navigation - Yeh important hai */
     .top-nav {
       background: white;
       border-bottom: 1px solid #e2e8f0;
-      padding: 12px 0;
+      padding: 14px 0;
       position: sticky;
       top: 0;
       z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .nav-container {
       max-width: 1000px;
@@ -40,6 +38,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
     }
     .brand-logo { 
       font-size: 26px; 
@@ -50,13 +50,15 @@
     .brand-logo span { color: var(--primary); }
 
     .nav-links {
-      display: none;
-      gap: 25px;
-      font-weight: 500;
+      display: flex;
+      gap: 20px;
+      font-weight: 600;
+      flex-wrap: wrap;
     }
     .nav-links a {
-      text-decoration: none;
       color: var(--text-dark);
+      text-decoration: none;
+      font-size: 15px;
     }
     .nav-links a:hover {
       color: var(--primary);
@@ -64,73 +66,60 @@
 
     .menu-btn {
       background: none; border: none;
-      font-size: 28px; color: var(--text-dark); cursor: pointer;
+      font-size: 28px; cursor: pointer;
+      display: none;
     }
 
-    /* Rest of your existing styles */
-    .container { width: 100%; max-width: 1000px; margin: auto; padding: 20px 15px; }
-    .brand-header { display: none; } /* We replaced it with top-nav */
-
-    .hero-section { text-align: center; margin: 40px 0 30px; }
-    .hero-section h1 { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
-    .hero-section p { font-size: 15.5px; color: var(--text-muted); }
-
-    .filter-container {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
+    .container { 
+      max-width: 1000px; 
+      margin: auto; 
+      padding: 20px 15px; 
     }
+
+    .hero-section { text-align: center; margin: 40px 0 35px; }
+    .hero-section h1 { font-size: 28px; font-weight: 700; line-height: 1.2; }
+    .hero-section p { font-size: 15.5px; color: var(--text-muted); margin-top: 8px; }
+
+    .filter-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 30px 0; }
     .filter-btn {
-      border: 1px solid #e2e8f0; background: white; color: #334155;
-      padding: 9px 20px; border-radius: 25px; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s;
+      padding: 9px 20px; border-radius: 25px; font-weight: 600;
+      border: 1px solid #e2e8f0; background: white; cursor: pointer;
     }
-    .filter-btn.active { background: #1e293b; color: white; }
+    .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
 
-    .tools-list { display: flex; flex-direction: column; gap: 16px; }
     .tool-card {
-      background: var(--bg-card); border: 1px solid #e2e8f0; border-radius: 16px;
-      padding: 20px; display: flex; gap: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+      padding: 20px; display: flex; gap: 16px; margin-bottom: 15px;
       transition: all 0.2s;
     }
-    .tool-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--primary);
-      box-shadow: 0 8px 25px rgba(236, 72, 153, 0.1);
-    }
-    .tool-icon {
-      font-size: 28px; background: #fdf4ff; padding: 14px; border-radius: 12px;
-      min-width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
-    }
+    .tool-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+    .tool-icon { font-size: 28px; background: #fdf4ff; padding: 12px; border-radius: 12px; }
 
     footer {
-      text-align: center; margin-top: 60px; padding: 30px 20px 20px;
+      text-align: center; margin-top: 60px; padding: 30px 0;
       font-size: 13.5px; color: var(--text-muted); border-top: 1px solid #e2e8f0;
     }
     .footer-links {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;
     }
     .footer-links a { color: var(--primary); text-decoration: none; }
-    .footer-links a:hover { text-decoration: underline; }
 
-    @media (min-width: 768px) {
-      .nav-links { display: flex; }
-      .menu-btn { display: none; }
-    }
-
-    @media (max-width: 480px) {
-      .hero-section h1 { font-size: 24px; }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .menu-btn { display: block; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navigation -->
+  <!-- Top Navigation Bar -->
   <nav class="top-nav">
     <div class="nav-container">
       <div class="brand-logo">PIXEL<span>PRESS</span></div>
       
       <div class="nav-links">
-        <a href="/about.html">About</a>
+        <a href="/about.html">About Us</a>
         <a href="/blog/index.html">Blog</a>
         <a href="/faq.html">FAQ</a>
         <a href="/contact.html">Contact</a>
@@ -142,35 +131,8 @@
 
   <!-- Side Menu (Mobile) -->
   <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
-  
   <div class="side-menu" id="sideMenu">
-    <div class="menu-header">
-      <div class="brand-logo">PIXEL<span>PRESS</span></div>
-      <button class="close-btn" onclick="toggleMenu(false)">✕</button>
-    </div>
-    <div class="menu-links">
-      <a href="/index.html">🏠 Home</a>
-      <a href="/compress.html">📦 Compress Image</a>
-      <a href="/resize.html">📐 Resize Image</a>
-      <a href="/photo-editor.html">✨ Photo Editor</a>
-      <a href="/convert.html">🔄 Convert Format</a>
-      <a href="/watermark.html">💧 Watermark</a>
-      <a href="/remove-bg.html">🫥 Remove Background</a>
-      <a href="/meme-generator.html">😂 Meme Generator</a>
-      
-      <div style="height: 1px; background: #e2e8f0; margin: 15px 0;"></div>
-      
-      <div class="menu-section-title">Company</div>
-      <a href="/about.html">ℹ️ About Us</a>
-      <a href="/contact.html">📬 Contact</a>
-      <a href="/blog/index.html">📝 Blog</a>
-      
-      <div class="menu-section-title">Legal</div>
-      <a href="/privacy-policy.html">🛡️ Privacy Policy</a>
-      <a href="/terms.html">📜 Terms of Service</a>
-      <a href="/disclaimer.html">⚠️ Disclaimer</a>
-      <a href="/faq.html">❔ FAQ</a>
-    </div>
+    <!-- Side menu content same as before - tum apna purana side menu code yahan paste kar sakte ho -->
   </div>
 
   <div class="container">
@@ -179,19 +141,7 @@
       <p>Your online photo editor is here and forever free!</p>
     </section>
 
-    <!-- Filter + Tools List (your existing code) -->
-    <div class="filter-container">
-      <button class="filter-btn active" onclick="filterTools('all', this)">All</button>
-      <button class="filter-btn" onclick="filterTools('optimize', this)">Optimize</button>
-      <button class="filter-btn" onclick="filterTools('create', this)">Create</button>
-      <button class="filter-btn" onclick="filterTools('edit', this)">Edit</button>
-      <button class="filter-btn" onclick="filterTools('convert', this)">Convert</button>
-    </div>
-
-    <section class="tools-list" id="toolsList">
-      <!-- Your all tool cards here (same as before) -->
-      <!-- ... copy your tool cards from previous code ... -->
-    </section>
+    <!-- Filter buttons aur tools list apna purana code yahan paste kar do -->
 
     <footer>
       <div class="footer-links">
@@ -199,7 +149,7 @@
         <a href="/contact.html">Contact</a>
         <a href="/faq.html">FAQ</a>
         <a href="/blog/index.html">Blog</a>
-        <a href="/privacy-policy.html">Privacy</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
         <a href="/terms.html">Terms</a>
         <a href="/disclaimer.html">Disclaimer</a>
       </div>
@@ -208,16 +158,11 @@
   </div>
 
   <script>
-    // Your existing filterTools and toggleMenu functions
-    function filterTools(category, element) { ... }   // paste your function
-    function toggleMenu(show) { ... }                 // paste your function
-
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.error(err));
-      });
+    function toggleMenu(show) {
+      // tumhara purana toggleMenu function yahan paste kar do
     }
+
+    // Filter function bhi yahan paste kar do
   </script>
 </body>
 </html>

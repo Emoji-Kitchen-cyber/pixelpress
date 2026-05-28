@@ -1,218 +1,599 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixelPress Intelligence Blog – Optimization & Image Processing</title>
+  <meta name="description" content="Master file systems processing, background manipulation metrics, high performance image resizing techniques and lossless optimization paths with verified guides." />
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/blog" />
 
-<script>
-  window.dataLayer = window.dataLayer || [];
+  <!-- Open Graph -->
+  <meta property="og:title" content="PixelPress Intelligence Blog Hub" />
+  <meta property="og:description" content="Professional image processing strategies and optimization guidelines." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pixelpress-smoky.vercel.app/blog" />
 
-  function gtag(){
-    dataLayer.push(arguments);
-  }
+  <style>
+    /* ──────────────────────────────────────────────
+       TOKENS
+    ────────────────────────────────────────────── */
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #111118;
+      --card:      #16161f;
+      --border:    #22222e;
+      --accent:    #5b6cf9;
+      --accent2:   #a78bfa;
+      --text:      #e8e8f0;
+      --muted:     #6b6b80;
+      --tag-bg:    #1e1e2e;
+      --radius:    14px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
 
-  gtag('js', new Date());
+    /* ──────────────────────────────────────────────
+       RESET + BASE
+    ────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Premium Production Meta Engine Modules -->
-  <title>PixelPress Intelligence Blog - Optimization & Image Processing Master Class</title>
-  <meta name="description" content="Master file systems processing, background manipulation metrics, high performance image resizing techniques and lossless optimization paths with verified guides.">
-  <link rel="canonical" href="https://pixelpress.com/blog/index.html">
-  
-  <!-- Open Graph Meta Vectors -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="PixelPress Intelligence Blog Hub">
-  <meta property="og:description" content="Professional image processing strategies and optimization guidelines.">
-  <meta property="og:url" content="https://pixelpress.com/blog/index.html">
-  <meta property="og:image" content="https://pixelpress.com/assets/blog-banner.jpg">
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  <!-- Structural Styles Connection Hooks -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../css/blog.css">
+    a { color: inherit; text-decoration: none; }
+
+    /* ──────────────────────────────────────────────
+       GOOGLE FONTS (self-contained CDN)
+    ────────────────────────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* ──────────────────────────────────────────────
+       NOISE OVERLAY
+    ────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ──────────────────────────────────────────────
+       NAV
+    ────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(1rem, 5vw, 3rem);
+      height: 64px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover,
+    .nav-links a.active { color: var(--text); }
+
+    /* ──────────────────────────────────────────────
+       HERO
+    ────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(3rem, 8vw, 6rem) clamp(1rem, 5vw, 3rem) clamp(2rem, 5vw, 4rem);
+      text-align: center;
+    }
+
+    /* radial glow behind hero */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -120px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse at center, rgba(91,108,249,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.85rem;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-badge span { display: inline-block; width: 6px; height: 6px; background: var(--accent2); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      max-width: 720px;
+      margin-inline: auto;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent) 20%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 540px;
+      margin: 0 auto 2rem;
+    }
+
+    /* ──────────────────────────────────────────────
+       FILTER TABS
+    ────────────────────────────────────────────── */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: clamp(2rem, 4vw, 3.5rem);
+      padding: 0 clamp(1rem, 5vw, 3rem);
+    }
+
+    .filter-btn {
+      padding: 0.45rem 1.1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ──────────────────────────────────────────────
+       GRID
+    ────────────────────────────────────────────── */
+    .grid-wrap {
+      padding: 0 clamp(1rem, 5vw, 3rem) clamp(3rem, 6vw, 5rem);
+      max-width: 1200px;
+      margin-inline: auto;
+    }
+
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* ──────────────────────────────────────────────
+       CARD
+    ────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      cursor: pointer;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(91,108,249,0.12);
+    }
+
+    .card-category {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+    }
+
+    .card h2 {
+      font-family: var(--font-head);
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text);
+    }
+
+    .card p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-meta .read-time {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .card-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 0.8rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .card:hover .card-arrow {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Hidden cards */
+    .card[hidden] { display: none; }
+
+    /* ──────────────────────────────────────────────
+       CTA BANNER
+    ────────────────────────────────────────────── */
+    .cta-banner {
+      max-width: 1200px;
+      margin: 0 auto clamp(2rem, 4vw, 3rem);
+      padding: 0 clamp(1rem, 5vw, 3rem);
+    }
+
+    .cta-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      background: linear-gradient(135deg, rgba(91,108,249,0.12), rgba(167,139,250,0.08));
+      border: 1px solid rgba(91,108,249,0.3);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+    }
+
+    .cta-text h3 {
+      font-family: var(--font-head);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .cta-text p { font-size: 0.875rem; color: var(--muted); }
+
+    .cta-btn {
+      padding: 0.65rem 1.5rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* ──────────────────────────────────────────────
+       FOOTER
+    ────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem clamp(1rem, 5vw, 3rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    footer .logo {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    footer p { font-size: 0.8rem; color: var(--muted); }
+
+    /* ──────────────────────────────────────────────
+       RESPONSIVE
+    ────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .articles-grid { grid-template-columns: 1fr; }
+      .cta-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
 </head>
-<body class="blog-body-wrapper">
 
-  <!-- Isolated Navigation Header -->
-  <header class="blog-header">
-    <div class="blog-container blog-nav">
-      <a href="../index.html" class="blog-logo"><i class="fa-solid fa-cubes-blur"></i> PIXEL<span>PRESS</span></a>
-      <button class="lang-btn" id="langSwitcherBtn"><i class="fa-solid fa-globe"></i> العربية</button>
-    </div>
-  </header>
+<body>
 
-  <!-- Premium Interactive Matrix Hero Section -->
-  <section class="blog-hero">
-    <div class="blog-container">
-      <h1>PixelPress Graphic Knowledge Base</h1>
-      <p>Discover professional guides on asset optimization, design standards, format adjustments, and performance enhancement pipelines.</p>
-      
-      <div class="search-wrapper">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input type="text" id="blogSearchField" class="search-input" placeholder="Search articles or tools...">
-      </div>
+  <!-- NAV -->
+  <nav>
+    <a href="../index.html" class="nav-logo">PIXELPRESS</a>
+    <ul class="nav-links">
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="index.html" class="active">Blog</a></li>
+      <li><a href="../compress.html">Compress</a></li>
+    </ul>
+  </nav>
 
-      <div class="category-strip">
-        <span class="cat-badge active" data-cat="all">All Content</span>
-        <span class="cat-badge" data-cat="compression">Compression</span>
-        <span class="cat-badge" data-cat="bg-removal">Background Logic</span>
-        <span class="cat-badge" data-cat="formats">Formats Conversion</span>
-        <span class="cat-badge" data-cat="social">Social Assets</span>
-      </div>
-    </div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge"><span></span> Knowledge Base</div>
+    <h1>PixelPress <em>Graphic</em><br>Knowledge Base</h1>
+    <p>Discover professional guides on asset optimization, design standards, format adjustments, and performance enhancement pipelines.</p>
   </section>
 
-  <!-- Main Execution Layout Grid Matrix -->
-  <main class="blog-container blog-main-grid">
-    
-    <!-- Primary Post Feed Channel Engine -->
-    <section class="articles-grid">
-      
-      <!-- Card Node 1 -->
-      <a href="./compress-guide.html" class="article-card" data-category="compression">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=600&auto=format&fit=crop&q=60" alt="Image Compression Framework" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 8 Min Read</span></div>
-          <h3 class="card-title">How to Compress Images Without Losing Quality</h3>
-          <p class="card-excerpt">Discover how mathematical quantization algorithms can optimize file footprints without sacrificing structural sharpness or color profiles.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+  <!-- FILTER TABS -->
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All Content</button>
+    <button class="filter-btn" data-filter="compression">Compression</button>
+    <button class="filter-btn" data-filter="background">Background</button>
+    <button class="filter-btn" data-filter="formats">Formats</button>
+    <button class="filter-btn" data-filter="conversion">Conversion</button>
+    <button class="filter-btn" data-filter="social">Social Assets</button>
+  </div>
+
+  <!-- GRID -->
+  <main class="grid-wrap">
+    <div class="articles-grid" id="articlesGrid">
+
+      <!-- Card 1 -->
+      <article class="card" data-category="compression" onclick="location.href='../blog/compress-guide.html'">
+        <span class="card-category">Image Compression Framework</span>
+        <h2>How to Compress Images Without Losing Quality</h2>
+        <p>Discover how mathematical quantization algorithms can optimize file footprints without sacrificing structural sharpness or color profiles.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 8 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 2 -->
-      <a href="./bg-remover-guide.html" class="article-card" data-category="bg-removal">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=60" alt="Background Extraction System" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 9 Min Read</span></div>
-          <h3 class="card-title">Best Free Background Remover Online</h3>
-          <p class="card-excerpt">An objective deep dive evaluating foreground extraction models, alpha channel isolation techniques, and real-time canvas edge detection tools.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 2 -->
+      <article class="card" data-category="background" onclick="location.href='../blog/bg-remover-guide.html'">
+        <span class="card-category">Background Extraction System</span>
+        <h2>Best Free Background Remover Online</h2>
+        <p>An objective deep dive evaluating foreground extraction models, alpha channel isolation techniques, and real-time canvas edge detection tools.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 9 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 3 -->
-      <a href="./jpg-vs-png.html" class="article-card" data-category="formats">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=60" alt="Formats Assessment Matrix" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 7 Min Read</span></div>
-          <h3 class="card-title">JPG vs PNG Explained</h3>
-          <p class="card-excerpt">Break down file formats mathematically. Learn when to use lossy JPEG block DCT or lossless deflate-mapped PNG alpha channels for web assets.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 3 -->
+      <article class="card" data-category="formats" onclick="location.href='../blog/jpg-vs-png.html'">
+        <span class="card-category">Formats Assessment Matrix</span>
+        <h2>JPG vs PNG Explained</h2>
+        <p>Break down file formats mathematically. Learn when to use lossy JPEG block DCT or lossless deflate-mapped PNG alpha channels for web assets.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 7 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 4 -->
-      <a href="./images-to-pdf.html" class="article-card" data-category="formats">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&auto=format&fit=crop&q=60" alt="Document Compilation Architecture" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 8 Min Read</span></div>
-          <h3 class="card-title">Convert Images to PDF Easily</h3>
-          <p class="card-excerpt">Discover how multi-image streams can compress seamlessly into scalable PDF documents while maintaining print-ready DPI properties.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 4 -->
+      <article class="card" data-category="conversion" onclick="location.href='../blog/images-to-pdf.html'">
+        <span class="card-category">Document Compilation Architecture</span>
+        <h2>Convert Images to PDF Easily</h2>
+        <p>Discover how multi-image streams can compress seamlessly into scalable PDF documents while maintaining print-ready DPI properties.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 8 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 5 -->
-      <a href="./whatsapp-resize.html" class="article-card" data-category="compression">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=600&auto=format&fit=crop&q=60" alt="Resizing Systems Engine" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 6 Min Read</span></div>
-          <h3 class="card-title">Resize Images for WhatsApp</h3>
-          <p class="card-excerpt">Prevent heavy application resizing algorithms from compressing your images. Learn to control aspect-ratios and optimize native dimension matrix grids.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 5 -->
+      <article class="card" data-category="social" onclick="location.href='../blog/whatsapp-resize.html'">
+        <span class="card-category">Resizing Systems Engine</span>
+        <h2>Resize Images for WhatsApp</h2>
+        <p>Prevent heavy application resizing algorithms from compressing your images. Learn to control aspect-ratios and optimize native dimension matrix grids.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 6 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 6 -->
-      <a href="./social-media-sizes.html" class="article-card" data-category="social">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60" alt="Social Optimization Layouts" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 10 Min Read</span></div>
-          <h3 class="card-title">Best Image Sizes for Social Media</h3>
-          <p class="card-excerpt">An absolute engineering specification lookup sheet for Facebook, Instagram, LinkedIn, and YouTube layout dimensions.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 6 -->
+      <article class="card" data-category="social" onclick="location.href='../blog/social-media-sizes.html'">
+        <span class="card-category">Social Optimization Layouts</span>
+        <h2>Best Image Sizes for Social Media</h2>
+        <p>An absolute engineering specification lookup sheet for Facebook, Instagram, LinkedIn, and YouTube layout dimensions.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 10 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 7 -->
-      <a href="./mobile-bg-removal.html" class="article-card" data-category="bg-removal">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&auto=format&fit=crop&q=60" alt="Mobile Image Extraction Pipeline" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 8 Min Read</span></div>
-          <h3 class="card-title">Remove Background on Mobile</h3>
-          <p class="card-excerpt">Isolate objects directly using browser canvas pipelines in mobile devices, bypassing heavy app resource consumption footprints.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 7 -->
+      <article class="card" data-category="background" onclick="location.href='../blog/mobile-bg-removal.html'">
+        <span class="card-category">Mobile Image Extraction Pipeline</span>
+        <h2>Remove Background on Mobile</h2>
+        <p>Isolate objects directly using browser canvas pipelines in mobile devices, bypassing heavy app resource consumption footprints.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 8 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 8 -->
-      <a href="./website-compression.html" class="article-card" data-category="compression">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=60" alt="Core Web Vitals Optimization Engine" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 9 Min Read</span></div>
-          <h3 class="card-title">Compress Images for Websites</h3>
-          <p class="card-excerpt">Boost your site speed, optimize Largest Contentful Paint (LCP) times, and scale edge servers via next-gen processing pipelines.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 8 -->
+      <article class="card" data-category="compression" onclick="location.href='../blog/website-compression.html'">
+        <span class="card-category">Core Web Vitals Optimization</span>
+        <h2>Compress Images for Websites</h2>
+        <p>Boost your site speed, optimize Largest Contentful Paint (LCP) times, and scale edge servers via next-gen processing pipelines.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 9 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 9 -->
-      <a href="./blur-faces-guide.html" class="article-card" data-category="social">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=600&auto=format&fit=crop&q=60" alt="Anonymization Kernels Logic" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 7 Min Read</span></div>
-          <h3 class="card-title">How to Blur Faces in Photos</h3>
-          <p class="card-excerpt">Learn how canvas box blurs and Gaussian neighborhood kernels protect facial metadata security directly inside local browsers.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 9 -->
+      <article class="card" data-category="formats" onclick="location.href='../blog/blur-faces-guide.html'">
+        <span class="card-category">Anonymization Kernels Logic</span>
+        <h2>How to Blur Faces in Photos</h2>
+        <p>Learn how canvas box blurs and Gaussian neighborhood kernels protect facial metadata security directly inside local browsers.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 7 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-      <!-- Card Node 10 -->
-      <a href="./photo-editing-tools.html" class="article-card" data-category="social">
-        <img class="card-banner" src="https://images.unsplash.com/photo-1541462608141-ad4979e408c9?w=600&auto=format&fit=crop&q=60" alt="Web Canvas Filter Utilities" loading="lazy">
-        <div class="card-content">
-          <div class="card-meta"><span><i class="fa-regular fa-calendar"></i> May 2026</span><span><i class="fa-regular fa-clock"></i> 9 Min Read</span></div>
-          <h3 class="card-title">Best Online Photo Editing Tools</h3>
-          <p class="card-excerpt">An engineering assessment of web matrix color filters, canvas transformation operations, and asset compilation frameworks.</p>
-          <div class="card-footer"><div class="author-box"><div class="author-avatar"></div><span class="author-name">Muhammad Jahangir</span></div><i class="fa-solid fa-arrow-right"></i></div>
+      <!-- Card 10 -->
+      <article class="card" data-category="formats" onclick="location.href='../blog/photo-editing-tools.html'">
+        <span class="card-category">Web Canvas Filter Utilities</span>
+        <h2>Best Online Photo Editing Tools</h2>
+        <p>An engineering assessment of web matrix color filters, canvas transformation operations, and asset compilation frameworks.</p>
+        <div class="card-meta">
+          <span class="read-time">📖 9 Min Read · May 2026</span>
+          <span class="card-arrow">→</span>
         </div>
-      </a>
+      </article>
 
-    </section>
-
-    <!-- Sidebar Sticky Engine Wrapper Layout -->
-    <aside class="blog-sidebar">
-      
-      <!-- Native Product Integration Widget Module (High CTR Engine) -->
-      <div class="tool-recommend-card">
-        <h4>Need Instant Compression?</h4>
-        <p>Reduce file dimensions up to 90% mathematically without altering pixel clarity structures natively.</p>
-        <a href="../compress.html" class="tool-btn">Launch Compressor <i class="fa-solid fa-bolt" style="margin-left:6px;"></i></a>
-      </div>
-
-      <!-- About Native Architecture Card -->
-      <div class="sidebar-widget">
-        <h4 class="widget-title">About PixelPress Lab</h4>
-        <p style="font-size: 14px; color: var(--blog-gray-700); margin:0;">An online platform providing client-side image and document processing tools, optimized for speed and privacy.</p>
-      </div>
-    </aside>
-
+    </div><!-- /grid -->
   </main>
 
-  <section class="blog-container">
-    <div class="news-box">
-      <h2>Subscribe to PixelPress Core Updates</h2>
-      <p>Receive technical insights about web asset rendering, CDN caching updates, and metadata sanitization systems.</p>
-      <div class="news-form">
-        <input type="email" class="news-input" placeholder="Enter security-validated email address...">
-        <button class="tool-btn" style="border:none; cursor:pointer;">Join Matrix</button>
+  <!-- CTA BANNER -->
+  <div class="cta-banner">
+    <div class="cta-inner">
+      <div class="cta-text">
+        <h3>Need Instant Compression?</h3>
+        <p>Reduce file dimensions up to 90% mathematically without altering pixel clarity structures natively.</p>
       </div>
+      <a href="../compress.html" class="cta-btn">Launch Compressor →</a>
     </div>
-  </section>
+  </div>
 
-  <script src="../js/blog.js"></script>
+  <!-- FOOTER -->
+  <footer>
+    <span class="logo">PIXELPRESS</span>
+    <p>© 2026 PixelPress Lab. Client-side image processing, optimized for speed & privacy.</p>
+  </footer>
+
+  <!-- FILTER SCRIPT -->
+  <script>
+    const btns  = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.card');
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // active state
+        btns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+
+        cards.forEach((card, i) => {
+          const match = filter === 'all' || card.dataset.category === filter;
+          if (match) {
+            card.removeAttribute('hidden');
+            // stagger re-appear
+            card.style.animationDelay = `${i * 0.05}s`;
+            card.style.animation = 'none';
+            requestAnimationFrame(() => {
+              card.style.animation = '';
+            });
+          } else {
+            card.setAttribute('hidden', '');
+          }
+        });
+      });
+    });
+  </script>
+
 </body>
 </html>

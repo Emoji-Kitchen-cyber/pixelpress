@@ -1,12 +1,7 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/photo-editor", "destination": "/photo-editor.html" },
-    { "source": "/compress", "destination": "/compress.html" },
-    { "source": "/resize", "destination": "/resize.html" },
-    { "source": "/convert", "destination": "/convert.html" },
-    { "source": "/watermark", "destination": "/watermark.html" }
-  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",

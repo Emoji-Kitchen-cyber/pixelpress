@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blur Face — PixelPress</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .canvas-container { position: relative; max-width: 100%; margin: 0 auto; }
+    .canvas-container canvas { max-width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid #e5e7eb; }
+    .slider-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .slider-group input[type="range"] { flex: 1; min-width: 150px; }
+    .slider-value { font-weight: 600; min-width: 30px; }
+    .faces-count { font-size: 0.9rem; color: #6b7280; margin-top: 8px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 999; }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
+    <button class="btn-outline" onclick="history.back()">← Back</button>
+  </header>
+
+  <main class="tool-page">
+    <h1>👤 Blur Face</h1>
+    <p style="color:#6b7280; margin-bottom:24px;">Automatically detect and blur faces for privacy. 100% client-side.</p>
+
+    <!-- Upload -->
+    <div class="workflow-step" id="upload-step">
+      <h2>1. Upload Image</h2>
+      <div class="upload-zone" id="upload-zone">
+        <div class="icon">📤</div>
+        <p>Click or drag & drop an image here</p>
+      </div>
+      <input type="file" id="file-input" accept="image/*" hidden>
+    </div>
+
+    <!-- Detection & Blur -->
+    <div class="workflow-step hidden" id="detect-step">
+      <h2>2. Detect & Blur Faces</h2>
+      <div class="slider-group" style="margin-bottom:16px;">
+        <label for="blur-intensity" style="font-weight:500;">Blur Intensity:</label>
+        <input type="range" id="blur-intensity" min="5" max="40" value="15" step="1">
+        <span class="slider-value" id="intensity-value">15px</span>
+      </div>
+      <div class="canvas-container" id="canvas-container">
+        <canvas id="output-canvas"></canvas>
+      </div>
+      <p class="faces-count" id="faces-count"></p>
+      <div class="processing-bar" id="processing-bar">
+        <div class="spinner"></div>
+        <p>Detecting faces...</p>
+      </div>
+      <div class="action-row" style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
+        <button class="btn-primary" id="detect-btn">🔍 Detect Faces</button>
+        <button class="btn-outline" id="new-blur-btn">🔄 New Image</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="workflow-step hidden" id="result-step">
+      <h2>3. Download Result</h2>
+      <div class="preview-box" style="text-align:center;">
+        <img id="result-preview" alt="Blurred result" style="max-width:100%; max-height:350px; border-radius:8px; border:1px solid #e5e7eb;">
+      </div>
+      <div class="download-section" style="margin-top:20px;">
+        <button class="btn-primary" id="download-btn">⬇ Download Image</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- face-api.js with TinyFaceDetector (lightweight model) -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    (function() {
+      // ---- State ----
+      let originalImage = null;
+      let resultDataUrl = null;
+
+      // ---- DOM ----
+      const uploadStep = $('upload-step');
+      const detectStep = $('detect-step');
+      const resultStep = $('result-step');
+      const canvas = $('output-canvas');
+      const canvasContainer = $('canvas-container');
+      const detectBtn = $('detect-btn');
+      const newBlurBtn = $('new-blur-btn');
+      const downloadBtn = $('download-btn');
+      const blurIntensity = $('blur-intensity');
+      const intensityValue = $('intensity-value');
+      const facesCount = $('faces-count');
+      const processingBar = $('processing-bar');
+      const resultPreview = $('result-preview');
+      const toast = $('toast');
+      const ctx = canvas.getContext('2d');
+
+      // ---- Toast ----
+      function showToast(msg, isError = false) {
+        toast.textContent = msg;
+        toast.style.background = isError ? '#dc2626' : '#1e293b';
+        toast.style.display = 'block';
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
+      }
+
+      // ---- Load face-api models (TinyFaceDetector) ----
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+      async function loadModels() {
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL), // optional, improves detection
+        ]);
+        console.log('Face detection models loaded');
+      }
+
+      // Load models on page load
+      loadModels().catch(err => {
+        console.error('Model load error:', err);
+        showToast('⚠️ Face detection models could not load. Check your connection.', true);
+      });
+
+      // ---- Upload ----
+      setupUpload('upload-zone', 'file-input', (img) => {
+        originalImage = img;
+        // Setup canvas
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        facesCount.textContent = '';
+        canvasContainer.style.maxWidth = Math.min(img.naturalWidth, 800) + 'px'; // constrain display width
+        uploadStep.classList.add('hidden');
+        detectStep.classList.remove('hidden');
+        resultStep.classList.add('hidden');
+        detectBtn.disabled = false;
+        processingBar.style.display = 'none';
+      });
+
+      // ---- Blur Intensity Display ----
+      blurIntensity.addEventListener('input', () => {
+        intensityValue.textContent = blurIntensity.value + 'px';
+      });
+
+      // ---- Apply Blur to Face Regions ----
+      function blurFaceRegions(detections) {
+        // Redraw original
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(originalImage, 0, 0);
+
+        const blurAmount = parseInt(blurIntensity.value);
+
+        detections.forEach(detection => {
+          const box = detection.box;
+          // Expand box slightly for better coverage
+          const margin = box.width * 0.1;
+          const x = Math.max(0, box.x - margin);
+          const y = Math.max(0, box.y - margin);
+          const w = Math.min(canvas.width - x, box.width + margin * 2);
+          const h = Math.min(canvas.height - y, box.height + margin * 2);
+
+          // Extract face region
+          const faceImageData = ctx.getImageData(x, y, w, h);
+
+          // Create off-screen canvas to blur
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = w;
+          offCanvas.height = h;
+          const offCtx = offCanvas.getContext('2d');
+          offCtx.putImageData(faceImageData, 0, 0);
+
+          // Apply blur filter
+          offCtx.filter = `blur(${blurAmount}px)`;
+          offCtx.drawImage(offCanvas, 0, 0);
+          offCtx.filter = 'none';
+
+          // Put blurred region back
+          ctx.drawImage(offCanvas, x, y);
+        });
+      }
+
+      // ---- Detect & Blur ----
+      detectBtn.addEventListener('click', async () => {
+        if (!originalImage) {
+          showToast('Please upload an image first.', true);
+          return;
+        }
+
+        detectBtn.disabled = true;
+        processingBar.style.display = 'block';
+        facesCount.textContent = '';
+
+        try {
+          // Use TinyFaceDetector for speed
+          const options = new faceapi.TinyFaceDetectorOptions({
+            inputSize: 416,       // smaller = faster, larger = more accurate
+            scoreThreshold: 0.5,  // confidence threshold
+          });
+
+          const detections = await faceapi.detectAllFaces(canvas, options);
+
+          if (detections.length === 0) {
+            facesCount.textContent = 'No faces detected. Try another image.';
+            showToast('ℹ️ No faces found in this image.', true);
+          } else {
+            facesCount.textContent = `✅ ${detections.length} face(s) detected and blurred.`;
+            blurFaceRegions(detections);
+            // Store result for download
+            resultDataUrl = canvas.toDataURL('image/png');
+            resultPreview.src = resultDataUrl;
+            detectStep.classList.add('hidden');
+            resultStep.classList.remove('hidden');
+            showToast(`✅ ${detections.length} face(s) blurred successfully!`);
+          }
+        } catch (err) {
+          console.error('Face detection error:', err);
+          showToast('❌ Detection failed. Try a clearer image or refresh.', true);
+        } finally {
+          processingBar.style.display = 'none';
+          detectBtn.disabled = false;
+        }
+      });
+
+      // ---- New Image ----
+      newBlurBtn.addEventListener('click', () => {
+        originalImage = null;
+        resultDataUrl = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        uploadStep.classList.remove('hidden');
+        detectStep.classList.add('hidden');
+        resultStep.classList.add('hidden');
+        $('file-input').value = '';
+      });
+
+      // ---- Download ----
+      downloadBtn.addEventListener('click', () => {
+        if (!resultDataUrl) {
+          showToast('Nothing to download.', true);
+          return;
+        }
+        fetch(resultDataUrl)
+          .then(res => res.blob())
+          .then(blob => downloadBlob(blob, 'face-blurred.png'))
+          .catch(() => showToast('Download failed.', true));
+      });
+    })();
+  </script>
+</body>
+</html>

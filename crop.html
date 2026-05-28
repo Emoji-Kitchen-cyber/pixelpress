@@ -1,80 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced Crop Image — PixelPress</title>
-  <link rel="stylesheet" href="./css/style.css" />
+  <meta charset="UTF-8"><title>Crop Image</title>
+  <link rel="stylesheet" href="css/style.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 </head>
 <body>
-
-  <div class="workspace">
-    <header class="workspace-header">
-      <a href="./index.html" class="brand">PIXEL<span>PRESS</span></a>
-      <button class="btn btn-outline" onclick="location.reload()">Reset Tool</button>
-    </header>
-
-    <div class="workspace-body">
-      <div id="uploadOverlay" class="upload-overlay">
-        <div class="upload-card" id="dropZone">
-          <div style="font-size: 48px;">✂️</div>
-          <h3>Select an image</h3>
-          <p>Drag and drop your image here or click to browse.</p>
-          <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Choose Image</button>
-          <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" class="hidden">
-        </div>
-      </div>
-
-      <main class="canvas-area">
-        <img id="imageToCrop" src="" alt="Picture" class="hidden" style="max-width: 100%; max-height: 100%;">
-      </main>
-
-      <aside class="sidebar">
-        <div class="sidebar-section">
-          <div class="sidebar-title">Crop Options</div>
-          <div class="ratio-grid" id="ratioButtons">
-            <button class="ratio-btn active" data-ratio="NaN">Free</button>
-            <button class="ratio-btn" data-ratio="1">1:1 Square</button>
-            <button class="ratio-btn" data-ratio="1.33333">4:3 Standard</button>
-            <button class="ratio-btn" data-ratio="1.77777">16:9 Wide</button>
-            <button class="ratio-btn" data-ratio="0.8">4:5 IG Post</button>
-            <button class="ratio-btn" data-ratio="0.5625">9:16 Story</button>
-          </div>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-title">Transform</div>
-          <div class="control-row">
-            <button class="btn-icon" id="btnRotateLeft" title="Rotate Left">↺</button>
-            <button class="btn-icon" id="btnRotateRight" title="Rotate Right">↻</button>
-            <button class="btn-icon" id="btnFlipH" title="Flip Horizontal">↔</button>
-            <button class="btn-icon" id="btnFlipV" title="Flip Vertical">↕</button>
-          </div>
-          <div class="range-container">
-            <label><span>Zoom</span><span id="zoomVal">100%</span></label>
-            <input type="range" id="zoomSlider" min="0.1" max="3" step="0.1" value="1">
-          </div>
-        </div>
-
-        <div class="sidebar-section" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end;">
-          <div class="sidebar-title">Export Options</div>
-          <div class="control-row" style="margin-bottom: 20px;">
-            <select id="exportFormat" class="ratio-btn" style="width: 100%; text-align: center;">
-              <option value="image/jpeg">JPG</option>
-              <option value="image/png">PNG</option>
-              <option value="image/webp">WEBP</option>
-            </select>
-          </div>
-          <button id="btnCropDownload" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;">
-            Crop Image & Download
-          </button>
-        </div>
-      </aside>
+  <div class="tool-page">
+    <h1>Advanced Crop</h1>
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">Click to Upload</div>
+    <input type="file" id="fileInput" class="hidden">
+    <div id="editor" style="display:none;">
+      <img id="img" style="max-width:100%">
+      <button class="btn-primary" id="save">Download Crop</button>
     </div>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <script src="./js/crop.js"></script>
+  <script src="js/crop.js"></script>
 </body>
 </html>
+

@@ -62,5 +62,3 @@ self.addEventListener('fetch', event => {
     );
   }
 });
-
-

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="google-site-verification" content="S_xtKI5JCRkkoHtqpOZ35xBeybTS056a9DXNtNMAUZ0" />
   <title>PixelPress — Free Online Image Toolkit</title>
+
   <style>
     :root {
       --primary: #ec4899;
@@ -14,139 +14,222 @@
       --bg-main: #f8fafc;
       --bg-card: #ffffff;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg-main);
       color: var(--text-dark);
       padding: 10px;
     }
-    .container { width: 100%; max-width: 1000px; margin: auto; padding: 15px 10px; }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      margin: auto;
+      padding: 15px 10px;
+    }
+
+    /* iloveimg Style Header */
     .brand-header {
-      display: flex; align-items: center; justify-content: center;
-      position: relative; margin-top: 15px; margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 15px;
+      margin-bottom: 25px;
     }
-    .menu-btn {
-      position: absolute; left: 10px; background: none; border: none;
-      font-size: 26px; color: var(--text-dark); cursor: pointer;
-      padding: 5px; border-radius: 8px; transition: background 0.2s;
+
+    .brand-logo {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
     }
-    .menu-btn:hover { background: #e2e8f0; }
-    .brand-logo { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; }
-    .brand-logo span { color: var(--primary); }
-    .menu-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.4); z-index: 9998; display: none;
-      opacity: 0; transition: opacity 0.3s ease;
+
+    .brand-logo span {
+      color: var(--primary);
     }
-    .menu-overlay.show { display: block; opacity: 1; }
-    .side-menu {
-      position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
-      background: white; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-      z-index: 9999; transition: left 0.3s ease; display: flex;
-      flex-direction: column; padding: 20px; overflow-y: auto;
+
+    .hero-section {
+      text-align: center;
+      margin-bottom: 30px;
     }
-    .side-menu.open { left: 0; }
-    .menu-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;
+
+    .hero-section h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+      line-height: 1.2;
     }
-    .menu-header .brand-logo { font-size: 22px; }
-    .close-btn {
-      background: #f1f5f9; border: none; font-size: 18px; color: #64748b;
-      cursor: pointer; width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+
+    .hero-section p {
+      font-size: 15px;
+      color: var(--text-muted);
     }
-    .close-btn:hover { background: #e2e8f0; color: var(--text-dark); }
-    .menu-links { display: flex; flex-direction: column; gap: 10px; }
-    .menu-links a {
-      text-decoration: none; color: var(--text-dark); font-size: 15px;
-      font-weight: 500; padding: 12px 15px; border-radius: 12px;
-      display: flex; align-items: center; gap: 12px; transition: all 0.2s ease;
-    }
-    .menu-links a:hover { background: #fdf4ff; color: var(--primary); }
-    .hero-section { text-align: center; margin-bottom: 30px; }
-    .hero-section h1 { font-size: 28px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; line-height: 1.2; }
-    .hero-section p { font-size: 15px; color: var(--text-muted); }
+
+    /* Category Filter Tags */
     .filter-container {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
     }
+
     .filter-btn {
-      border: 1px solid #e2e8f0; background: white; color: #334155;
-      padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #334155;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
-    .filter-btn:hover { border-color: #cbd5e1; background: #f1f5f9; }
-    .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
-    .tools-list { display: flex; flex-direction: column; gap: 15px; }
-    .tool-link { text-decoration: none; color: inherit; display: block; }
-    .tool-link.hidden { display: none; }
+
+    .filter-btn:hover {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+    }
+
+    .filter-btn.active {
+      background: #1e293b;
+      color: white;
+      border-color: #1e293b;
+    }
+
+    /* iloveimg Layout Lists/Cards */
+    .tools-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .tool-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
     .tool-card {
-      background: var(--bg-card); border: 1px solid #e2e8f0; border-radius: 16px;
-      padding: 20px; display: flex; align-items: flex-start; gap: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
       cursor: pointer;
     }
+
     .tool-card:hover {
-      transform: translateY(-2px); border-color: var(--primary);
+      transform: translateY(-2px);
+      border-color: var(--primary);
       box-shadow: 0 6px 20px rgba(236, 72, 153, 0.08);
     }
+
+    /* Icon Layout inside Cards */
     .tool-icon {
-      font-size: 26px; background: #fdf4ff; padding: 12px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; min-width: 52px;
-      height: 52px; border: 1px solid #f472b6;
+      font-size: 26px;
+      background: #fdf4ff;
+      padding: 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      height: 52px;
+      border: 1px solid #f472b6;
     }
-    .tool-info { flex: 1; }
-    .tool-info h2 { font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
-    .tool-info p { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+
+    .tool-info {
+      flex: 1;
+    }
+
+    .tool-info h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .tool-info p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
     footer {
-      text-align: center; margin-top: 50px; padding: 20px; font-size: 13px;
-      color: var(--text-muted); border-top: 1px solid #e2e8f0;
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid #e2e8f0;
     }
-    footer a { color: var(--primary); text-decoration: none; font-weight: 600; margin-left: 5px; }
-    footer a:hover { text-decoration: underline; }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .tool-link.hidden {
+      display: none;
+    }
+
     @media (max-width: 480px) {
-      .hero-section h1 { font-size: 24px; }
-      .tool-card { padding: 16px; gap: 12px; }
-      .tool-icon { font-size: 22px; min-width: 46px; height: 46px; padding: 8px; }
-      .tool-info h2 { font-size: 16px; }
-      .tool-info p { font-size: 12.5px; }
-      .menu-btn { left: 5px; }
+      .hero-section h1 {
+        font-size: 24px;
+      }
+      .tool-card {
+        padding: 16px;
+        gap: 12px;
+      }
+      .tool-icon {
+        font-size: 22px;
+        min-width: 46px;
+        height: 46px;
+        padding: 8px;
+      }
+      .tool-info h2 {
+        font-size: 16px;
+      }
+      .tool-info p {
+        font-size: 12.5px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
-  <div class="side-menu" id="sideMenu">
-    <div class="menu-header">
-      <div class="brand-logo">PIXEL<span>PRESS</span></div>
-      <button class="close-btn" onclick="toggleMenu(false)">✕</button>
-    </div>
-    <div class="menu-links">
-      <a href="./index.html">🏠 Home</a>
-      <a href="./compress.html">📦 Compress Image</a>
-      <a href="./resize.html">📐 Resize Image</a>
-      <a href="./photo-editor.html">✨ Photo Editor</a>
-      <a href="./convert.html">🔄 Convert Format</a>
-      <a href="./watermark.html">💧 Watermark Image</a>
-      <a href="./pdf-to-jpg.html">📄 PDF to JPG</a>
-      <a href="./jpg-to-pdf.html">🖼️ JPG to PDF</a>
-      <div style="height: 1px; background: #e2e8f0; margin: 10px 0;"></div>
-      <a href="./remove-bg.html">🫥 Remove Background</a>
-      <a href="./meme-generator.html">😂 Meme Generator</a>
-      <a href="./privacy-policy.html">🛡️ Privacy Policy</a>
-    </div>
-  </div>
 
   <div class="container">
+
     <header class="brand-header">
-      <button class="menu-btn" onclick="toggleMenu(true)">☰</button>
       <div class="brand-logo">PIXEL<span>PRESS</span></div>
     </header>
+
     <section class="hero-section">
       <h1>Every tool you could want to<br>edit images in bulk</h1>
       <p>Your online photo editor is here and forever free!</p>
     </section>
+
     <div class="filter-container">
       <button class="filter-btn active" onclick="filterTools('all', this)">All</button>
       <button class="filter-btn" onclick="filterTools('optimize', this)">Optimize</button>
@@ -155,8 +238,9 @@
       <button class="filter-btn" onclick="filterTools('convert', this)">Convert</button>
       <button class="filter-btn" onclick="filterTools('security', this)">Security</button>
     </div>
+
     <section class="tools-list" id="toolsList">
-      <!-- existing tools unchanged -->
+
       <a href="./compress.html" class="tool-link" data-category="optimize">
         <div class="tool-card">
           <div class="tool-icon">📦</div>
@@ -166,6 +250,7 @@
           </div>
         </div>
       </a>
+
       <a href="./resize.html" class="tool-link" data-category="edit">
         <div class="tool-card">
           <div class="tool-icon">📐</div>
@@ -175,6 +260,7 @@
           </div>
         </div>
       </a>
+
       <a href="./photo-editor.html" class="tool-link" data-category="edit create">
         <div class="tool-card">
           <div class="tool-icon">✨</div>
@@ -184,6 +270,7 @@
           </div>
         </div>
       </a>
+
       <a href="./convert.html" class="tool-link" data-category="convert">
         <div class="tool-card">
           <div class="tool-icon">🔄</div>
@@ -193,6 +280,7 @@
           </div>
         </div>
       </a>
+
       <a href="./watermark.html" class="tool-link" data-category="security create">
         <div class="tool-card">
           <div class="tool-icon">💧</div>
@@ -202,6 +290,7 @@
           </div>
         </div>
       </a>
+
       <a href="./pdf-to-jpg.html" class="tool-link" data-category="convert">
         <div class="tool-card">
           <div class="tool-icon">📄</div>
@@ -211,6 +300,7 @@
           </div>
         </div>
       </a>
+
       <a href="./jpg-to-pdf.html" class="tool-link" data-category="convert">
         <div class="tool-card">
           <div class="tool-icon">🖼️</div>
@@ -220,36 +310,24 @@
           </div>
         </div>
       </a>
-      <!-- NEW TOOLS START -->
-      <a href="./remove-bg.html" class="tool-link" data-category="edit create">
-        <div class="tool-card">
-          <div class="tool-icon">🫥</div>
-          <div class="tool-info">
-            <h2>Remove Background</h2>
-            <p>AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser.</p>
-          </div>
-        </div>
-      </a>
-      <a href="./meme-generator.html" class="tool-link" data-category="create">
-        <div class="tool-card">
-          <div class="tool-icon">😂</div>
-          <div class="tool-info">
-            <h2>Meme Generator</h2>
-            <p>Create memes with templates, custom images, draggable text, stickers and more. Export as JPG, PNG, or WEBP.</p>
-          </div>
-        </div>
-      </a>
-      <!-- NEW TOOLS END -->
+
     </section>
+
     <footer>
-      © 2026 PixelPress — All Rights Reserved | <a href="./privacy-policy.html">Privacy Policy</a>
+           <footer>
+      © 2026 PixelPress — All Rights Reserved | <a href="./privacy-policy.html" style="color: #ec4899; text-decoration: none; font-weight: 600;">Privacy Policy</a>
     </footer>
+
+    </footer>
+
   </div>
+
   <script>
     function filterTools(category, element) {
       const buttons = document.querySelectorAll('.filter-btn');
       buttons.forEach(btn => btn.classList.remove('active'));
       element.classList.add('active');
+
       const links = document.querySelectorAll('.tool-link');
       links.forEach(link => {
         if (category === 'all') {
@@ -264,17 +342,7 @@
         }
       });
     }
-    function toggleMenu(show) {
-      const menu = document.getElementById('sideMenu');
-      const overlay = document.getElementById('menuOverlay');
-      if (show) {
-        menu.classList.add('open');
-        overlay.classList.add('show');
-      } else {
-        menu.classList.remove('open');
-        overlay.classList.remove('show');
-      }
-    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -283,5 +351,6 @@
       });
     }
   </script>
+
 </body>
 </html>

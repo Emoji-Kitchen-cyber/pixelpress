@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pixelpress-cache-v1';
+const CACHE_NAME = 'pixelpress-cache-v2';
 
 // Install Event - Forces the new service worker to take over immediately
 self.addEventListener('install', event => {
@@ -24,12 +24,11 @@ self.addEventListener('activate', event => {
 });
 
 // Fetch Event - "Network First, Falling back to Cache" Strategy
-// This ensures users always get the freshest live version from Vercel if internet is on!
 self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(networkResponse => {
-        // If internet is working, return fresh data and silently update cache
+        // If network works, serve fresh content and update cache silently
         return caches.open(CACHE_NAME).then(cache => {
           if (event.request.method === 'GET') {
             cache.put(event.request, networkResponse.clone());
@@ -38,7 +37,7 @@ self.addEventListener('fetch', event => {
         });
       })
       .catch(() => {
-        // If user is offline, give them the cached version (Bulletproof offline mode)
+        // If user is offline, fall back to the secure local cache
         return caches.match(event.request);
       })
   );

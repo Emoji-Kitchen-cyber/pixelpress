@@ -1,92 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Resize Image — PixelPress</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resize IMAGE - Most Advanced Online Resizer | PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./css/style.css">
   <style>
-    :root { --primary: #ec4899; --text-dark: #0f172a; --bg-main: #f8fafc; }
-    body { font-family: system-ui, sans-serif; background: var(--bg-main); color: var(--text-dark); padding: 20px; }
-    .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .upload-area { border: 2px dashed #cbd5e1; padding: 40px; text-align: center; border-radius: 12px; cursor: pointer; margin-bottom: 20px; }
-    .controls { display: none; margin-bottom: 20px; }
-    .controls.active { display: block; }
-    input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px; }
-    .btn { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    #previewImg { max-width: 100%; margin-top: 15px; border-radius: 8px; display: none; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; display: none; }
+    .tool-container { max-width: 900px; margin: 40px auto; padding: 20px; }
+    .upload-box {
+      border: 2px dashed #cbd5e1; background: #ffffff; padding: 50px 20px;
+      text-align: center; border-radius: 16px; cursor: pointer; transition: all 0.3s;
+    }
+    .upload-box:hover { border-color: #ec4899; background: #fdf4ff; }
+    .upload-box i { font-size: 50px; color: #ec4899; margin-bottom: 15px; }
+    
+    /* Workspace Grid */
+    .resize-workspace { display: grid; grid-template-columns: 1fr 340px; gap: 25px; margin-top: 30px; display: none; }
+    .preview-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; }
+    .preview-panel img { max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .img-meta { margin-top: 15px; font-size: 13px; color: #64748b; font-weight: 500; }
+
+    /* Control Panel Options */
+    .control-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+    .tabs { display: flex; border-bottom: 2px solid #f1f5f9; margin-bottom: 20px; gap: 10px; }
+    .tab-btn { flex: 1; padding: 12px; background: none; border: none; font-size: 14px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+    .tab-btn.active { color: #ec4899; border-bottom-color: #ec4899; }
+    
+    .config-section { display: none; }
+    .config-section.active { display: block; }
+    
+    .input-group { margin-bottom: 15px; }
+    .input-group label { display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase; }
+    .input-wrapper { display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 10px; background: #f8fafc; }
+    .input-wrapper input { border: none; background: transparent; width: 100%; padding: 10px 5px; font-size: 15px; font-weight: 600; color: #0f172a; outline: none; }
+    .input-wrapper span { font-size: 13px; font-weight: 700; color: #94a3b8; }
+    
+    .checkbox-group { display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; font-weight: 600; color: #475569; }
+    .checkbox-group input { width: 16px; height: 16px; accent-color: #ec4899; cursor: pointer; }
+
+    /* Percent Option Buttons */
+    .percent-options { display: flex; flex-direction: column; gap: 10px; }
+    .percent-card { border: 1px solid #e2e8f0; padding: 14px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+    .percent-card:hover { border-color: #ec4899; background: #fdf4ff; }
+    .percent-card.active { border-color: #ec4899; background: #ec4899; color: white; }
+    .percent-card .title { font-weight: 700; font-size: 14px; }
+    .percent-card .sub { font-size: 12px; opacity: 0.8; }
+
+    /* Action Button */
+    .action-btn { width: 100%; background: #ec4899; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 20px; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .action-btn:hover { background: #db2777; }
+    
+    #fileInput { display: none; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2 style="text-align: center; margin-bottom: 20px;">Resize Image</h2>
-    
-    <div class="upload-area" id="dropZone">
-      <p>Click to select image</p>
-      <input type="file" id="fileInput" accept="image/*" style="display:none" />
+  <!-- Top bar configuration from your template -->
+  <header class="brand-header" style="background:#fff; padding:15px 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+    <a href="./index.html" style="text-decoration:none; color:#0f172a; font-weight:800; font-size:20px;"><i class="fa-solid fa-arrow-left" style="margin-right:10px;"></i>PIXEL<span style="color:#ec4899">PRESS</span></a>
+    <span style="font-weight:700; font-size:14px; color:#64748b; text-transform:uppercase;">Advanced Resizer Matrix</span>
+  </header>
+
+  <div class="tool-container">
+    <!-- Step 1: Upload DropZone -->
+    <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <i class="fa-solid fa-cloud-arrow-up"></i>
+      <h3 style="font-size:20px; margin-bottom:8px;">Choose image file to resize</h3>
+      <p style="color:#64748b; font-size:14px;">Supports JPG, PNG, WEBP formats securely</p>
+      <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
     </div>
 
-    <div class="controls" id="controlsPanel">
-      <input type="number" id="widthInput" placeholder="Width (px)">
-      <input type="number" id="heightInput" placeholder="Height (px)">
-      <button class="btn" id="resizeBtn">Resize & Download</button>
-    </div>
+    <!-- Step 2: Advanced Dynamic Workspace Grid -->
+    <div class="resize-workspace" id="workspace">
+      <!-- Left Panel: Intelligent Preview -->
+      <div class="preview-panel">
+        <img id="imagePreview" src="" alt="Source Preview">
+        <div class="img-meta" id="imgMeta">Original: 0 x 0 px</div>
+      </div>
 
-    <img id="previewImg" alt="Preview">
-  </div>
-  <div class="toast" id="toastBox"></div>
+      <!-- Right Panel: Advanced Controls Controller -->
+      <div class="control-panel">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('pixels')"><i class="fa-solid fa-vector-square" style="margin-right:6px;"></i> By Pixels</button>
+          <button class="tab-btn" onclick="switchTab('percentage')"><i class="fa-solid fa-percent" style="margin-right:6px;"></i> By %</button>
+        </div>
 
-  <script>
-    const fileInput = document.getElementById('fileInput'), dropZone = document.getElementById('dropZone');
-    const controls = document.getElementById('controlsPanel'), resizeBtn = document.getElementById('resizeBtn');
-    let selectedImage = null;
+        <!-- Tab Content 1: Custom Exact Pixels Configuration -->
+        <div id="pixelsSection" class="config-section active">
+          <div class="input-group">
+            <label>Width Size</label>
+            <div class="input-wrapper">
+              <input type="number" id="resizeWidth" value="0">
+              <span>PX</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Height Size</label>
+            <div class="input-wrapper">
+              <input type="number" id="resizeHeight" value="0">
+              <span>PX</span>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="maintainAspect" checked>
+            <label for="maintainAspect">Lock Aspect Ratio (Keep Proportions)</label>
+          </div>
+        </div>
 
-    dropZone.onclick = () => fileInput.click();
-    fileInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      selectedImage = file;
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const preview = document.getElementById('previewImg');
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-        controls.classList.add('active');
-      };
-      reader.readAsDataURL(file);
-    };
-
-    resizeBtn.onclick = () => {
-      const w = document.getElementById('widthInput').value;
-      const h = document.getElementById('heightInput').value;
-      if (!w || !h) return showToast('Enter width and height!');
-
-      const img = new Image();
-      img.src = document.getElementById('previewImg').src;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        <!-- Tab Content 2: Smart Percent Scaling Matrix -->
+        <div id="percentageSection" class="config-section">
+          <div class="percent-options">
+            <div class="percent-card active" data-percent="75" onclick="selectPercent(75, this)">
+              <div class="title">75% Smaller</div>
+              <div class="sub" id="label75">Resize to 75% of original bounds</div>
+            </div>
+            <div class="percent-card" data-percent="50" onclick="selectPercent(50, this)">
+              <div class="title">50% Medium Scale</div>
+              <div class="sub" id="label50">Resize to 50% of original bounds</div>
+            </div>
+            <div class="percent-card" data-percent="25" onclick="selectPercent(25, this)">
+              <div class="title">25% Compact Scale</div>
+              <div class="sub" id="label25">Resize to 25% of original bounds</div>
+            </div>
+          </div>
+        </div>
         
-        // Final Download Logic
-        const link = document.createElement('a');
-        link.download = 'resized-image.png';
-        link.href = canvas.toDataURL(selectedImage.type);
-        link.click();
-        showToast('Resizing complete, download started!');
-      };
-    };
+        <!-- Advanced Render Engine Presets Layer -->
+        <div style="margin-top:20px; padding-top:15px; border-top:1px solid #f1f5f9;">
+          <div class="input-group">
+            <label style="font-size:11px; color:#94a3b8;">Output Optimization Preset</label>
+            <select id="outputQuality" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; background:#f8fafc; font-weight:600; color:#334155; outline:none; cursor:pointer;">
+              <option value="0.92">High Quality (Recommended)</option>
+              <option value="0.80">Medium Quality (Optimized Space)</option>
+              <option value="0.65">Low Quality (Maximum Compression)</option>
+            </select>
+          </div>
+        </div>
 
-    function showToast(msg) {
-      const t = document.getElementById('toastBox');
-      t.innerText = msg; t.style.display = 'block';
-      setTimeout(() => t.style.display = 'none', 3000);
-    }
-  </script>
+        <!-- Run Trigger Execution Core Call -->
+        <button class="action-btn" id="processBtn" onclick="executeResize()"><i class="fa-solid fa-arrows-up-to-line"></i> Resize Image Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Global Framework Assets Caller -->
+  <script src="./js/common.js"></script>
+  <script src="./js/resize.js"></script>
 </body>
 </html>
 

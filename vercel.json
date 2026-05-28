@@ -5,16 +5,6 @@
     { "source": "/compress", "destination": "/compress.html" },
     { "source": "/resize", "destination": "/resize.html" },
     { "source": "/convert", "destination": "/convert.html" },
-    { "source": "/watermark", "destination": "/watermark.html" },
-    { "source": "/remove-bg", "destination": "/remove-bg.html" },
-    { "source": "/crop", "destination": "/crop.html" },
-    { "source": "/blur-face", "destination": "/blur-face.html" },
-    { "source": "/about", "destination": "/about.html" },
-    { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
-    { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/disclaimer", "destination": "/disclaimer.html" },
-    { "source": "/faq", "destination": "/faq.html" },
-    { "source": "/blog", "destination": "/blog/index.html" }
+    { "source": "/watermark", "destination": "/watermark.html" }
   ]
 }

@@ -1,47 +1,20 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Professional Blur Face — PixelPress</title>
+  <title>AI Blur Face — PixelPress</title>
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    /* Instant UI Fix for Download Button Visibility */
-    .download-fab {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 1000;
-      box-shadow: 0 10px 25px rgba(236, 72, 153, 0.5) !important;
-      padding: 14px 28px !important;
-      font-size: 1rem !important;
-    }
-    .canvas-wrapper {
-      max-width: 100%;
-      max-height: 75vh;
-      overflow: auto;
-      border-radius: 12px;
-      box-shadow: var(--shadow-lg);
-      background: #ffffff;
-      cursor: crosshair;
-    }
-    .status-badge {
-      background: #f1f5f9;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      margin-top: 10px;
-      border-left: 4px solid var(--primary);
-    }
-  </style>
 </head>
 <body>
 
   <div class="workspace">
     <header class="workspace-header">
       <a href="./index.html" class="brand">PIXEL<span>PRESS</span></a>
-      <div>
-        <span style="font-size: 0.85rem; color: var(--text-light); font-weight:600;">AI Vision Pro v2.5</span>
+      <div class="header-actions">
+        <button id="downloadBtn" class="btn btn-primary hidden">Download Image</button>
       </div>
     </header>
 
@@ -49,49 +22,36 @@
       <main class="canvas-area">
         <div class="upload-overlay" id="uploadOverlay">
           <div class="upload-card" id="dropZone">
-            <span style="font-size: 52px;">👤</span>
-            <h3>Advanced AI Face Blur</h3>
-            <p>Automatic smart recognition + manual click-to-blur option</p>
-            <button class="btn btn-primary">Select Image File</button>
+            <span style="font-size: 48px;">👤</span>
+            <h3>AI Face Blur Tool</h3>
+            <p>Upload a photo to automatically detect and blur human faces</p>
+            <button class="btn btn-primary">Select Photo</button>
             <input type="file" id="fileInput" class="hidden" accept="image/*">
           </div>
         </div>
 
-        <div class="canvas-wrapper" id="canvasWrapper">
-          <canvas id="mainCanvas"></canvas>
+        <div style="max-width: 100%; max-height: 100%; overflow: auto; display: flex; justify-content: center; align-items: center;">
+          <canvas id="mainCanvas" style="max-width: 100%; height: auto; box-shadow: var(--shadow-md); display: block;"></canvas>
         </div>
       </main>
 
       <aside class="sidebar">
         <div class="sidebar-section">
-          <h4 class="sidebar-title">Blur Configuration</h4>
+          <h4 class="sidebar-title">Blur Options</h4>
           <div class="range-container">
-            <label for="blurSlider"><span>Blur Severity</span><span id="blurValue">25px</span></label>
-            <input type="range" id="blurSlider" min="5" max="60" value="25">
+            <label for="blurSlider"><span>Blur Amount</span><span id="blurValue">20px</span></label>
+            <input type="range" id="blurSlider" min="5" max="50" value="20">
           </div>
         </div>
-        
-        <div class="sidebar-section">
-          <h4 class="sidebar-title">Manual Edit Mode</h4>
-          <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 10px;">
-            💡 AI missed a spot? Simply click or drag directly on the image above to manually inject blur patches.
-          </p>
-          <button class="btn btn-outline" id="clearBtn" style="width: 100%;">Reset Image</button>
-        </div>
-
-        <div class="sidebar-section">
-          <h4 class="sidebar-title">Engine Logs</h4>
-          <div class="status-badge" id="statusBox">Waiting for input image...</div>
+        <div class="sidebar-section" id="statusBox" style="color: var(--text-light); font-size: 0.9rem;">
+          AI engine stands ready. Upload an image to start processing.
         </div>
       </aside>
     </div>
   </div>
 
-  <button id="downloadBtn" class="btn btn-primary download-fab hidden">⬇️ Download Master Image</button>
-
   <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
   <script src="js/blur-face.js"></script>
 </body>
 </html>
-
 

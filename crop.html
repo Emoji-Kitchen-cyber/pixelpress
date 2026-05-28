@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><title>Crop Image</title>
+  <meta charset="UTF-8">
+  <title>Professional Crop | PixelPress</title>
   <link rel="stylesheet" href="css/style.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 </head>
 <body>
   <div class="tool-page">
-    <h1>Advanced Crop</h1>
-    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">Click to Upload</div>
-    <input type="file" id="fileInput" class="hidden">
-    <div id="editor" style="display:none;">
-      <img id="img" style="max-width:100%">
-      <button class="btn-primary" id="save">Download Crop</button>
+    <h1>Advanced Crop Tool</h1>
+    <div class="upload-zone" id="dropZone">
+      <p>Click or Drag Image Here</p>
+      <input type="file" id="fileInput" class="hidden" accept="image/*">
+    </div>
+    
+    <div id="editorArea" style="display:none; margin-top:20px;">
+      <div class="preview-box"><img id="image" style="max-width:100%"></div>
+      <div class="download-section">
+        <button class="btn-primary" id="cropBtn">Crop & Download</button>
+      </div>
     </div>
   </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script src="js/crop.js"></script>
 </body>

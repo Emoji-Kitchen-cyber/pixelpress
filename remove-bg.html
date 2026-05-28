@@ -14,6 +14,7 @@
     .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     .toast.error { background: #dc2626; }
     .hidden { display: none !important; }
+    .diagnostics { font-size: 0.8rem; color: #6b7280; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -26,7 +27,6 @@
     <h1>🫥 Remove Background</h1>
     <p style="color:#6b7280; margin-bottom: 24px;">AI-powered background removal. 100% client-side — your images never leave your device.</p>
 
-    <!-- STEP 1: Upload -->
     <div class="workflow-step">
       <h2>1. Upload Image</h2>
       <div class="upload-zone" id="upload-zone">
@@ -37,7 +37,6 @@
       <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden>
     </div>
 
-    <!-- STEP 2: Settings -->
     <div class="workflow-step hidden" id="settings-step">
       <h2>2. Background Options</h2>
       <div class="bg-options">
@@ -51,10 +50,10 @@
       <div class="processing-bar" id="processing-bar">
         <div class="spinner"></div>
         <p id="processing-status">Loading AI engine...</p>
+        <p class="diagnostics" id="diagnostics"></p>
       </div>
     </div>
 
-    <!-- STEP 3: Result -->
     <div class="workflow-step hidden" id="result-step">
       <h2>3. Download Result</h2>
       <div class="result-container">
@@ -82,11 +81,10 @@
       let originalImage = null;
       let originalFile = null;
       let resultBlob = null;
-      let removeBackgroundFn = null;
-      let engineLoading = false;
+      let engineLoadingPromise = null;  // single promise for loading
       let engineReady = false;
 
-      // ============ DOM REFS ============
+      // ============ DOM ============
       const uploadZone = document.getElementById('upload-zone');
       const fileInput = document.getElementById('file-input');
       const settingsStep = document.getElementById('settings-step');
@@ -94,6 +92,7 @@
       const processBtn = document.getElementById('process-btn');
       const processingBar = document.getElementById('processing-bar');
       const processingStatus = document.getElementById('processing-status');
+      const diagnostics = document.getElementById('diagnostics');
       const bgType = document.getElementById('bg-type');
       const bgColor = document.getElementById('bg-color');
       const originalPreview = document.getElementById('original-preview');
@@ -103,7 +102,7 @@
       const toast = document.getElementById('toast');
 
       // ============ TOAST ============
-      function showToast(msg, isError = false) {
+      function showToast(msg, isError) {
         toast.textContent = msg;
         toast.className = 'toast' + (isError ? ' error' : '');
         toast.style.display = 'block';
@@ -111,64 +110,116 @@
         toast._timeout = setTimeout(function() { toast.style.display = 'none'; }, 4000);
       }
 
-      // ============ ENGINE LOADER ============
-      async function loadEngine() {
-        // Already ready
-        if (engineReady) return true;
-
-        // Already loading — wait for it
-        if (engineLoading) {
-          return new Promise(function(resolve) {
-            var check = setInterval(function() {
-              if (engineReady) { clearInterval(check); resolve(true); }
-              if (!engineLoading && !engineReady) { clearInterval(check); resolve(false); }
-            }, 300);
-          });
-        }
-
-        // Start loading
-        engineLoading = true;
-        processingStatus.textContent = 'Loading AI engine... Please wait.';
-
-        try {
-          var module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.esm.js');
-          removeBackgroundFn = module.removeBackground;
-          engineReady = true;
-          engineLoading = false;
-          console.log('✅ Remove BG engine ready');
-          return true;
-        } catch (err) {
-          console.error('Engine load error:', err);
-          engineLoading = false;
-          showToast('Failed to load AI engine. Please refresh and try again.', true);
-          return false;
-        }
+      function log(msg) {
+        console.log('[RemoveBG] ' + msg);
+        diagnostics.textContent = msg;
       }
 
-      // Start loading immediately in background
-      loadEngine();
+      // ============ ENGINE LOADER (UMD + polling) ============
+      function loadEngine() {
+        // If already loaded successfully
+        if (engineReady) return Promise.resolve(true);
 
-      // ============ UPLOAD HANDLING ============
+        // If loading is in progress, return the existing promise
+        if (engineLoadingPromise) return engineLoadingPromise;
+
+        // Start loading
+        engineLoadingPromise = new Promise(function(resolve, reject) {
+          // Check if UMD global already exists (maybe cached from previous page)
+          if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
+            engineReady = true;
+            resolve(true);
+            return;
+          }
+
+          log('Loading AI engine...');
+
+          // Primary CDN URL (stable)
+          const primaryUrl = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js';
+          // Fallback CDN
+          const fallbackUrl = 'https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.umd.js';
+
+          let scriptLoaded = false;
+          let timeoutId;
+
+          function tryLoad(url, isFallback) {
+            const script = document.createElement('script');
+            script.src = url;
+            script.async = true;
+
+            script.onload = function() {
+              scriptLoaded = true;
+              // Wait a moment for the script to initialize and set the global
+              var attempts = 0;
+              var checkInterval = setInterval(function() {
+                attempts++;
+                if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
+                  clearInterval(checkInterval);
+                  clearTimeout(timeoutId);
+                  engineReady = true;
+                  log('Engine ready ✓');
+                  resolve(true);
+                } else if (attempts > 20) {
+                  clearInterval(checkInterval);
+                  if (!isFallback) {
+                    log('Primary CDN loaded but global not found. Trying fallback...');
+                    tryLoad(fallbackUrl, true);
+                  } else {
+                    reject(new Error('Engine script loaded but function not exposed.'));
+                  }
+                }
+              }, 200);
+            };
+
+            script.onerror = function() {
+              scriptLoaded = true;
+              clearTimeout(timeoutId);
+              if (!isFallback) {
+                log('Primary CDN failed. Trying fallback...');
+                tryLoad(fallbackUrl, true);
+              } else {
+                reject(new Error('Failed to load engine script from both CDNs.'));
+              }
+            };
+
+            document.head.appendChild(script);
+
+            // Timeout: 25 seconds for slow connections
+            timeoutId = setTimeout(function() {
+              if (!scriptLoaded) {
+                clearInterval(checkInterval);
+                reject(new Error('Engine loading timed out. Please check your internet connection.'));
+              }
+            }, 25000);
+          }
+
+          // Start with primary
+          tryLoad(primaryUrl, false);
+        });
+
+        // Clear the promise if it fails so next click can retry
+        engineLoadingPromise.catch(function(err) {
+          log('Engine load error: ' + err.message);
+          engineLoadingPromise = null; // allow retry
+          showToast('Engine failed to load. Please refresh and try again.', true);
+        });
+
+        return engineLoadingPromise;
+      }
+
+      // Preload the engine quietly as soon as possible
+      loadEngine().catch(function() {});
+
+      // ============ UPLOAD ============
       uploadZone.addEventListener('click', function() { fileInput.click(); });
-
-      uploadZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-      });
-
-      uploadZone.addEventListener('dragleave', function() {
-        uploadZone.classList.remove('dragover');
-      });
-
+      uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); uploadZone.classList.add('dragover'); });
+      uploadZone.addEventListener('dragleave', function() { uploadZone.classList.remove('dragover'); });
       uploadZone.addEventListener('drop', function(e) {
         e.preventDefault();
         uploadZone.classList.remove('dragover');
         handleFile(e.dataTransfer.files[0]);
       });
-
-      fileInput.addEventListener('change', function() {
-        handleFile(fileInput.files[0]);
-      });
+      fileInput.addEventListener('change', function() { handleFile(fileInput.files[0]); });
 
       function handleFile(file) {
         if (!file) return;
@@ -180,7 +231,6 @@
           showToast('File too large. Maximum 10MB allowed.', true);
           return;
         }
-
         var reader = new FileReader();
         reader.onload = function() {
           var img = new Image();
@@ -198,7 +248,6 @@
         reader.readAsDataURL(file);
       }
 
-      // ============ BACKGROUND TYPE TOGGLE ============
       bgType.addEventListener('change', function() {
         bgColor.style.display = bgType.value === 'color' ? 'inline-block' : 'none';
       });
@@ -210,38 +259,44 @@
           return;
         }
 
-        // Ensure engine is loaded
-        var loaded = await loadEngine();
-        if (!loaded) {
-          showToast('AI engine not ready. Please refresh the page.', true);
-          return;
-        }
-
         processBtn.disabled = true;
         processingBar.style.display = 'block';
-        processingStatus.textContent = 'Removing background... This takes 15-30 seconds.';
+        processingStatus.textContent = 'Preparing...';
         resultStep.classList.add('hidden');
 
         try {
-          var config = {
+          // Ensure engine is loaded
+          await loadEngine();
+
+          if (!window.imglyBackgroundRemoval || !window.imglyBackgroundRemoval.removeBackground) {
+            throw new Error('AI engine not ready after loading.');
+          }
+
+          processingStatus.textContent = 'Removing background (15-30 sec)...';
+          
+          const config = {
             model: 'small',
             output: { format: 'image/png' }
           };
-
           if (bgType.value === 'color') {
             config.output.background = bgColor.value;
           }
 
-          resultBlob = await removeBackgroundFn(originalFile, config);
+          resultBlob = await window.imglyBackgroundRemoval.removeBackground(originalFile, config);
 
-          var url = URL.createObjectURL(resultBlob);
+          const url = URL.createObjectURL(resultBlob);
           resultPreview.src = url;
           resultStep.classList.remove('hidden');
           settingsStep.classList.add('hidden');
           showToast('✅ Background removed successfully!');
         } catch (err) {
-          console.error('Processing error:', err);
-          showToast('❌ Processing failed. Try a smaller image.', true);
+          console.error(err);
+          showToast('❌ ' + (err.message || 'Processing failed. Try a smaller image.'), true);
+          // If engine failed, reset loading flag so next time can retry
+          if (err.message.indexOf('Engine') !== -1) {
+            engineLoadingPromise = null;
+            engineReady = false;
+          }
         } finally {
           processingBar.style.display = 'none';
           processBtn.disabled = false;
@@ -250,15 +305,12 @@
 
       // ============ DOWNLOAD ============
       downloadBtn.addEventListener('click', function() {
-        if (!resultBlob) {
-          showToast('Nothing to download yet.', true);
-          return;
-        }
-        var name = (originalFile && originalFile.name ? originalFile.name : 'image').replace(/\.\w+$/, '') + '-nobg.png';
-        var url = URL.createObjectURL(resultBlob);
-        var a = document.createElement('a');
+        if (!resultBlob) { showToast('Nothing to download.', true); return; }
+        const filename = (originalFile && originalFile.name ? originalFile.name : 'image').replace(/\.\w+$/, '') + '-nobg.png';
+        const url = URL.createObjectURL(resultBlob);
+        const a = document.createElement('a');
         a.href = url;
-        a.download = name;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

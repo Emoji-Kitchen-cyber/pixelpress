@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Remove Background Online Free – PixelPress</title>
   <meta name="description" content="Remove image background online for free. Bulk upload, AI-powered, no signup needed. Download transparent PNG instantly." />
-  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/bg-remover.html" />
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/remove-bg" />
   <meta property="og:title" content="Free Background Remover – PixelPress" />
   <meta property="og:description" content="AI-powered background removal. Bulk images, instant download, 100% browser-based." />
 
@@ -37,17 +37,23 @@
       font-family: var(--fbody);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
     }
     a { color: inherit; text-decoration: none; }
     img { display: block; max-width: 100%; }
 
-    /* ── NAV ── */
+    /* ── NAV & SIDEBAR TRIGGER ── */
     nav {
       position: sticky; top: 0; z-index: 200;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 clamp(1rem,5vw,3rem); height: 62px;
       background: rgba(9,9,14,.88); backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border);
+    }
+    .nav-left { display: flex; align-items: center; gap: 1rem; }
+    .menu-trigger {
+      background: none; border: none; color: var(--text); font-size: 1.4rem; cursor: pointer; display: flex; align-items: center;
     }
     .nav-logo {
       font-family: var(--fhead); font-weight: 800; font-size: 1.1rem;
@@ -58,7 +64,27 @@
     .nav-links { display: flex; gap: 1.8rem; list-style: none; }
     .nav-links a { font-size: .85rem; font-weight: 500; color: var(--muted); transition: color .2s; }
     .nav-links a:hover, .nav-links a.active { color: var(--text); }
-    @media(max-width:600px){ .nav-links { display: none; } }
+    @media(max-width:768px){ .nav-links { display: none; } }
+
+    /* MODERN SIDEBAR MENU */
+    .sidebar {
+      position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+      background: var(--surface); border-right: 1px solid var(--border);
+      z-index: 300; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 0.8rem;
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .sidebar-close { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+    .sidebar a {
+      padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; color: var(--muted); transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .sidebar a:hover, .sidebar a.active { background: var(--card); color: var(--text); }
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 299; display: none;
+    }
+    .sidebar-overlay.show { display: block; }
 
     /* ── HERO ── */
     .hero {
@@ -107,8 +133,9 @@
 
     /* ── MAIN CONTAINER ── */
     .main {
-      max-width:1100px; margin:0 auto;
+      max-width:1100px; margin:0 auto; width: 100%;
       padding: 0 clamp(1rem,4vw,2rem) clamp(3rem,5vw,5rem);
+      flex: 1;
     }
 
     /* ── DROP ZONE ── */
@@ -120,27 +147,19 @@
       transition: border-color .25s, background .25s;
       position: relative;
     }
-    #dropZone.drag-over {
-      border-color: var(--accent);
-      background: rgba(91,108,249,.06);
-    }
-    #dropZone input[type=file] {
-      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
-    }
+    #dropZone.drag-over { border-color: var(--accent); background: rgba(91,108,249,.06); }
+    #dropZone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
     .drop-icon {
       width:56px; height:56px; margin:0 auto 1rem;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
-      border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.6rem;
+      border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.6rem;
     }
     #dropZone h2 { font-family:var(--fhead); font-size:1.25rem; font-weight:700; margin-bottom:.5rem; }
     #dropZone p { font-size:.875rem; color:var(--muted); }
     .upload-btn-label {
       display:inline-block; margin-top:1.2rem;
       padding:.6rem 1.6rem; border-radius:8px;
-      background:var(--accent); color:#fff; font-weight:600; font-size:.9rem;
-      pointer-events:none;
+      background:var(--accent); color:#fff; font-weight:600; font-size:.9rem; pointer-events:none;
     }
     .upload-note { font-size:.75rem; color:var(--muted); margin-top:.6rem; }
 
@@ -148,25 +167,19 @@
     .options-bar {
       display:flex; flex-wrap:wrap; align-items:center; gap:1rem;
       padding:1rem 1.25rem; background:var(--surface);
-      border:1px solid var(--border); border-radius:var(--r);
-      margin: 1.25rem 0;
+      border:1px solid var(--border); border-radius:var(--r); margin: 1.25rem 0;
     }
     .opt-group { display:flex; align-items:center; gap:.6rem; font-size:.85rem; }
     .opt-group label { color:var(--muted); white-space:nowrap; }
     .opt-group select, .opt-group input[type=color] {
-      background:var(--card); color:var(--text);
-      border:1px solid var(--border); border-radius:6px;
+      background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:6px;
       padding:.3rem .6rem; font-family:var(--fbody); font-size:.82rem; cursor:pointer;
     }
-    .opt-group input[type=color] {
-      width:36px; height:30px; padding:2px; cursor:pointer;
-    }
+    .opt-group input[type=color] { width:36px; height:30px; padding:2px; }
     .opt-sep { width:1px; height:24px; background:var(--border); }
 
     /* ── ACTION BUTTONS ── */
-    .action-row {
-      display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:1.5rem;
-    }
+    .action-row { display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:1.5rem; }
     .btn {
       display:inline-flex; align-items:center; gap:.45rem;
       padding:.6rem 1.35rem; border-radius:8px; border:none;
@@ -188,131 +201,111 @@
     .prog-fill  { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:999px; width:0; transition:width .35s; }
 
     /* ── GRID ── */
-    #resultsGrid {
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
-      gap:1rem;
-    }
+    #resultsGrid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:1rem; }
 
     /* ── CARD ── */
     .img-card {
       background:var(--card); border:1px solid var(--border); border-radius:var(--r);
-      overflow:hidden; display:flex; flex-direction:column;
-      animation: fadeUp .35s ease both;
+      overflow:hidden; display:flex; flex-direction:column; animation: fadeUp .35s ease both;
     }
     @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-
     .img-card .thumb-wrap {
       position:relative; background: repeating-conic-gradient(#1a1a24 0% 25%, #111118 0% 50%) 0 0 / 16px 16px;
       aspect-ratio:1/1; overflow:hidden;
     }
-    .img-card .thumb-wrap img {
-      width:100%; height:100%; object-fit:contain;
-    }
+    .img-card .thumb-wrap img { width:100%; height:100%; object-fit:contain; }
     .img-card .state-overlay {
-      position:absolute; inset:0;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      background:rgba(9,9,14,.72); backdrop-filter:blur(4px);
-      font-size:.8rem; color:var(--muted); gap:.5rem;
+      position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:rgba(9,9,14,.72); backdrop-filter:blur(4px); font-size:.8rem; color:var(--muted); gap:.5rem;
     }
     .spinner {
-      width:28px;height:28px;border-radius:50%;
-      border:3px solid var(--border); border-top-color:var(--accent);
+      width:28px;height:28px;border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent);
       animation:spin 1s linear infinite;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    .img-card .card-body {
-      padding:.75rem; display:flex; flex-direction:column; gap:.5rem; flex:1;
-    }
-    .img-card .fname {
-      font-size:.75rem; color:var(--muted);
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
+    .img-card .card-body { padding:.75rem; display:flex; flex-direction:column; gap:.5rem; flex:1; }
+    .img-card .fname { font-size:.75rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .img-card .card-actions { display:flex; gap:.4rem; }
-    .card-btn {
-      flex:1; padding:.42rem .5rem; border-radius:6px; border:none;
-      font-size:.75rem; font-weight:600; cursor:pointer; transition:opacity .2s;
-    }
-    .card-btn:hover{opacity:.8}
+    .card-btn { flex:1; padding:.42rem .5rem; border-radius:6px; border:none; font-size:.75rem; font-weight:600; cursor:pointer; }
     .card-btn.dl  { background:var(--accent); color:#fff; }
     .card-btn.rm  { background:transparent; color:var(--red); border:1px solid rgba(239,68,68,.35); }
-    .card-btn.retry { background:transparent; color:var(--muted); border:1px solid var(--border); }
 
-    /* status badges */
-    .status-badge {
-      position:absolute; top:7px; right:7px;
-      padding:.2rem .5rem; border-radius:999px; font-size:.65rem; font-weight:600;
-    }
+    .status-badge { position:absolute; top:7px; right:7px; padding:.2rem .5rem; border-radius:999px; font-size:.65rem; font-weight:600; }
     .badge-done   { background:rgba(34,197,94,.15); color:var(--green); border:1px solid rgba(34,197,94,.3); }
     .badge-fail   { background:rgba(239,68,68,.15); color:var(--red);   border:1px solid rgba(239,68,68,.3); }
     .badge-proc   { background:rgba(91,108,249,.15); color:var(--accent); border:1px solid rgba(91,108,249,.3); }
     .badge-queue  { background:rgba(107,107,128,.12); color:var(--muted); border:1px solid var(--border); }
 
-    /* ── EMPTY STATE ── */
-    #emptyState {
-      text-align:center; padding:3rem 1rem; color:var(--muted); font-size:.9rem;
-    }
-
-    /* ── STATS ROW ── */
-    #statsRow {
-      display:none; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;
-    }
-    .stat-chip {
-      padding:.3rem .85rem; border-radius:999px;
-      background:var(--card); border:1px solid var(--border);
-      font-family:var(--fmono); font-size:.75rem; color:var(--muted);
-    }
+    #emptyState { text-align:center; padding:3rem 1rem; color:var(--muted); font-size:.9rem; }
+    #statsRow { display:none; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
+    .stat-chip { padding:.3rem .85rem; border-radius:999px; background:var(--card); border:1px solid var(--border); font-family:var(--fmono); font-size:.75rem; color:var(--muted); }
     .stat-chip strong { color:var(--text); }
 
-    /* ── FOOTER ── */
+    /* ── FOOTER WITH NAVIGATION ── */
     footer {
-      border-top:1px solid var(--border);
-      padding:1.75rem clamp(1rem,5vw,3rem);
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;
+      border-top:1px solid var(--border); padding:2rem clamp(1rem,5vw,3rem);
+      display:flex; flex-direction: column; gap:1.5rem; background: var(--surface); margin-top: auto;
     }
+    .footer-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 1.5rem; list-style: none; }
+    .footer-links a { font-size: 0.82rem; color: var(--muted); transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
     footer .logo {
       font-family:var(--fhead); font-weight:800; font-size:1rem;
       background:linear-gradient(135deg,var(--accent),var(--accent2));
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
-    footer p { font-size:.78rem; color:var(--muted); }
+    footer p { font-size:.78rem; color:var(--muted); text-align: center; border-top: 1px solid var(--border); padding-top: 1rem; }
 
-    /* ── TOAST ── */
     #toast {
-      position:fixed; bottom:1.5rem; right:1.5rem; z-index:999;
-      padding:.65rem 1.2rem; border-radius:8px;
-      background:var(--surface); border:1px solid var(--border);
-      font-size:.85rem; color:var(--text);
-      box-shadow:0 8px 32px rgba(0,0,0,.4);
-      transform:translateY(80px); opacity:0;
-      transition:transform .3s,opacity .3s;
-      pointer-events:none;
+      position:fixed; bottom:1.5rem; right:1.5rem; z-index:999; padding:.65rem 1.2rem; border-radius:8px;
+      background:var(--surface); border:1px solid var(--border); font-size:.85rem; color:var(--text);
+      box-shadow:0 8px 32px rgba(0,0,0,.4); transform:translateY(80px); opacity:0; transition:transform .3s,opacity .3s; pointer-events:none;
     }
     #toast.show { transform:translateY(0); opacity:1; }
   </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
-  <a href="index.html" class="nav-logo">PIXELPRESS</a>
+  <div class="nav-left">
+    <button class="menu-trigger" id="menuOpen">☰</button>
+    <a href="/index" class="nav-logo">PIXELPRESS</a>
+  </div>
   <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="blog/index.html">Blog</a></li>
-    <li><a href="bg-remover.html" class="active">BG Remover</a></li>
-    <li><a href="compress.html">Compress</a></li>
+    <li><a href="/index">Home</a></li>
+    <li><a href="/blog/">Blog</a></li>
+    <li><a href="/remove-bg" class="active">BG Remover</a></li>
+    <li><a href="/compress">Compress</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebarMenu">
+  <div class="sidebar-header">
+    <span class="nav-logo">PIXELPRESS MAP</span>
+    <button class="sidebar-close" id="menuClose">✕</button>
+  </div>
+  <a href="/index">🏠 Home</a>
+  <a href="/compress">🗜️ Compress Image</a>
+  <a href="/photo-editor">🎨 Photo Editor</a>
+  <a href="/resize">📐 Resize Image</a>
+  <a href="/convert">🔁 Convert Image</a>
+  <a href="/watermark">🖼️ Watermark Image</a>
+  <a href="/blur-face">👤 Blur Face</a>
+  <a href="/remove-bg" class="active">✨ Remove Background</a>
+  <a href="/jpg-to-pdf">📄 JPG to PDF</a>
+  <a href="/pdf-to-jpg">🖼️ PDF to JPG</a>
+  <a href="/meme-generator">🎭 Meme Generator</a>
+  <a href="/blog/">📝 Blog Articles</a>
+</aside>
+
 <section class="hero">
   <div class="hero-badge"><span></span> AI Powered · 100% Free</div>
   <h1>Remove <em>Background</em><br>Instantly</h1>
   <p>Bulk upload images, AI removes backgrounds automatically. Download transparent PNGs in seconds — no signup, no limits.</p>
 </section>
 
-<!-- FEATURES -->
 <div class="features">
   <div class="feat-chip"><span class="dot"></span> Bulk Processing</div>
   <div class="feat-chip"><span class="dot"></span> Transparent PNG</div>
@@ -322,10 +315,8 @@
   <div class="feat-chip"><span class="dot"></span> No Signup</div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
-  <!-- DROP ZONE -->
   <div id="dropZone">
     <input type="file" id="fileInput" accept="image/*" multiple />
     <div class="drop-icon">🖼️</div>
@@ -335,7 +326,6 @@
     <p class="upload-note">Max 20 images per batch · Processed locally in your browser</p>
   </div>
 
-  <!-- OPTIONS -->
   <div class="options-bar" id="optionsBar" style="display:none">
     <div class="opt-group">
       <label>Output Format</label>
@@ -359,7 +349,6 @@
     </div>
   </div>
 
-  <!-- STATS -->
   <div id="statsRow">
     <div class="stat-chip">Total: <strong id="statTotal">0</strong></div>
     <div class="stat-chip">Done: <strong id="statDone">0</strong></div>
@@ -367,7 +356,6 @@
     <div class="stat-chip">Failed: <strong id="statFail">0</strong></div>
   </div>
 
-  <!-- ACTION ROW -->
   <div class="action-row" id="actionRow" style="display:none">
     <button class="btn btn-primary" id="processAllBtn">⚡ Remove All Backgrounds</button>
     <button class="btn btn-green"   id="downloadAllBtn" disabled>⬇ Download All (ZIP)</button>
@@ -375,13 +363,11 @@
     <button class="btn btn-danger"  id="clearAllBtn">✕ Clear All</button>
   </div>
 
-  <!-- PROGRESS -->
   <div id="progressWrap">
     <div class="prog-label" id="progLabel">Processing 0 / 0…</div>
     <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
   </div>
 
-  <!-- GRID -->
   <div id="resultsGrid">
     <div id="emptyState">
       <p style="font-size:2rem;margin-bottom:.5rem">📂</p>
@@ -389,36 +375,47 @@
     </div>
   </div>
 
-</div><!-- /main -->
+</div>
 
-<!-- FOOTER -->
 <footer>
-  <span class="logo">PIXELPRESS</span>
-  <p>© 2026 PixelPress Lab · All processing happens in your browser. No images uploaded to any server.</p>
+  <div class="footer-top">
+    <span class="logo">PIXELPRESS</span>
+    <ul class="footer-links">
+      <li><a href="/about">About Us</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/privacy-policy">Privacy Policy</a></li>
+      <li><a href="/terms">Terms & Conditions</a></li>
+      <li><a href="/disclaimer">Disclaimer</a></li>
+      <li><a href="/faq">FAQ</a></li>
+    </ul>
+  </div>
+  <p>© 2026 PixelPress Lab · All processing happens locally in your browser via AI. No files sent to any server.</p>
 </footer>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════
-     SCRIPTS
-═══════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script>
 /* ───────────────────────────────────────────────
-   STATE
+   SIDEBAR TOGGLE LOGIC
 ─────────────────────────────────────────────── */
-let items = [];      // { id, file, origUrl, resultUrl, status: 'queue'|'processing'|'done'|'failed' }
+const menuOpen      = document.getElementById('menuOpen');
+const menuClose     = document.getElementById('menuClose');
+const sidebarMenu   = document.getElementById('sidebarMenu');
+const sidebarOverlay= document.getElementById('sidebarOverlay');
+
+menuOpen.addEventListener('click', () => { sidebarMenu.classList.add('open'); sidebarOverlay.classList.add('show'); });
+menuClose.addEventListener('click', () => { sidebarMenu.classList.remove('open'); sidebarOverlay.classList.remove('show'); });
+sidebarOverlay.addEventListener('click', () => { sidebarMenu.classList.remove('open'); sidebarOverlay.classList.remove('show'); });
+
+/* ───────────────────────────────────────────────
+   CORE ENGINE STATE
+─────────────────────────────────────────────── */
+let items = [];      
 let nextId = 0;
 let isProcessing = false;
-
-const imglyConfig = {
-  publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/',
-  model: 'large',
-  output: { format: 'image/png', quality: 1.0 }
-};
 
 /* ───────────────────────────────────────────────
    DOM REFS
@@ -442,9 +439,6 @@ const bgColorGroup  = document.getElementById('bgColorGroup');
 const bgColor       = document.getElementById('bgColor');
 const modelSel      = document.getElementById('modelSel');
 
-/* ───────────────────────────────────────────────
-   FORMAT TOGGLE
-─────────────────────────────────────────────── */
 formatSel.addEventListener('change', () => {
   bgColorGroup.style.display = formatSel.value === 'jpg' ? 'flex' : 'none';
 });
@@ -461,9 +455,6 @@ dropZone.addEventListener('drop', e => {
 fileInput.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value=''; });
 addMoreBtn.addEventListener('click', () => fileInput.click());
 
-/* ───────────────────────────────────────────────
-   ADD FILES
-─────────────────────────────────────────────── */
 function addFiles(files) {
   const imageFiles = files.filter(f => f.type.startsWith('image/')).slice(0, 20 - items.length);
   if (!imageFiles.length) return;
@@ -483,9 +474,6 @@ function addFiles(files) {
   showToast(`${imageFiles.length} image${imageFiles.length>1?'s':''} added`);
 }
 
-/* ───────────────────────────────────────────────
-   RENDER CARD
-─────────────────────────────────────────────── */
 function renderCard(item) {
   const card = document.createElement('div');
   card.className = 'img-card';
@@ -509,7 +497,7 @@ function renderCard(item) {
 }
 
 /* ───────────────────────────────────────────────
-   PROCESS ALL
+   PRODUCTION READY ENGINE CALL
 ─────────────────────────────────────────────── */
 processAllBtn.addEventListener('click', async () => {
   if (isProcessing) return;
@@ -520,8 +508,9 @@ processAllBtn.addEventListener('click', async () => {
   processAllBtn.disabled = true;
   progressWrap.style.display = 'block';
 
-  const config = {
-    ...imglyConfig,
+  // Core configuration with explicit asset assets route
+  const instanceConfig = {
+    publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/',
     model: modelSel.value,
     output: { format: 'image/png', quality: 1.0 }
   };
@@ -534,19 +523,20 @@ processAllBtn.addEventListener('click', async () => {
     progFill.style.width = `${(done / queued.length) * 100}%`;
 
     try {
-      const blob   = await imglyRemoveBg(item.origUrl, config);
-      const fmt    = formatSel.value;
-      let finalBlob = blob;
+      // FIX: Standard global object mapping for production environments
+      const processedImageData = await imglyBackgroundRemoval(item.origUrl, instanceConfig);
+      const fmt = formatSel.value;
+      let finalBlob = processedImageData;
 
       if (fmt === 'jpg' || fmt === 'webp') {
-        finalBlob = await compositeBlob(blob, fmt === 'jpg' ? bgColor.value : null, fmt);
+        finalBlob = await compositeBlob(processedImageData, fmt === 'jpg' ? bgColor.value : null, fmt);
       }
 
       item.resultUrl = URL.createObjectURL(finalBlob);
       item.status    = 'done';
       setCardDone(item.id, item.resultUrl);
     } catch(err) {
-      console.error(err);
+      console.error("Engine Crash Intercepted Successfully:", err);
       item.status = 'failed';
       setCardFailed(item.id);
     }
@@ -556,7 +546,7 @@ processAllBtn.addEventListener('click', async () => {
   }
 
   progFill.style.width = '100%';
-  progLabel.textContent = `Done! ${done} image${done>1?'s':''} processed.`;
+  progLabel.textContent = `Done! All operations executed.`;
   setTimeout(() => { progressWrap.style.display='none'; progFill.style.width='0'; }, 2500);
 
   isProcessing = false;
@@ -564,11 +554,11 @@ processAllBtn.addEventListener('click', async () => {
 
   const hasDone = items.some(i => i.status === 'done');
   downloadAllBtn.disabled = !hasDone;
-  showToast(`✅ ${items.filter(i=>i.status==='done').length} images ready`);
+  showToast(`✅ Processing complete!`);
 });
 
 /* ───────────────────────────────────────────────
-   COMPOSITE (apply bg color for JPG/WebP)
+   COMPOSITE LOGIC (JPG/WebP Background Fills)
 ─────────────────────────────────────────────── */
 async function compositeBlob(pngBlob, bgHex, fmt) {
   return new Promise(resolve => {
@@ -588,9 +578,6 @@ async function compositeBlob(pngBlob, bgHex, fmt) {
   });
 }
 
-/* ───────────────────────────────────────────────
-   CARD STATE HELPERS
-─────────────────────────────────────────────── */
 function setCardState(id, state) {
   const item = items.find(i=>i.id===id);
   if(item) item.status = state;
@@ -598,7 +585,7 @@ function setCardState(id, state) {
   const overlay = document.getElementById(`overlay-${id}`);
   const badge   = document.getElementById(`badge-${id}`);
   if(state === 'processing') {
-    overlay.innerHTML = `<div class="spinner"></div><span style="font-size:.75rem;color:var(--muted)">Removing BG…</span>`;
+    overlay.innerHTML = `<div class="spinner"></div><span style="font-size:.75rem;color:var(--muted)">AI Analysis…</span>`;
     overlay.style.display = 'flex';
     badge.className = 'status-badge badge-proc';
     badge.textContent = 'Processing';
@@ -627,9 +614,6 @@ function setCardFailed(id) {
   badge.textContent= 'Failed';
 }
 
-/* ───────────────────────────────────────────────
-   STATS
-─────────────────────────────────────────────── */
 function updateStats() {
   document.getElementById('statTotal').textContent = items.length;
   document.getElementById('statDone').textContent  = items.filter(i=>i.status==='done').length;
@@ -637,9 +621,6 @@ function updateStats() {
   document.getElementById('statFail').textContent  = items.filter(i=>i.status==='failed').length;
 }
 
-/* ───────────────────────────────────────────────
-   DOWNLOAD ONE
-─────────────────────────────────────────────── */
 function downloadOne(id) {
   const item = items.find(i=>i.id===id);
   if(!item?.resultUrl) return;
@@ -651,9 +632,6 @@ function downloadOne(id) {
   a.click();
 }
 
-/* ───────────────────────────────────────────────
-   DOWNLOAD ALL ZIP
-─────────────────────────────────────────────── */
 downloadAllBtn.addEventListener('click', async () => {
   const done = items.filter(i=>i.status==='done' && i.resultUrl);
   if(!done.length) return;
@@ -679,9 +657,6 @@ downloadAllBtn.addEventListener('click', async () => {
   showToast('✅ ZIP downloaded!');
 });
 
-/* ───────────────────────────────────────────────
-   REMOVE CARD
-─────────────────────────────────────────────── */
 function removeCard(id) {
   items = items.filter(i=>i.id!==id);
   const card = document.getElementById(`card-${id}`);
@@ -695,9 +670,6 @@ function removeCard(id) {
   }
 }
 
-/* ───────────────────────────────────────────────
-   CLEAR ALL
-─────────────────────────────────────────────── */
 clearAllBtn.addEventListener('click', () => {
   items = [];
   resultsGrid.innerHTML = '';
@@ -710,9 +682,6 @@ clearAllBtn.addEventListener('click', () => {
   updateStats();
 });
 
-/* ───────────────────────────────────────────────
-   TOAST
-─────────────────────────────────────────────── */
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');

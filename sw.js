@@ -1,15 +1,43 @@
-const CACHE_NAME = 'pixelpress-cache-v3'; // Incremented to v3 to completely destroy the v1/v2 loop
+const CACHE_NAME = 'pixelpress-cache-v4'; // Incremented to v4 to destroy previous loops completely
 
-// Assets to cache for offline availability
+// Assets to cache including clean URLs
 const ASSETS_TO_CACHE = [
   '/',
+  '/index',
   '/index.html',
+  '/about',
   '/about.html',
+  '/contact',
   '/contact.html',
+  '/faq',
   '/faq.html',
+  '/privacy-policy',
   '/privacy-policy.html',
+  '/terms',
   '/terms.html',
+  '/disclaimer',
   '/disclaimer.html',
+  '/compress',
+  '/compress.html',
+  '/photo-editor',
+  '/photo-editor.html',
+  '/resize',
+  '/resize.html',
+  '/convert',
+  '/convert.html',
+  '/watermark',
+  '/watermark.html',
+  '/blur-face',
+  '/blur-face.html',
+  '/remove-bg',
+  '/remove-bg.html',
+  '/jpg-to-pdf',
+  '/jpg-to-pdf.html',
+  '/pdf-to-jpg',
+  '/pdf-to-jpg.html',
+  '/meme-generator',
+  '/meme-generator.html',
+  '/blog/',
   '/blog/index.html',
   '/manifest.json'
 ];
@@ -19,7 +47,10 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       console.log('[Service Worker] Pre-caching core assets');
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Using setting that doesn't fail if one file is missing temporarily
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.log('Failed to cache:', url, err)))
+      );
     }).then(() => self.skipWaiting())
   );
 });
@@ -36,18 +67,20 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim()) // Forces immediate control without reload
+    }).then(() => self.clients.claim())
   );
 });
 
-// Fetch Event - Network First with automatic cache fallback
+// Fetch Event - Network First Strategy with strict falling back
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  // Ignore browser extensions or external ad requests to prevent crashes
+  if (!event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
     fetch(event.request)
       .then(networkResponse => {
-        // If network is online, clone response into cache
         if (networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -57,8 +90,17 @@ self.addEventListener('fetch', event => {
         return networkResponse;
       })
       .catch(() => {
-        // If offline or network fails, fall back to cache
-        return caches.match(event.request);
+        // If network fails (Offline mode), try to find exact match or extension fallback
+        return caches.match(event.request).then(cachedResponse => {
+          if (cachedResponse) return cachedResponse;
+          
+          // Try adding .html fallback logically in cache
+          const urlObj = new URL(event.request.url);
+          if (!urlObj.pathname.endsWith('/') && !urlObj.pathname.includes('.')) {
+            return caches.match(urlObj.pathname + '.html');
+          }
+        });
       })
   );
 });
+

@@ -76,8 +76,8 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- @imgly/background-removal CDN (UMD build) -->
-  <script src="https://unpkg.com/@imgly/background-removal@1.7.0/dist/index.umd.js"></script>
+  <!-- Library - STABLE VERSION -->
+  <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
   <script src="js/common.js"></script>
   <script>
     (function() {
@@ -85,21 +85,40 @@
       let originalImage = null;
       let originalFile = null;
       let resultBlob = null;
+      let libraryReady = false;
 
       // ---- DOM refs ----
-      const uploadZone = $('upload-zone');
-      const fileInput = $('file-input');
-      const settingsStep = $('settings-step');
-      const resultStep = $('result-step');
-      const processBtn = $('process-btn');
-      const processingBar = $('processing-bar');
-      const bgType = $('bg-type');
-      const bgColor = $('bg-color');
-      const originalPreview = $('original-preview');
-      const resultPreview = $('result-preview');
-      const downloadBtn = $('download-btn');
-      const newImageBtn = $('new-image-btn');
-      const toast = $('toast');
+      const uploadZone = document.getElementById('upload-zone');
+      const fileInput = document.getElementById('file-input');
+      const settingsStep = document.getElementById('settings-step');
+      const resultStep = document.getElementById('result-step');
+      const processBtn = document.getElementById('process-btn');
+      const processingBar = document.getElementById('processing-bar');
+      const bgType = document.getElementById('bg-type');
+      const bgColor = document.getElementById('bg-color');
+      const originalPreview = document.getElementById('original-preview');
+      const resultPreview = document.getElementById('result-preview');
+      const downloadBtn = document.getElementById('download-btn');
+      const newImageBtn = document.getElementById('new-image-btn');
+      const toast = document.getElementById('toast');
+
+      // ---- Check if library loaded ----
+      window.addEventListener('load', () => {
+        if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
+          libraryReady = true;
+          console.log('✅ Background removal library ready');
+        } else {
+          console.error('❌ Library not found on window.imglyBackgroundRemoval');
+          showToast('⚠️ Background removal engine loading... Please wait or refresh.', false);
+          // Retry after 3 seconds
+          setTimeout(() => {
+            if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
+              libraryReady = true;
+              console.log('✅ Library loaded after delay');
+            }
+          }, 3000);
+        }
+      });
 
       // ---- File Validation ----
       const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -121,21 +140,40 @@
         toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
       }
 
-      // ---- Upload handling (reusing common.js pattern) ----
-      setupUpload('upload-zone', 'file-input', (img, file) => {
+      // ---- Upload handling ----
+      uploadZone.addEventListener('click', () => fileInput.click());
+      uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+      uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+      uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFile(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+      function handleFile(file) {
+        if (!file) return;
         const error = validateFile(file);
         if (error) {
           showToast(error, true);
           return;
         }
-        originalImage = img;
-        originalFile = file;
-        originalPreview.src = img.src;
-        settingsStep.classList.remove('hidden');
-        resultStep.classList.add('hidden');
-        processingBar.style.display = 'none';
-        processBtn.disabled = false;
-      });
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            originalImage = img;
+            originalFile = file;
+            originalPreview.src = img.src;
+            settingsStep.classList.remove('hidden');
+            resultStep.classList.add('hidden');
+            processingBar.style.display = 'none';
+            processBtn.disabled = false;
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
 
       // ---- Background Type Toggle ----
       bgType.addEventListener('change', () => {
@@ -149,37 +187,37 @@
           return;
         }
 
+        if (!libraryReady) {
+          showToast('⚠️ Engine still loading. Please wait a few seconds and try again.', true);
+          return;
+        }
+
         processBtn.disabled = true;
         processingBar.style.display = 'block';
         resultStep.classList.add('hidden');
 
         try {
-          // Access the UMD global
-          const { removeBackground } = window.imglyBackgroundRemoval || {};
-          if (!removeBackground) throw new Error('Background removal library failed to load.');
-
-          // Prepare config
+          const removeBackground = window.imglyBackgroundRemoval.removeBackground;
+          
           const config = {
-            model: 'medium',   // 'small' (fast), 'medium' (balanced), 'large' (best quality)
+            model: 'medium',
             output: { format: 'image/png' }
           };
 
-          // Add background if not transparent
           if (bgType.value === 'color') {
             config.output.background = bgColor.value;
           }
 
-          // Convert image to Blob if needed (the library can handle File, Blob, or URL)
-          const imageBlob = originalFile || await fetch(originalImage.src).then(r => r.blob());
+          const imageBlob = originalFile;
           resultBlob = await removeBackground(imageBlob, config);
 
-          // Display result
           resultPreview.src = URL.createObjectURL(resultBlob);
           resultStep.classList.remove('hidden');
+          settingsStep.classList.add('hidden');
           showToast('✅ Background removed successfully!');
         } catch (err) {
           console.error('Remove BG error:', err);
-          showToast('❌ Processing failed: ' + (err.message || 'Unknown error. Try a different image.'), true);
+          showToast('❌ Processing failed: ' + (err.message || 'Try a different image or smaller size.'), true);
         } finally {
           processingBar.style.display = 'none';
           processBtn.disabled = false;
@@ -193,7 +231,12 @@
           return;
         }
         const filename = (originalFile?.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
-        downloadBlob(resultBlob, filename);
+        const url = URL.createObjectURL(resultBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
       });
 
       // ---- New Image ----

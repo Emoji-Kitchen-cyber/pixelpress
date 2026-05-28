@@ -1,20 +1,29 @@
-const input = document.getElementById('fileInput');
-const img = document.getElementById('img');
+const fileInput = document.getElementById('fileInput');
+const image = document.getElementById('image');
+const editor = document.getElementById('editorArea');
 let cropper;
-input.onchange = (e) => {
+
+document.getElementById('dropZone').onclick = () => fileInput.click();
+
+fileInput.onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
-    img.src = e.target.result;
-    document.getElementById('editor').style.display = 'block';
-    cropper = new Cropper(img, { aspectRatio: NaN });
+  reader.onload = (event) => {
+    image.src = event.target.result;
+    editor.style.display = 'block';
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(image, { aspectRatio: NaN, viewMode: 1 });
   };
-  reader.readAsDataURL(e.target.files[0]);
+  reader.readAsDataURL(file);
 };
-document.getElementById('save').onclick = () => {
+
+document.getElementById('cropBtn').onclick = () => {
   const canvas = cropper.getCroppedCanvas();
   const link = document.createElement('a');
-  link.download = 'cropped.png';
-  link.href = canvas.toDataURL();
+  link.download = 'pixelpress-crop.png';
+  link.href = canvas.toDataURL('image/png');
   link.click();
 };
+
 

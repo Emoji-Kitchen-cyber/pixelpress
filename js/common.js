@@ -53,3 +53,9 @@ function hideProcessing(containerId) {
   const el = $(containerId);
   if (el) el.style.display = 'none';
 }
+
+// Global error logger for monitoring (development & debugging)
+window.onerror = function(msg, url, line) {
+  console.error('Global error:', msg, 'at', url, 'line', line);
+  // Optional: send error to a logging service in the future
+};

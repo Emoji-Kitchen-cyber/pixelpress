@@ -37,7 +37,7 @@
       <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden>
     </div>
 
-    <!-- STEP 2: Process -->
+    <!-- STEP 2: Settings -->
     <div class="workflow-step hidden" id="settings-step">
       <h2>2. Background Options</h2>
       <div class="bg-options">
@@ -50,7 +50,7 @@
       <button class="btn-primary" id="process-btn" style="margin-top:16px;">✨ Remove Background</button>
       <div class="processing-bar" id="processing-bar">
         <div class="spinner"></div>
-        <p id="processing-status">Loading AI engine... Please wait.</p>
+        <p id="processing-status">Loading AI engine...</p>
       </div>
     </div>
 
@@ -76,21 +76,17 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- Load library as ES module -->
-  <script type="module">
-    import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.esm.js';
-    window.removeBackgroundFn = removeBackground;
-    window.dispatchEvent(new Event('bgremoval-ready'));
-    console.log('✅ Background removal engine loaded');
-  </script>
-
   <script>
     (function() {
+      // ============ STATE ============
       let originalImage = null;
       let originalFile = null;
       let resultBlob = null;
+      let removeBackgroundFn = null;
+      let engineLoading = false;
       let engineReady = false;
 
+      // ============ DOM REFS ============
       const uploadZone = document.getElementById('upload-zone');
       const fileInput = document.getElementById('file-input');
       const settingsStep = document.getElementById('settings-step');
@@ -106,53 +102,89 @@
       const newImageBtn = document.getElementById('new-image-btn');
       const toast = document.getElementById('toast');
 
-      // Listen for engine ready
-      window.addEventListener('bgremoval-ready', () => {
-        engineReady = true;
-        console.log('Engine confirmed ready');
-      });
-
-      // Fallback: check after 5 seconds
-      setTimeout(() => {
-        if (!engineReady && window.removeBackgroundFn) {
-          engineReady = true;
-        }
-      }, 5000);
-
+      // ============ TOAST ============
       function showToast(msg, isError = false) {
         toast.textContent = msg;
         toast.className = 'toast' + (isError ? ' error' : '');
         toast.style.display = 'block';
         clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        toast._timeout = setTimeout(function() { toast.style.display = 'none'; }, 4000);
       }
 
-      // Upload handling
-      uploadZone.addEventListener('click', () => fileInput.click());
-      uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-      uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-      uploadZone.addEventListener('drop', e => {
+      // ============ ENGINE LOADER ============
+      async function loadEngine() {
+        // Already ready
+        if (engineReady) return true;
+
+        // Already loading — wait for it
+        if (engineLoading) {
+          return new Promise(function(resolve) {
+            var check = setInterval(function() {
+              if (engineReady) { clearInterval(check); resolve(true); }
+              if (!engineLoading && !engineReady) { clearInterval(check); resolve(false); }
+            }, 300);
+          });
+        }
+
+        // Start loading
+        engineLoading = true;
+        processingStatus.textContent = 'Loading AI engine... Please wait.';
+
+        try {
+          var module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.esm.js');
+          removeBackgroundFn = module.removeBackground;
+          engineReady = true;
+          engineLoading = false;
+          console.log('✅ Remove BG engine ready');
+          return true;
+        } catch (err) {
+          console.error('Engine load error:', err);
+          engineLoading = false;
+          showToast('Failed to load AI engine. Please refresh and try again.', true);
+          return false;
+        }
+      }
+
+      // Start loading immediately in background
+      loadEngine();
+
+      // ============ UPLOAD HANDLING ============
+      uploadZone.addEventListener('click', function() { fileInput.click(); });
+
+      uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+      });
+
+      uploadZone.addEventListener('dragleave', function() {
+        uploadZone.classList.remove('dragover');
+      });
+
+      uploadZone.addEventListener('drop', function(e) {
         e.preventDefault();
         uploadZone.classList.remove('dragover');
         handleFile(e.dataTransfer.files[0]);
       });
-      fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+      fileInput.addEventListener('change', function() {
+        handleFile(fileInput.files[0]);
+      });
 
       function handleFile(file) {
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-          showToast('Please upload an image file.', true);
+          showToast('Please upload an image file (JPG, PNG, WEBP).', true);
           return;
         }
         if (file.size > 10 * 1024 * 1024) {
-          showToast('File too large. Max 10MB.', true);
+          showToast('File too large. Maximum 10MB allowed.', true);
           return;
         }
-        
-        const reader = new FileReader();
-        reader.onload = () => {
-          const img = new Image();
-          img.onload = () => {
+
+        var reader = new FileReader();
+        reader.onload = function() {
+          var img = new Image();
+          img.onload = function() {
             originalImage = img;
             originalFile = file;
             originalPreview.src = img.src;
@@ -166,33 +198,33 @@
         reader.readAsDataURL(file);
       }
 
-      bgType.addEventListener('change', () => {
+      // ============ BACKGROUND TYPE TOGGLE ============
+      bgType.addEventListener('change', function() {
         bgColor.style.display = bgType.value === 'color' ? 'inline-block' : 'none';
       });
 
-      // Process button
-      processBtn.addEventListener('click', async () => {
+      // ============ PROCESS ============
+      processBtn.addEventListener('click', async function() {
         if (!originalImage) {
-          showToast('Upload an image first.', true);
+          showToast('Please upload an image first.', true);
           return;
         }
 
-        if (!engineReady && !window.removeBackgroundFn) {
-          showToast('AI engine still loading. Please wait 10 seconds and try again.', true);
+        // Ensure engine is loaded
+        var loaded = await loadEngine();
+        if (!loaded) {
+          showToast('AI engine not ready. Please refresh the page.', true);
           return;
         }
 
         processBtn.disabled = true;
         processingBar.style.display = 'block';
-        processingStatus.textContent = 'Removing background... 15-30 seconds';
+        processingStatus.textContent = 'Removing background... This takes 15-30 seconds.';
         resultStep.classList.add('hidden');
 
         try {
-          const removeBgFn = window.removeBackgroundFn;
-          if (!removeBgFn) throw new Error('Engine not available');
-
-          const config = {
-            model: 'small',  // 'small' is faster, less memory
+          var config = {
+            model: 'small',
             output: { format: 'image/png' }
           };
 
@@ -200,36 +232,41 @@
             config.output.background = bgColor.value;
           }
 
-          resultBlob = await removeBgFn(originalFile, config);
+          resultBlob = await removeBackgroundFn(originalFile, config);
 
-          const url = URL.createObjectURL(resultBlob);
+          var url = URL.createObjectURL(resultBlob);
           resultPreview.src = url;
           resultStep.classList.remove('hidden');
           settingsStep.classList.add('hidden');
-          showToast('✅ Background removed!');
+          showToast('✅ Background removed successfully!');
         } catch (err) {
-          console.error('Error:', err);
-          showToast('❌ Failed. Try a smaller image or different format.', true);
+          console.error('Processing error:', err);
+          showToast('❌ Processing failed. Try a smaller image.', true);
         } finally {
           processingBar.style.display = 'none';
           processBtn.disabled = false;
         }
       });
 
-      // Download
-      downloadBtn.addEventListener('click', () => {
-        if (!resultBlob) return;
-        const name = (originalFile?.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
-        const url = URL.createObjectURL(resultBlob);
-        const a = document.createElement('a');
+      // ============ DOWNLOAD ============
+      downloadBtn.addEventListener('click', function() {
+        if (!resultBlob) {
+          showToast('Nothing to download yet.', true);
+          return;
+        }
+        var name = (originalFile && originalFile.name ? originalFile.name : 'image').replace(/\.\w+$/, '') + '-nobg.png';
+        var url = URL.createObjectURL(resultBlob);
+        var a = document.createElement('a');
         a.href = url;
         a.download = name;
+        document.body.appendChild(a);
         a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
       });
 
-      // New image
-      newImageBtn.addEventListener('click', () => {
+      // ============ NEW IMAGE ============
+      newImageBtn.addEventListener('click', function() {
         settingsStep.classList.add('hidden');
         resultStep.classList.add('hidden');
         originalImage = null;
@@ -238,9 +275,12 @@
           URL.revokeObjectURL(resultPreview.src);
         }
         resultBlob = null;
+        resultPreview.src = '';
+        originalPreview.src = '';
         fileInput.value = '';
         processingBar.style.display = 'none';
       });
+
     })();
   </script>
 </body>

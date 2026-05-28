@@ -2,119 +2,211 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Background Changer - Safe for your website</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remove Background — PixelPress</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Yeh styles sirf is page par apply hongi, baaki site ko nahi chhedti */
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 2rem auto;
-      text-align: center;
-    }
-    canvas, img {
-      max-width: 100%;
-      margin-top: 1rem;
-      border: 1px solid #ccc;
-    }
-    .controls {
-      margin: 1rem 0;
-    }
-    input, select, button {
-      margin: 0.3rem;
-    }
+    .result-container { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
+    .result-card { flex: 1 1 250px; background: #fff; border-radius: 12px; padding: 16px; border: 1px solid #e5e7eb; text-align: center; }
+    .result-card img { max-width: 100%; max-height: 250px; border-radius: 8px; object-fit: contain; }
+    .bg-options { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .bg-options input[type="color"] { width: 60px; height: 40px; padding: 2px; border-radius: 8px; border: 1px solid #d1d5db; cursor: pointer; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .toast.error { background: #dc2626; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <h2>🖼️ Background Remover & Changer</h2>
+  <header class="main-header">
+    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
+    <button class="btn-outline" onclick="history.back()">← Back</button>
+  </header>
 
-  <div>
-    <input type="file" id="imageInput" accept="image/*" />
-  </div>
+  <main class="tool-page">
+    <h1>🫥 Remove Background</h1>
+    <p style="color:#6b7280; margin-bottom: 24px;">AI-powered background removal. 100% client-side — your images never leave your device.</p>
 
-  <div class="controls">
-    <label>Naya background:</label>
-    <select id="bgType">
-      <option value="color">Solid Color</option>
-      <option value="image">Image URL</option>
-    </select>
+    <!-- STEP 1: Upload -->
+    <div class="workflow-step">
+      <h2>1. Upload Image</h2>
+      <div class="upload-zone" id="upload-zone">
+        <div class="icon">📤</div>
+        <p>Click or drag & drop an image here</p>
+        <p style="font-size:0.8rem; color:#9ca3af;">JPG, PNG, WEBP (max 10MB)</p>
+      </div>
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden>
+    </div>
 
-    <input type="color" id="bgColor" value="#00aaff" />
-    <input type="text" id="bgImageUrl" placeholder="Image URL yahan paste karein" style="display:none;" />
-  </div>
+    <!-- STEP 2: Settings (shown after upload) -->
+    <div class="workflow-step hidden" id="settings-step">
+      <h2>2. Background Options</h2>
+      <div class="bg-options">
+        <select id="bg-type" class="form-select" style="padding:10px 14px; border-radius:8px; border:1px solid #d1d5db;">
+          <option value="transparent">Transparent (PNG)</option>
+          <option value="color">Solid Color</option>
+        </select>
+        <input type="color" id="bg-color" value="#ffffff">
+      </div>
+      <button class="btn-primary" id="process-btn" style="margin-top:16px;">✨ Remove Background</button>
+      <div class="processing-bar" id="processing-bar">
+        <div class="spinner"></div>
+        <p>Removing background... this may take 15-30 seconds.</p>
+      </div>
+    </div>
 
-  <button id="processBtn">Change Background</button>
-  <p id="status"></p>
+    <!-- STEP 3: Result -->
+    <div class="workflow-step hidden" id="result-step">
+      <h2>3. Download Result</h2>
+      <div class="result-container">
+        <div class="result-card">
+          <p style="font-weight:600; margin-bottom:8px;">Original</p>
+          <img id="original-preview" alt="Original">
+        </div>
+        <div class="result-card">
+          <p style="font-weight:600; margin-bottom:8px;">Background Removed</p>
+          <img id="result-preview" alt="Result">
+        </div>
+      </div>
+      <div class="download-section">
+        <button class="btn-primary" id="download-btn">⬇ Download PNG</button>
+        <button class="btn-outline" id="new-image-btn" style="margin-left:12px;">🔄 Try Another Image</button>
+      </div>
+    </div>
+  </main>
 
-  <div>
-    <h3>Result:</h3>
-    <img id="outputImage" />
-  </div>
+  <div class="toast" id="toast"></div>
 
-  <!-- Library ko CDN se lao – isse koi server load nahi, aur model 404 ki tension nahi -->
+  <!-- @imgly/background-removal CDN (UMD build) -->
   <script src="https://unpkg.com/@imgly/background-removal@1.7.0/dist/index.umd.js"></script>
-
+  <script src="js/common.js"></script>
   <script>
     (function() {
-      // poora code apne private scope mein, kisi global variable ko touch nahi karta
-      const bgType = document.getElementById('bgType');
-      const bgColor = document.getElementById('bgColor');
-      const bgImageUrl = document.getElementById('bgImageUrl');
+      // ---- State ----
+      let originalImage = null;
+      let originalFile = null;
+      let resultBlob = null;
 
-      bgType.addEventListener('change', function() {
-        if (bgType.value === 'color') {
-          bgColor.style.display = 'inline';
-          bgImageUrl.style.display = 'none';
-        } else {
-          bgColor.style.display = 'none';
-          bgImageUrl.style.display = 'inline';
+      // ---- DOM refs ----
+      const uploadZone = $('upload-zone');
+      const fileInput = $('file-input');
+      const settingsStep = $('settings-step');
+      const resultStep = $('result-step');
+      const processBtn = $('process-btn');
+      const processingBar = $('processing-bar');
+      const bgType = $('bg-type');
+      const bgColor = $('bg-color');
+      const originalPreview = $('original-preview');
+      const resultPreview = $('result-preview');
+      const downloadBtn = $('download-btn');
+      const newImageBtn = $('new-image-btn');
+      const toast = $('toast');
+
+      // ---- File Validation ----
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+      function validateFile(file) {
+        if (!file) return 'No file selected.';
+        if (!ALLOWED_TYPES.includes(file.type)) return 'Unsupported format. Please use JPG, PNG, or WEBP.';
+        if (file.size > MAX_SIZE) return 'File is too large (max 10MB).';
+        return null;
+      }
+
+      // ---- Toast ----
+      function showToast(msg, isError = false) {
+        toast.textContent = msg;
+        toast.className = 'toast' + (isError ? ' error' : '');
+        toast.style.display = 'block';
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
+      }
+
+      // ---- Upload handling (reusing common.js pattern) ----
+      setupUpload('upload-zone', 'file-input', (img, file) => {
+        const error = validateFile(file);
+        if (error) {
+          showToast(error, true);
+          return;
         }
+        originalImage = img;
+        originalFile = file;
+        originalPreview.src = img.src;
+        settingsStep.classList.remove('hidden');
+        resultStep.classList.add('hidden');
+        processingBar.style.display = 'none';
+        processBtn.disabled = false;
       });
 
-      document.getElementById('processBtn').addEventListener('click', async function() {
-        const fileInput = document.getElementById('imageInput');
-        const status = document.getElementById('status');
-        const outputImg = document.getElementById('outputImage');
+      // ---- Background Type Toggle ----
+      bgType.addEventListener('change', () => {
+        bgColor.style.display = bgType.value === 'color' ? 'inline-block' : 'none';
+      });
 
-        if (!fileInput.files.length) {
-          alert('Pehle ek image select karein.');
+      // ---- Process ----
+      processBtn.addEventListener('click', async () => {
+        if (!originalImage) {
+          showToast('Please upload an image first.', true);
           return;
         }
 
-        status.textContent = 'Processing... (thoda wait karein)';
-        outputImg.src = '';
+        processBtn.disabled = true;
+        processingBar.style.display = 'block';
+        resultStep.classList.add('hidden');
 
         try {
-          // Library UMD global se access kar rahe hain, but IIFE ke andar safe hai
-          const { removeBackground } = window.imglyBackgroundRemoval;
-          const image = fileInput.files[0];
-          let background;
+          // Access the UMD global
+          const { removeBackground } = window.imglyBackgroundRemoval || {};
+          if (!removeBackground) throw new Error('Background removal library failed to load.');
 
+          // Prepare config
+          const config = {
+            model: 'medium',   // 'small' (fast), 'medium' (balanced), 'large' (best quality)
+            output: { format: 'image/png' }
+          };
+
+          // Add background if not transparent
           if (bgType.value === 'color') {
-            background = bgColor.value;
-          } else {
-            const url = bgImageUrl.value.trim();
-            if (!url) throw new Error('Background image ka URL daalein');
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Background image load nahi hui');
-            background = await response.blob();
+            config.output.background = bgColor.value;
           }
 
-          const resultBlob = await removeBackground(image, {
-            model: 'medium',
-            output: {
-              format: 'image/png',
-              background: background
-            }
-          });
+          // Convert image to Blob if needed (the library can handle File, Blob, or URL)
+          const imageBlob = originalFile || await fetch(originalImage.src).then(r => r.blob());
+          resultBlob = await removeBackground(imageBlob, config);
 
-          outputImg.src = URL.createObjectURL(resultBlob);
-          status.textContent = 'Ho gaya!';
+          // Display result
+          resultPreview.src = URL.createObjectURL(resultBlob);
+          resultStep.classList.remove('hidden');
+          showToast('✅ Background removed successfully!');
         } catch (err) {
-          status.textContent = 'Error: ' + err.message;
-          console.error(err);
+          console.error('Remove BG error:', err);
+          showToast('❌ Processing failed: ' + (err.message || 'Unknown error. Try a different image.'), true);
+        } finally {
+          processingBar.style.display = 'none';
+          processBtn.disabled = false;
         }
       });
-    })(); // IIFE yahan khatam
+
+      // ---- Download ----
+      downloadBtn.addEventListener('click', () => {
+        if (!resultBlob) {
+          showToast('Nothing to download yet.', true);
+          return;
+        }
+        const filename = (originalFile?.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
+        downloadBlob(resultBlob, filename);
+      });
+
+      // ---- New Image ----
+      newImageBtn.addEventListener('click', () => {
+        settingsStep.classList.add('hidden');
+        resultStep.classList.add('hidden');
+        originalImage = null;
+        originalFile = null;
+        resultBlob = null;
+        fileInput.value = '';
+        processingBar.style.display = 'none';
+      });
+    })();
   </script>
 </body>
 </html>

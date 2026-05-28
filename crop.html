@@ -1,128 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Advanced Crop — PixelPress</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+  <link rel="stylesheet" href="css/style.css">
   <style>
-    :root {
-      --primary: #ec4899;
-      --primary-hover: #db2777;
-      --text-dark: #0f172a;
-      --text-muted: #64748b;
-      --bg-main: #f8fafc;
-      --bg-card: #ffffff;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-dark);
-      padding: 15px;
-    }
-    .container { width: 100%; max-width: 900px; margin: auto; }
-    .header { margin: 20px 0; display: flex; align-items: center; gap: 15px; }
-    .back-btn { text-decoration: none; color: var(--text-dark); font-weight: 600; font-size: 15px; background: #e2e8f0; padding: 8px 15px; border-radius: 8px; }
-    .title { font-size: 24px; font-weight: 800; }
-    .card { background: var(--bg-card); border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); text-align: center; }
-    .upload-box { border: 2px dashed #f472b6; padding: 40px 20px; border-radius: 12px; background: #fdf4ff; cursor: pointer; margin-bottom: 20px; }
-    .upload-box input { display: none; }
-    .crop-wrapper { max-height: 450px; margin-bottom: 20px; display: none; border-radius: 8px; overflow: hidden; background: #000; }
-    .crop-wrapper img { max-width: 100%; display: block; }
-    .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; display: none; }
-    .btn { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .btn:hover { background: #f1f5f9; }
-    .btn.active { background: #1e293b; color: white; border-color: #1e293b; }
-    .btn-main { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; display: none; transition: background 0.2s; }
-    .btn-main:hover { background: var(--primary-hover); }
+    .crop-container { max-width: 100%; max-height: 500px; margin: 0 auto; }
+    .crop-container img { max-width: 100%; display: block; }
+    .aspect-ratios { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .aspect-btn { padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+    .aspect-btn:hover { background: #f3f4f6; }
+    .aspect-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 999; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <a href="./index.html" class="back-btn">⬅ Home</a>
-      <h1 class="title">Advanced Crop Tool</h1>
-    </div>
-    <div class="card">
-      <label class="upload-box" id="dropArea">
-        <span style="font-size: 40px;">✂️</span>
-        <p style="margin-top: 10px; font-weight: 600;">Click or Drag & Drop Image Here</p>
-        <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Supports JPG, PNG, WEBP</p>
-        <input type="file" id="fileInput" accept="image/*" />
-      </label>
-      
-      <div class="crop-wrapper">
-        <img id="imageToCrop" src="" alt="Source Image" />
+  <header class="main-header">
+    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
+    <button class="btn-outline" onclick="history.back()">← Back</button>
+  </header>
+
+  <main class="tool-page">
+    <h1>✂️ Advanced Crop</h1>
+    <p style="color:#6b7280; margin-bottom:24px;">Precise cropping with preset aspect ratios. Drag to adjust, scroll to zoom.</p>
+
+    <!-- Upload Step -->
+    <div class="workflow-step" id="upload-step">
+      <h2>1. Upload Image</h2>
+      <div class="upload-zone" id="upload-zone">
+        <div class="icon">📤</div>
+        <p>Click or drag & drop an image here</p>
       </div>
-
-      <div class="controls" id="cropControls">
-        <button class="btn active" onclick="setAspect(NaN, this)">Free</button>
-        <button class="btn" onclick="setAspect(1, this)">1:1 (Square)</button>
-        <button class="btn" onclick="setAspect(16/9, this)">16:9 (YouTube)</button>
-        <button class="btn" onclick="setAspect(4/3, this)">4:3</button>
-        <button class="btn" onclick="rotateImg(-90)">↺ Rotate Left</button>
-        <button class="btn" onclick="rotateImg(90)">↻ Rotate Right</button>
-      </div>
-
-      <button class="btn-main" id="cropBtn" onclick="executeCrop()">Crop & Download Image</button>
+      <input type="file" id="file-input" accept="image/*" hidden>
     </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <!-- Crop Step -->
+    <div class="workflow-step hidden" id="crop-step">
+      <h2>2. Crop Your Image</h2>
+      <div class="aspect-ratios" id="aspect-ratios">
+        <button class="aspect-btn active" data-ratio="free">Free</button>
+        <button class="aspect-btn" data-ratio="1:1">1:1</button>
+        <button class="aspect-btn" data-ratio="4:5">4:5</button>
+        <button class="aspect-btn" data-ratio="16:9">16:9</button>
+        <button class="aspect-btn" data-ratio="9:16">9:16</button>
+        <button class="aspect-btn" data-ratio="3:2">3:2</button>
+      </div>
+      <div class="crop-container" id="crop-container">
+        <img id="crop-image" alt="Crop preview">
+      </div>
+      <div class="action-row">
+        <button class="btn-primary" id="crop-btn">✂️ Apply Crop</button>
+        <button class="btn-outline" id="reset-btn">↺ Reset</button>
+        <button class="btn-outline" id="new-crop-btn">🔄 New Image</button>
+      </div>
+    </div>
+
+    <!-- Result Step -->
+    <div class="workflow-step hidden" id="result-step">
+      <h2>3. Download Cropped Image</h2>
+      <div class="preview-box" style="text-align:center;">
+        <img id="result-preview" alt="Cropped result" style="max-width:100%; max-height:350px; border-radius:8px; border:1px solid #e5e7eb;">
+      </div>
+      <div class="download-section" style="margin-top:20px;">
+        <button class="btn-primary" id="download-btn">⬇ Download</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script src="js/common.js"></script>
   <script>
-    let cropper;
-    const fileInput = document.getElementById('fileInput');
-    const imageToCrop = document.getElementById('imageToCrop');
-    const cropWrapper = document.querySelector('.crop-wrapper');
-    const cropControls = document.getElementById('cropControls');
-    const cropBtn = document.getElementById('cropBtn');
-    const dropArea = document.getElementById('dropArea');
+    (function() {
+      let cropper = null;
+      let currentFile = null;
 
-    fileInput.addEventListener('change', function(e) {
-      if (e.target.files && e.target.files) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          imageToCrop.src = event.target.result;
-          dropArea.style.display = 'none';
-          cropWrapper.style.display = 'block';
-          cropControls.style.display = 'flex';
-          cropBtn.style.display = 'block';
-          
-          if(cropper) { cropper.destroy(); }
-          cropper = new Cropper(imageToCrop, {
-            viewMode: 1,
-            autoCropArea: 1,
-            responsive: true,
-          });
-        };
-        reader.readAsDataURL(e.target.files);
+      const uploadStep = $('upload-step');
+      const cropStep = $('crop-step');
+      const resultStep = $('result-step');
+      const cropContainer = $('crop-container');
+      const cropImage = $('crop-image');
+      const cropBtn = $('crop-btn');
+      const resetBtn = $('reset-btn');
+      const newCropBtn = $('new-crop-btn');
+      const downloadBtn = $('download-btn');
+      const resultPreview = $('result-preview');
+      const aspectBtns = document.querySelectorAll('.aspect-btn');
+      const toast = $('toast');
+
+      // ---- Toast ----
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 3000);
       }
-    });
 
-    function setAspect(ratio, element) {
-      cropper.setAspectRatio(ratio);
-      document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
-      if(element) element.classList.add('active');
-    }
+      // ---- Upload ----
+      setupUpload('upload-zone', 'file-input', (img, file) => {
+        currentFile = file;
+        cropImage.src = img.src;
+        uploadStep.classList.add('hidden');
+        cropStep.classList.remove('hidden');
+        resultStep.classList.add('hidden');
 
-    function rotateImg(deg) {
-      cropper.rotate(deg);
-    }
+        // Destroy previous cropper if exists
+        if (cropper) cropper.destroy();
 
-    function executeCrop() {
-      if (!cropper) return;
-      const canvas = cropper.getClippedCanvas({ maxWidth: 4096, maxHeight: 4096 });
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'pixelpress-cropped-' + Date.now() + '.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }, 'image/png');
-    }
+        // Initialize Cropper.js
+        cropper = new Cropper(cropImage, {
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.8,
+          responsive: true,
+          restore: false,
+          guides: true,
+          center: true,
+          highlight: false,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false,
+        });
+      });
+
+      // ---- Aspect Ratio Buttons ----
+      aspectBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          aspectBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const ratio = btn.dataset.ratio;
+          if (!cropper) return;
+          if (ratio === 'free') {
+            cropper.setAspectRatio(NaN);
+          } else {
+            const [w, h] = ratio.split(':').map(Number);
+            cropper.setAspectRatio(w / h);
+          }
+        });
+      });
+
+      // ---- Crop ----
+      cropBtn.addEventListener('click', () => {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({
+          maxWidth: 4096,
+          maxHeight: 4096,
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high',
+        });
+        if (!canvas) {
+          showToast('Could not generate crop. Please try again.');
+          return;
+        }
+        resultPreview.src = canvas.toDataURL('image/png');
+        cropStep.classList.add('hidden');
+        resultStep.classList.remove('hidden');
+        showToast('✅ Image cropped!');
+      });
+
+      // ---- Reset ----
+      resetBtn.addEventListener('click', () => {
+        if (cropper) cropper.reset();
+      });
+
+      // ---- New Image ----
+      newCropBtn.addEventListener('click', () => {
+        if (cropper) cropper.destroy();
+        cropper = null;
+        cropImage.src = '';
+        cropStep.classList.add('hidden');
+        resultStep.classList.add('hidden');
+        uploadStep.classList.remove('hidden');
+        $('file-input').value = '';
+      });
+
+      // ---- Download ----
+      downloadBtn.addEventListener('click', () => {
+        const img = resultPreview;
+        if (!img.src || img.src === '') {
+          showToast('Nothing to download.');
+          return;
+        }
+        const filename = (currentFile?.name || 'image').replace(/\.\w+$/, '') + '-cropped.png';
+        // Convert dataURL to blob for download
+        fetch(img.src)
+          .then(res => res.blob())
+          .then(blob => downloadBlob(blob, filename))
+          .catch(() => showToast('Download failed.'));
+      });
+    })();
   </script>
 </body>
 </html>

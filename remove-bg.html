@@ -32,16 +32,16 @@
       <div class="upload-zone" id="upload-zone">
         <div class="icon">📤</div>
         <p>Click or drag & drop an image here</p>
-        <p style="font-size:0.8rem; color:#9ca3af;">JPG, PNG, WEBP (max 10MB)</p>
+        <p style="font-size:0.8rem; color:#9ca3af;">JPG, PNG, WEBP (max 5MB recommended)</p>
       </div>
       <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden>
     </div>
 
-    <!-- STEP 2: Settings (shown after upload) -->
+    <!-- STEP 2: Process -->
     <div class="workflow-step hidden" id="settings-step">
       <h2>2. Background Options</h2>
       <div class="bg-options">
-        <select id="bg-type" class="form-select" style="padding:10px 14px; border-radius:8px; border:1px solid #d1d5db;">
+        <select id="bg-type" style="padding:10px 14px; border-radius:8px; border:1px solid #d1d5db;">
           <option value="transparent">Transparent (PNG)</option>
           <option value="color">Solid Color</option>
         </select>
@@ -50,7 +50,7 @@
       <button class="btn-primary" id="process-btn" style="margin-top:16px;">✨ Remove Background</button>
       <div class="processing-bar" id="processing-bar">
         <div class="spinner"></div>
-        <p>Removing background... this may take 15-30 seconds.</p>
+        <p id="processing-status">Loading AI engine... Please wait.</p>
       </div>
     </div>
 
@@ -76,24 +76,28 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- Library - STABLE VERSION -->
-  <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
-  <script src="js/common.js"></script>
+  <!-- Load library as ES module -->
+  <script type="module">
+    import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.esm.js';
+    window.removeBackgroundFn = removeBackground;
+    window.dispatchEvent(new Event('bgremoval-ready'));
+    console.log('✅ Background removal engine loaded');
+  </script>
+
   <script>
     (function() {
-      // ---- State ----
       let originalImage = null;
       let originalFile = null;
       let resultBlob = null;
-      let libraryReady = false;
+      let engineReady = false;
 
-      // ---- DOM refs ----
       const uploadZone = document.getElementById('upload-zone');
       const fileInput = document.getElementById('file-input');
       const settingsStep = document.getElementById('settings-step');
       const resultStep = document.getElementById('result-step');
       const processBtn = document.getElementById('process-btn');
       const processingBar = document.getElementById('processing-bar');
+      const processingStatus = document.getElementById('processing-status');
       const bgType = document.getElementById('bg-type');
       const bgColor = document.getElementById('bg-color');
       const originalPreview = document.getElementById('original-preview');
@@ -102,36 +106,19 @@
       const newImageBtn = document.getElementById('new-image-btn');
       const toast = document.getElementById('toast');
 
-      // ---- Check if library loaded ----
-      window.addEventListener('load', () => {
-        if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
-          libraryReady = true;
-          console.log('✅ Background removal library ready');
-        } else {
-          console.error('❌ Library not found on window.imglyBackgroundRemoval');
-          showToast('⚠️ Background removal engine loading... Please wait or refresh.', false);
-          // Retry after 3 seconds
-          setTimeout(() => {
-            if (window.imglyBackgroundRemoval && window.imglyBackgroundRemoval.removeBackground) {
-              libraryReady = true;
-              console.log('✅ Library loaded after delay');
-            }
-          }, 3000);
-        }
+      // Listen for engine ready
+      window.addEventListener('bgremoval-ready', () => {
+        engineReady = true;
+        console.log('Engine confirmed ready');
       });
 
-      // ---- File Validation ----
-      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+      // Fallback: check after 5 seconds
+      setTimeout(() => {
+        if (!engineReady && window.removeBackgroundFn) {
+          engineReady = true;
+        }
+      }, 5000);
 
-      function validateFile(file) {
-        if (!file) return 'No file selected.';
-        if (!ALLOWED_TYPES.includes(file.type)) return 'Unsupported format. Please use JPG, PNG, or WEBP.';
-        if (file.size > MAX_SIZE) return 'File is too large (max 10MB).';
-        return null;
-      }
-
-      // ---- Toast ----
       function showToast(msg, isError = false) {
         toast.textContent = msg;
         toast.className = 'toast' + (isError ? ' error' : '');
@@ -140,7 +127,7 @@
         toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
       }
 
-      // ---- Upload handling ----
+      // Upload handling
       uploadZone.addEventListener('click', () => fileInput.click());
       uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
       uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
@@ -153,11 +140,15 @@
 
       function handleFile(file) {
         if (!file) return;
-        const error = validateFile(file);
-        if (error) {
-          showToast(error, true);
+        if (!file.type.startsWith('image/')) {
+          showToast('Please upload an image file.', true);
           return;
         }
+        if (file.size > 10 * 1024 * 1024) {
+          showToast('File too large. Max 10MB.', true);
+          return;
+        }
+        
         const reader = new FileReader();
         reader.onload = () => {
           const img = new Image();
@@ -175,32 +166,33 @@
         reader.readAsDataURL(file);
       }
 
-      // ---- Background Type Toggle ----
       bgType.addEventListener('change', () => {
         bgColor.style.display = bgType.value === 'color' ? 'inline-block' : 'none';
       });
 
-      // ---- Process ----
+      // Process button
       processBtn.addEventListener('click', async () => {
         if (!originalImage) {
-          showToast('Please upload an image first.', true);
+          showToast('Upload an image first.', true);
           return;
         }
 
-        if (!libraryReady) {
-          showToast('⚠️ Engine still loading. Please wait a few seconds and try again.', true);
+        if (!engineReady && !window.removeBackgroundFn) {
+          showToast('AI engine still loading. Please wait 10 seconds and try again.', true);
           return;
         }
 
         processBtn.disabled = true;
         processingBar.style.display = 'block';
+        processingStatus.textContent = 'Removing background... 15-30 seconds';
         resultStep.classList.add('hidden');
 
         try {
-          const removeBackground = window.imglyBackgroundRemoval.removeBackground;
-          
+          const removeBgFn = window.removeBackgroundFn;
+          if (!removeBgFn) throw new Error('Engine not available');
+
           const config = {
-            model: 'medium',
+            model: 'small',  // 'small' is faster, less memory
             output: { format: 'image/png' }
           };
 
@@ -208,43 +200,43 @@
             config.output.background = bgColor.value;
           }
 
-          const imageBlob = originalFile;
-          resultBlob = await removeBackground(imageBlob, config);
+          resultBlob = await removeBgFn(originalFile, config);
 
-          resultPreview.src = URL.createObjectURL(resultBlob);
+          const url = URL.createObjectURL(resultBlob);
+          resultPreview.src = url;
           resultStep.classList.remove('hidden');
           settingsStep.classList.add('hidden');
-          showToast('✅ Background removed successfully!');
+          showToast('✅ Background removed!');
         } catch (err) {
-          console.error('Remove BG error:', err);
-          showToast('❌ Processing failed: ' + (err.message || 'Try a different image or smaller size.'), true);
+          console.error('Error:', err);
+          showToast('❌ Failed. Try a smaller image or different format.', true);
         } finally {
           processingBar.style.display = 'none';
           processBtn.disabled = false;
         }
       });
 
-      // ---- Download ----
+      // Download
       downloadBtn.addEventListener('click', () => {
-        if (!resultBlob) {
-          showToast('Nothing to download yet.', true);
-          return;
-        }
-        const filename = (originalFile?.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
+        if (!resultBlob) return;
+        const name = (originalFile?.name || 'image').replace(/\.\w+$/, '') + '-nobg.png';
         const url = URL.createObjectURL(resultBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename;
+        a.download = name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       });
 
-      // ---- New Image ----
+      // New image
       newImageBtn.addEventListener('click', () => {
         settingsStep.classList.add('hidden');
         resultStep.classList.add('hidden');
         originalImage = null;
         originalFile = null;
+        if (resultBlob && resultPreview.src.startsWith('blob:')) {
+          URL.revokeObjectURL(resultPreview.src);
+        }
         resultBlob = null;
         fileInput.value = '';
         processingBar.style.display = 'none';

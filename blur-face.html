@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blur Face | PixelPress</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="tool-page">
+    <h1>AI Blur Face Tool</h1>
+    <div class="upload-zone" id="dropZone">
+      <p>Click to Upload Image</p>
+      <input type="file" id="fileInput" class="hidden" accept="image/*">
+    </div>
+    <div id="resultArea" style="margin-top:20px; text-align:center;">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+  <script src="js/blur-face.js"></script>
+</script>
+</body>
+</html>

@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelPress Official Blog | Latest Updates & Tutorials</title>
+    <title>PixelPress Blog | Professional PDF & Image Utility Guides</title>
     <!-- Font Awesome Icons for Modern UI -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #4f46e5;
             --primary-hover: #4338ca;
+            --success-color: #10b981;
             --text-main: #1f2937;
             --text-muted: #4b5563;
             --bg-body: #f9fafb;
@@ -67,6 +68,9 @@
             font-size: 0.95rem;
             font-weight: 500;
             transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .btn-home:hover {
@@ -76,7 +80,7 @@
         /* Hero Section */
         .blog-hero {
             text-align: center;
-            padding: 50px 20px;
+            padding: 60px 20px;
             background: linear-gradient(135deg, #e0e7ff 0%, #eef2ff 100%);
             margin-bottom: 40px;
         }
@@ -84,13 +88,13 @@
         .blog-hero h1 {
             font-size: 2.5rem;
             color: #111827;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .blog-hero p {
             color: var(--text-muted);
             font-size: 1.1rem;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
@@ -106,9 +110,9 @@
 
         /* Blog Posts Area */
         .posts-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
         }
 
         .blog-card {
@@ -117,27 +121,24 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .blog-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Temporary Placeholder for Blog Image */
-        .card-image-placeholder {
-            height: 220px;
-            background-color: #cbd5e1;
+        .card-banner {
+            height: 200px;
+            background: linear-gradient(45deg, #4f46e5, #818cf8);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #64748b;
-            font-size: 3rem;
+            color: white;
+            font-size: 4rem;
         }
 
+        .card-banner.pdf-jpg { background: linear-gradient(45deg, #ef4444, #f87171); }
+        .card-banner.jpg-pdf { background: linear-gradient(45deg, #10b981, #34d399); }
+        .card-banner.watermark { background: linear-gradient(45deg, #f59e0b, #fbbf24); }
+
         .card-content {
-            padding: 25px;
+            padding: 30px;
         }
 
         .card-tag {
@@ -149,24 +150,43 @@
             padding: 4px 10px;
             border-radius: 50px;
             text-transform: uppercase;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .card-content h2 {
-            font-size: 1.5rem;
+            font-size: 1.7rem;
             color: #111827;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-
-        .card-content h2:hover {
-            color: var(--primary-color);
+            margin-bottom: 12px;
         }
 
         .card-content p {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 1rem;
             margin-bottom: 20px;
+        }
+
+        /* Detailed Steps Inside Post */
+        .tool-steps {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .tool-steps h4 {
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+
+        .tool-steps ol {
+            padding-left: 20px;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+
+        .tool-steps ol li {
+            margin-bottom: 6px;
         }
 
         .card-meta {
@@ -210,35 +230,36 @@
             padding-left: 10px;
         }
 
-        .categories-list {
+        .features-list {
             list-style: none;
-        }
-
-        .categories-list li {
-            margin-bottom: 10px;
-        }
-
-        .categories-list a {
-            text-decoration: none;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
             font-size: 0.95rem;
-            transition: color 0.2s;
         }
 
-        .categories-list a:hover {
-            color: var(--primary-color);
+        .features-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+        }
+
+        .features-list i {
+            color: var(--success-color);
         }
 
         /* Newsletter Signup Widget */
         .newsletter-form input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .newsletter-form input:focus {
+            border-color: var(--primary-color);
         }
 
         .newsletter-form button {
@@ -246,15 +267,28 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
         }
 
         .newsletter-form button:hover {
             background-color: var(--primary-hover);
+        }
+
+        /* Success Message Styling */
+        .subscription-success {
+            display: none;
+            text-align: center;
+            color: var(--success-color);
+            background-color: #ecfdf5;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #a7f3d0;
+            font-size: 0.95rem;
+            margin-top: 10px;
         }
 
         /* Footer */
@@ -272,9 +306,6 @@
             .main-container {
                 grid-template-columns: 1fr;
             }
-            .sidebar {
-                order: 2;
-            }
         }
     </style>
 </head>
@@ -284,7 +315,7 @@
     <header>
         <div class="nav-container">
             <a href="/index.html" class="logo">
-                <i class="fa-solid fa-cubes"></i> PixelPress Blog
+                <i class="fa-solid fa-cubes"></i> PixelPress Workspace
             </a>
             <a href="/index.html" class="btn-home">
                 <i class="fa-solid fa-arrow-left"></i> Back to Tools
@@ -294,44 +325,90 @@
 
     <!-- Hero Header -->
     <section class="blog-hero">
-        <h1>Insights & Tutorials</h1>
-        <p>Discover expert guides on document management, image optimization, and web utilities tailored for your daily workflow.</p>
+        <h1>PixelPress Documentation & Guides</h1>
+        <p>Explore step-by-step documentation for our advanced web-based converters and privacy protection tools built for responsive speed.</p>
     </section>
 
     <!-- Main Grid Content -->
     <main class="main-container">
         
-        <!-- Left Side: Blog Posts List -->
+        <!-- Left Side: Complete Website Info & Guides -->
         <div class="posts-grid">
             
-            <!-- Sample Post 1 -->
+            <!-- Article 1: PDF to JPG -->
             <article class="blog-card">
-                <div class="card-image-placeholder">
-                    <i class="fa-regular fa-file-pdf"></i>
+                <div class="card-banner pdf-jpg">
+                    <i class="fa-solid fa-file-pdf"></i>
                 </div>
                 <div class="card-content">
-                    <span class="card-tag">Tutorial</span>
-                    <h2>How to Convert PDF to High-Quality JPG Instantly</h2>
-                    <p>Learn the best strategies to optimize your documents and extract clear, crisp image files without losing original formatting or data presentation elements.</p>
+                    <span class="card-tag">PDF Tools</span>
+                    <h2>Advanced Guide: Converting PDF Documents into High-Quality Images</h2>
+                    <p>Our PDF-to-JPG module ensures that every single document page is parsed accurately with absolute clarity. The conversion processing happens entirely inside your client browser, guaranteeing that confidential files never touch an external database. Ideal for presentation slides and form reviews.</p>
+                    
+                    <div class="tool-steps">
+                        <h4>How to Use the PDF to JPG Converter:</h4>
+                        <ol>
+                            <li>Navigate to the <strong>PDF to JPG</strong> section via your workspace.</li>
+                            <li>Drop or upload your target document.</li>
+                            <li>Click processing and save the extracted standalone high-resolution images.</li>
+                        </ol>
+                    </div>
+
                     <div class="card-meta">
-                        <span class="meta-author"><i class="fa-solid fa-user-nib"></i> Admin</span>
-                        <span><i class="fa-regular fa-calendar"></i> May 28, 2026</span>
+                        <span class="meta-author"><i class="fa-solid fa-gears"></i> Core System Module</span>
+                        <span>Status: Stable & Active</span>
                     </div>
                 </div>
             </article>
 
-            <!-- Sample Post 2 -->
+            <!-- Article 2: JPG to PDF -->
             <article class="blog-card">
-                <div class="card-image-placeholder">
-                    <i class="fa-regular fa-image"></i>
+                <div class="card-banner jpg-pdf">
+                    <i class="fa-solid fa-images"></i>
                 </div>
                 <div class="card-content">
-                    <span class="card-tag">Design Tips</span>
-                    <h2>Why Image Watermarking Matters for Digital Content Creator</h2>
-                    <p>Protect your intellectual digital property. Explore how simple text overlays or branding layers keep your designs secure across social media sharing networks.</p>
+                    <span class="card-tag">Document Management</span>
+                    <h2>Compiling Images and Graphic Assets Safely into Uniform PDFs</h2>
+                    <p>When dealing with assignments, receipts, or portfolios, combining disjointed images into a structured PDF document is vital. The JPG-to-PDF utility arranges your visual layouts swiftly while maintaining uniform structural ratios.</p>
+                    
+                    <div class="tool-steps">
+                        <h4>How to Compile Images into PDF:</h4>
+                        <ol>
+                            <li>Select the <strong>JPG to PDF</strong> generator panel.</li>
+                            <li>Upload files sequentially based on your layout preference.</li>
+                            <li>Compile instantly into a compressed, high-grade universal PDF file.</li>
+                        </ol>
+                    </div>
+
                     <div class="card-meta">
-                        <span class="meta-author"><i class="fa-solid fa-user-nib"></i> Admin</span>
-                        <span><i class="fa-regular fa-calendar"></i> May 25, 2026</span>
+                        <span class="meta-author"><i class="fa-solid fa-gears"></i> Core System Module</span>
+                        <span>Status: Stable & Active</span>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Article 3: Image Watermarking -->
+            <article class="blog-card">
+                <div class="card-banner watermark">
+                    <i class="fa-solid fa-copyright"></i>
+                </div>
+                <div class="card-content">
+                    <span class="card-tag">Security & Protection</span>
+                    <h2>Applying Dynamic Text Overlays and Watermarks to Protect Digital Media</h2>
+                    <p>Copyright protection is non-negotiable for digital creators. The PixelPress Image Watermarker offers seamless layering options allowing you to overlay custom text or identity markers over your creative designs securely.</p>
+                    
+                    <div class="tool-steps">
+                        <h4>How to Secure Your Media Asset:</h4>
+                        <ol>
+                            <li>Launch the <strong>Image Watermarking</strong> interface.</li>
+                            <li>Upload your master graphic asset or picture.</li>
+                            <li>Input custom text markers, configure structural alignments, and process output.</li>
+                        </ol>
+                    </div>
+
+                    <div class="card-meta">
+                        <span class="meta-author"><i class="fa-solid fa-gears"></i> Security System Module</span>
+                        <span>Status: Stable & Active</span>
                     </div>
                 </div>
             </article>
@@ -341,24 +418,32 @@
         <!-- Right Side: Sidebar Widgets -->
         <aside class="sidebar">
             
-            <!-- Widget 1: Categories -->
+            <!-- Platform Specs Widget -->
             <div class="sidebar-widget">
-                <h3 class="widget-title">Categories</h3>
-                <ul class="categories-list">
-                    <li><a href="#"><span>PDF Utilities</span> <span>(1)</span></a></li>
-                    <li><a href="#"><span>Image Optimization</span> <span>(1)</span></a></li>
-                    <li><a href="#"><span>Productivity Tools</span> <span>(0)</span></a></li>
+                <h3 class="widget-title">Platform Features</h3>
+                <ul class="features-list">
+                    <li><i class="fa-solid fa-circle-check"></i> 100% Client-Side Computation</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Responsive Cross-Device UI</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Offline Support Ready (PWA)</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Secure Document Architecture</li>
                 </ul>
             </div>
 
-            <!-- Widget 2: Newsletter Subscriptions -->
+            <!-- Newsletter Widget (With Real-Time Subscription Script) -->
             <div class="sidebar-widget">
-                <h3 class="widget-title">Newsletter</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">Get the latest tool features and web updates delivered right to your inbox.</p>
-                <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing!');">
-                    <input type="email" placeholder="Your email address" required>
-                    <button type="submit">Subscribe Now</button>
+                <h3 class="widget-title">Newsletter Subscriptions</h3>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">Get instant feature update alerts directly in your inbox.</p>
+                
+                <form class="newsletter-form" id="newsletterForm">
+                    <input type="email" id="userEmail" placeholder="Your email address" required>
+                    <button type="submit" id="submitBtn">Subscribe Now</button>
                 </form>
+
+                <!-- Dynamic Success Message Box -->
+                <div class="subscription-success" id="successBox">
+                    <i class="fa-solid fa-circle-check"></i> <br>
+                    <strong>Awesome!</strong> You have successfully subscribed to PixelPress newsletter updates.
+                </div>
             </div>
 
         </aside>
@@ -367,8 +452,27 @@
 
     <!-- Footer Section -->
     <footer>
-        <p>&copy; 2026 PixelPress. All rights reserved. Built for lightning-fast digital solutions.</p>
+        <p>&copy; 2026 PixelPress Workspace. Securely processing utilities with complete user privacy.</p>
     </footer>
+
+    <!-- Interactive JS Logic -->
+    <script>
+        document.getElementById('newsletterForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop page from refreshing
+            
+            const emailInput = document.getElementById('userEmail');
+            const submitBtn = document.getElementById('submitBtn');
+            const successBox = document.getElementById('successBox');
+
+            // 1. Hide form input and action button smoothly
+            emailInput.style.display = 'none';
+            submitBtn.style.display = 'none';
+
+            // 2. Reveal the real-time success alert box
+            successBox.style.display = 'block';
+        });
+    </script>
 
 </body>
 </html>
+

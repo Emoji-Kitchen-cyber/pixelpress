@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Crop — PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+  <style>
+    :root {
+      --primary: #ec4899;
+      --primary-hover: #db2777;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-dark);
+      padding: 15px;
+    }
+    .container { width: 100%; max-width: 900px; margin: auto; }
+    .header { margin: 20px 0; display: flex; align-items: center; gap: 15px; }
+    .back-btn { text-decoration: none; color: var(--text-dark); font-weight: 600; font-size: 15px; background: #e2e8f0; padding: 8px 15px; border-radius: 8px; }
+    .title { font-size: 24px; font-weight: 800; }
+    .card { background: var(--bg-card); border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); text-align: center; }
+    .upload-box { border: 2px dashed #f472b6; padding: 40px 20px; border-radius: 12px; background: #fdf4ff; cursor: pointer; margin-bottom: 20px; }
+    .upload-box input { display: none; }
+    .crop-wrapper { max-height: 450px; margin-bottom: 20px; display: none; border-radius: 8px; overflow: hidden; background: #000; }
+    .crop-wrapper img { max-width: 100%; display: block; }
+    .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; display: none; }
+    .btn { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn:hover { background: #f1f5f9; }
+    .btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+    .btn-main { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; display: none; transition: background 0.2s; }
+    .btn-main:hover { background: var(--primary-hover); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="./index.html" class="back-btn">⬅ Home</a>
+      <h1 class="title">Advanced Crop Tool</h1>
+    </div>
+    <div class="card">
+      <label class="upload-box" id="dropArea">
+        <span style="font-size: 40px;">✂️</span>
+        <p style="margin-top: 10px; font-weight: 600;">Click or Drag & Drop Image Here</p>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Supports JPG, PNG, WEBP</p>
+        <input type="file" id="fileInput" accept="image/*" />
+      </label>
+      
+      <div class="crop-wrapper">
+        <img id="imageToCrop" src="" alt="Source Image" />
+      </div>
+
+      <div class="controls" id="cropControls">
+        <button class="btn active" onclick="setAspect(NaN, this)">Free</button>
+        <button class="btn" onclick="setAspect(1, this)">1:1 (Square)</button>
+        <button class="btn" onclick="setAspect(16/9, this)">16:9 (YouTube)</button>
+        <button class="btn" onclick="setAspect(4/3, this)">4:3</button>
+        <button class="btn" onclick="rotateImg(-90)">↺ Rotate Left</button>
+        <button class="btn" onclick="rotateImg(90)">↻ Rotate Right</button>
+      </div>
+
+      <button class="btn-main" id="cropBtn" onclick="executeCrop()">Crop & Download Image</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script>
+    let cropper;
+    const fileInput = document.getElementById('fileInput');
+    const imageToCrop = document.getElementById('imageToCrop');
+    const cropWrapper = document.querySelector('.crop-wrapper');
+    const cropControls = document.getElementById('cropControls');
+    const cropBtn = document.getElementById('cropBtn');
+    const dropArea = document.getElementById('dropArea');
+
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          imageToCrop.src = event.target.result;
+          dropArea.style.display = 'none';
+          cropWrapper.style.display = 'block';
+          cropControls.style.display = 'flex';
+          cropBtn.style.display = 'block';
+          
+          if(cropper) { cropper.destroy(); }
+          cropper = new Cropper(imageToCrop, {
+            viewMode: 1,
+            autoCropArea: 1,
+            responsive: true,
+          });
+        };
+        reader.readAsDataURL(e.target.files);
+      }
+    });
+
+    function setAspect(ratio, element) {
+      cropper.setAspectRatio(ratio);
+      document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
+      if(element) element.classList.add('active');
+    }
+
+    function rotateImg(deg) {
+      cropper.rotate(deg);
+    }
+
+    function executeCrop() {
+      if (!cropper) return;
+      const canvas = cropper.getClippedCanvas({ maxWidth: 4096, maxHeight: 4096 });
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'pixelpress-cropped-' + Date.now() + '.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, 'image/png');
+    }
+  </script>
+</body>
+</html>

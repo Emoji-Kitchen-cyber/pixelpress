@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot Editor — PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
+    :root { --bg:#f5f5f7; --surface:rgba(255,255,255,0.75); --card:#ffffff; --border:rgba(0,0,0,0.06); --text:#1d1d1f; --muted:#6e6e73; --accent:#ec4899; --accent2:#a78bfa; }
+    [data-theme="dark"] { --bg:#09090e; --surface:rgba(21,21,30,0.7); --card:#15151e; --border:rgba(255,255,255,0.08); --text:#e8e8f0; --muted:#86868b; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; padding:0 2rem; height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-logo { font-family:'Syne', sans-serif; font-weight:800; font-size:1.2rem; text-transform:uppercase; }
+    .nav-logo span { background:linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .container { max-width:1200px; margin:2rem auto; width:100%; padding:0 20px; display:grid; grid-template-columns:1fr 350px; gap:2rem; flex:1; }
+    @media(max-width:900px){ .container{ grid-template-columns:1fr; } }
+    .preview-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; display:flex; align-items:center; justify-content:center; min-height:400px; }
+    .canvas-holder { max-width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.12); border-radius:12px; overflow:hidden; }
+    canvas { display:block; max-width:100%; height:auto; }
+    .controls { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:16px; }
+    .control-group { display:flex; flex-direction:column; gap:6px; }
+    label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; }
+    select, input[type="range"] { width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); }
+    .btn { background:var(--text); color:var(--bg); border:none; padding:12px; border-radius:8px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn:hover { background:var(--accent); color:white; }
+  </style>
+</head>
+<body>
+  <nav><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></nav>
+  <div class="container">
+    <div class="preview-box">
+      <div class="canvas-holder">
+        <canvas id="screenshotCanvas" width="800" height="600"></canvas>
+      </div>
+    </div>
+    <div class="controls">
+      <div>
+        <h2 style="font-family:'Syne';">Screenshot Editor</h2>
+        <p style="font-size:13px; color:var(--muted)">Wrap captures in device frames instantly.</p>
+      </div>
+      <div class="control-group">
+        <label>Upload Screenshot</label>
+        <button class="btn" onclick="document.getElementById('screenUpload').click()"><i class="fa-solid fa-upload"></i> Choose Image</button>
+        <input type="file" id="screenUpload" style="display:none" accept="image/*">
+      </div>
+      <div class="control-group">
+        <label>Canvas Background</label>
+        <select id="bgGradient">
+          <option value="sunset">Sunset Glow</option>
+          <option value="ocean">Ocean Breeze</option>
+          <option value="dark">Pro Dark Minimal</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Padding Amount</label>
+        <input type="range" id="canvasPadding" min="20" max="100" value="60">
+      </div>
+      <button class="btn" id="exportBtn" style="background:linear-gradient(135deg, var(--accent), var(--accent2)); color:white;"><i class="fa-solid fa-download"></i> Export Mockup</button>
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById('screenshotCanvas');
+    const ctx = canvas.getContext('2d');
+    let screenImg = null;
+
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
+
+    function renderMockup() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const gradStyle = document.getElementById('bgGradient').value;
+      let grad = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+      if(gradStyle === 'sunset') { grad.addColorStop(0, '#f43f5e'); grad.addColorStop(1, '#eab308'); }
+      else if(gradStyle === 'ocean') { grad.addColorStop(0, '#06b6d4'); grad.addColorStop(1, '#3b82f6'); }
+      else { grad.addColorStop(0, '#1e1e24'); grad.addColorStop(1, '#111115'); }
+      
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      if(screenImg) {
+        const padding = parseInt(document.getElementById('canvasPadding').value);
+        const targetW = canvas.width - (padding * 2);
+        const targetH = canvas.height - (padding * 2);
+        
+        // Shadow Effect
+        ctx.shadowColor = "rgba(0,0,0,0.3)";
+        ctx.shadowBlur = 30;
+        ctx.shadowOffsetY = 15;
+        
+        ctx.drawImage(screenImg, padding, padding, targetW, targetH);
+        ctx.shadowColor = "transparent"; // Reset shadow
+      }
+    }
+
+    document.getElementById('screenUpload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        screenImg = new Image();
+        screenImg.onload = renderMockup;
+        screenImg.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('bgGradient').addEventListener('change', renderMockup);
+    document.getElementById('canvasPadding').addEventListener('input', renderMockup);
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.download = 'pixelpress-mockup.png';
+      a.href = canvas.toDataURL();
+      a.click();
+    });
+    renderMockup();
+  </script>
+</body>
+</html>

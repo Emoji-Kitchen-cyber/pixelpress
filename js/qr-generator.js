@@ -1,32 +1,37 @@
 let qrcodeObj = null;
 
 function generateQR() {
-  const text = document.getElementById('qrText').value;
-  const color = document.getElementById('qrColor').value;
+  const textInput = document.getElementById('qrText');
+  const colorInput = document.getElementById('qrColor');
   const qrContainer = document.getElementById('qrcode');
+  
+  if (!textInput || !colorInput || !qrContainer) return; // Failsafe
+  
+  const text = textInput.value;
+  const color = colorInput.value;
   
   qrContainer.innerHTML = '';
   if (!text.trim()) return;
   
-  // High-Res production configuration matrix
   qrcodeObj = new QRCode(qrContainer, {
     text: text,
-    width: 512, // Native upscale rendering for true crystal clear quality
+    width: 512,
     height: 512,
     colorDark: color,
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
   });
 
-  // Force styling adjustment to box context bounds
-  const generatedImg = qrContainer.querySelector('img');
-  const generatedCanvas = qrContainer.querySelector('canvas');
-  if(generatedImg) generatedImg.style.width = "200px";
-  if(generatedCanvas) generatedCanvas.style.width = "200px";
+  // Scale down visually, keep high-res for download
+  setTimeout(() => {
+    const generatedImg = qrContainer.querySelector('img');
+    const generatedCanvas = qrContainer.querySelector('canvas');
+    if(generatedImg) generatedImg.style.width = "200px";
+    if(generatedCanvas) generatedCanvas.style.width = "200px";
+  }, 50);
 }
 
 function downloadQR() {
-  // Fault-tolerant engine checking both canvas and image pipeline targets
   const canvas = document.querySelector('#qrcode canvas');
   const img = document.querySelector('#qrcode img');
   const link = document.createElement('a');
@@ -35,25 +40,24 @@ function downloadQR() {
   if (canvas && canvas.getContext) {
     link.href = canvas.toDataURL("image/png");
     link.click();
-  } else if (img && img.src && !img.src.startsWith('data:text/html')) {
+  } else if (img && img.src) {
     link.href = img.src;
     link.click();
   } else {
-    alert("Generation tracking delay. Please modify the input text and try again.");
+    alert("Please wait a second for the QR code to render before downloading.");
   }
 }
 
-const syncThemeMode = () => {
+function syncThemeMode() {
   const theme = localStorage.getItem('pixelpress-theme') || 'light';
   document.documentElement.setAttribute('data-theme', theme);
-};
+}
 
+// Attach Events
 document.getElementById('qrText').addEventListener('input', generateQR);
 document.getElementById('qrColor').addEventListener('input', generateQR);
 document.getElementById('downloadBtn').addEventListener('click', downloadQR);
 
-window.addEventListener('DOMContentLoaded', () => {
-  syncThemeMode();
-  generateQR();
-});
-
+// Direct Execution (Bypasses DOMContentLoaded issues)
+syncThemeMode();
+generateQR();

@@ -1,42 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Color Picker — PixelPress</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Color Picker - PixelPress</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
-    激:root { --bg:#f5f5f7; --card:#ffffff; --border:rgba(0,0,0,0.06); --text:#1d1d1f; --muted:#6e6e73; --accent:#ec4899; }
-    [data-theme="dark"] { --bg:#09090e; --card:#15151e; --border:rgba(255,255,255,0.08); --text:#e8e8f0; --muted:#86868b; }
-    body { background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; margin:0; padding:0; }
-    nav { display:flex; align-items:center; padding:0 2rem; height:64px; background:var(--card); border-bottom:1px solid var(--border); }
-    .nav-logo { font-family:'Syne'; font-weight:800; color:var(--text); text-transform:uppercase; text-decoration:none; }
-    .nav-logo span { color:var(--accent); }
-    .container { max-width:500px; margin:4rem auto; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px; text-align:center; }
-    .color-box { width:100%; height:120px; border-radius:12px; margin:20px 0; border:1px solid var(--border); transition:background 0.1s; }
-    .inp-val { width:100%; padding:12px; font-family:monospace; font-size:16px; text-align:center; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
-    .btn { background:var(--text); color:var(--bg); border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer; width:100%; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: rgba(255, 255, 255, 0.75);
+      --card: #ffffff;
+      --border: rgba(0, 0, 0, 0.06);
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #ec4899;
+      --accent2: #a78bfa;
+      --glow: rgba(236, 72, 153, 0.1);
+      --r: 16px;
+      --fhead: 'Syne', sans-serif;
+      --fbody: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --fmono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #09090e;
+      --surface: rgba(21, 21, 30, 0.7);
+      --card: #15151e;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8e8f0;
+      --muted: #86868b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: var(--fbody); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.4s, color 0.4s; }
+    
+    /* Navbar matching index.html */
+    nav { position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(1rem, 5vw, 3rem); height: 64px; background: var(--surface); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: var(--fhead); font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .nav-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn { display: flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+    .back-btn:hover { color: var(--accent); }
+
+    /* Tool Workspace */
+    .main { max-width: 800px; margin: 0 auto; width: 100%; padding: 3rem 20px; flex: 1; }
+    .tool-header { text-align: center; margin-bottom: 2rem; }
+    .tool-header h1 { font-family: var(--fhead); font-size: 2.5rem; margin-bottom: 10px; }
+    
+    .workspace { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+    
+    .color-preview { width: 100%; height: 150px; border-radius: 12px; background-color: #ec4899; margin-bottom: 1.5rem; border: 1px solid var(--border); transition: background-color 0.1s; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+    
+    .controls { display: grid; grid-template-columns: 1fr auto; gap: 15px; margin-bottom: 2rem; align-items: center; }
+    input[type="color"] { width: 100%; height: 50px; border: none; border-radius: 8px; cursor: pointer; background: transparent; }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 8px; }
+    
+    .btn { background: var(--accent); color: white; border: none; padding: 0 20px; height: 50px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+
+    .output-grid { display: grid; gap: 15px; }
+    .output-group { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 15px; }
+    .output-group label { width: 50px; font-weight: 700; color: var(--muted); font-size: 14px; }
+    .output-group input { flex: 1; background: transparent; border: none; color: var(--text); font-family: var(--fmono); font-size: 15px; outline: none; }
+    .copy-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 5px; transition: color 0.2s; }
+    .copy-btn:hover { color: var(--accent); }
   </style>
 </head>
 <body>
-  <nav><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></nav>
-  <div class="container">
-    <h2 style="font-family:'Syne';">Color Picker</h2>
-    <input type="color" id="nativePicker" style="width:100%; height:50px; cursor:pointer; border-radius:8px; border:none; margin-top:15px;">
-    <div class="color-box" id="displayBlock" style="background:#ec4899;"></div>
-    <input type="text" class="inp-val" id="hexVal" value="#ec4899" readonly>
-    <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('hexVal').value); alert('Copied!')">Copy HEX Code</button>
+
+  <nav>
+    <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    <div style="width: 70px;"></div>
+  </nav>
+
+  <div class="main">
+    <div class="tool-header">
+      <h1>Color Picker</h1>
+      <p style="color: var(--muted);">Advanced color inspection, extraction, and HEX copying.</p>
+    </div>
+
+    <div class="workspace">
+      <div class="color-preview" id="preview"></div>
+      
+      <div class="controls">
+        <input type="color" id="colorInput" value="#ec4899">
+        <button class="btn" id="eyeDropperBtn" title="Pick color from screen"><i class="fa-solid fa-eye-dropper"></i> Pick Screen Color</button>
+      </div>
+
+      <div class="output-grid">
+        <div class="output-group">
+          <label>HEX</label>
+          <input type="text" id="hexOut" readonly>
+          <button class="copy-btn" onclick="copyText('hexOut')"><i class="fa-regular fa-copy"></i></button>
+        </div>
+        <div class="output-group">
+          <label>RGB</label>
+          <input type="text" id="rgbOut" readonly>
+          <button class="copy-btn" onclick="copyText('rgbOut')"><i class="fa-regular fa-copy"></i></button>
+        </div>
+        <div class="output-group">
+          <label>HSL</label>
+          <input type="text" id="hslOut" readonly>
+          <button class="copy-btn" onclick="copyText('hslOut')"><i class="fa-regular fa-copy"></i></button>
+        </div>
+      </div>
+    </div>
   </div>
+
   <script>
+    // Sync Theme with index.html
     document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
-    const picker = document.getElementById('nativePicker');
-    const block = document.getElementById('displayBlock');
-    const input = document.getElementById('hexVal');
-    picker.addEventListener('input', e => {
-      block.style.background = e.target.value;
-      input.value = e.target.value.toUpperCase();
+
+    const colorInput = document.getElementById('colorInput');
+    const preview = document.getElementById('preview');
+    const hexOut = document.getElementById('hexOut');
+    const rgbOut = document.getElementById('rgbOut');
+    const hslOut = document.getElementById('hslOut');
+    const eyeDropperBtn = document.getElementById('eyeDropperBtn');
+
+    // Hide EyeDropper button if browser doesn't support it
+    if (!window.EyeDropper) { eyeDropperBtn.style.display = 'none'; }
+
+    function hexToRGB(hex) {
+      let r = 0, g = 0, b = 0;
+      if (hex.length === 4) {
+        r = "0x" + hex + hex; g = "0x" + hex + hex; b = "0x" + hex + hex;
+      } else if (hex.length === 7) {
+        r = "0x" + hex + hex; g = "0x" + hex + hex; b = "0x" + hex + hex;
+      }
+      return `rgb(${+r}, ${+g}, ${+b})`;
+    }
+
+    function hexToHSL(hex) {
+      let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      let r = parseInt(result, 16) / 255;
+      let g = parseInt(result, 16) / 255;
+      let b = parseInt(result, 16) / 255;
+      let max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      if (max == min) { h = s = 0; } 
+      else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+    }
+
+    function updateColors(hex) {
+      preview.style.backgroundColor = hex;
+      hexOut.value = hex.toUpperCase();
+      rgbOut.value = hexToRGB(hex);
+      hslOut.value = hexToHSL(hex);
+    }
+
+    colorInput.addEventListener('input', (e) => updateColors(e.target.value));
+
+    eyeDropperBtn.addEventListener('click', async () => {
+      const eyeDropper = new EyeDropper();
+      try {
+        const result = await eyeDropper.open();
+        colorInput.value = result.sRGBHex;
+        updateColors(result.sRGBHex);
+      } catch (e) {
+        console.log('EyeDropper closed or failed');
+      }
     });
+
+    function copyText(id) {
+      const el = document.getElementById(id);
+      el.select();
+      document.execCommand('copy');
+      
+      const btn = el.nextElementSibling;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check" style="color: #10b981;"></i>';
+      setTimeout(() => btn.innerHTML = originalHtml, 1500);
+    }
+
+    // Init
+    updateColors(colorInput.value);
   </script>
 </body>
 </html>

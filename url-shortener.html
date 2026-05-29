@@ -157,7 +157,8 @@
         } else {
           shortId = generateShortId();
         }
-        const shortURL = `${window.location.origin}/s/${shortId}`;
+        // USE HASH-BASED SHORT LINK
+        const shortURL = `${window.location.origin}/#/s/${shortId}`;
         const entry = {
           id: shortId,
           long: longUrl,
@@ -305,23 +306,7 @@
         }
       });
 
-      // Redirect handler
-      if (window.location.pathname.startsWith('/s/')) {
-        const shortId = window.location.pathname.split('/s/')[1];
-        const stored = localStorage.getItem(`redirect_${shortId}`);
-        if (stored) {
-          const entry = JSON.parse(stored);
-          if (entry.expiry && Date.now() > entry.expiry) {
-            document.body.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>Link Expired</h2><a href="./index.html">Go Home</a></div>';
-          } else {
-            entry.clicks = (entry.clicks || 0) + 1;
-            localStorage.setItem(`redirect_${shortId}`, JSON.stringify(entry));
-            window.location.href = entry.long;
-          }
-        } else {
-          document.body.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>URL not found</h2><a href="./index.html">Go Home</a></div>';
-        }
-      }
+      // NO longer need the path-based redirect check (it's handled in index.html via hash)
 
       renderHistory();
     })();

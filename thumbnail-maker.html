@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thumbnail Maker — PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
+    
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255, 255, 255, 0.75); --card: #ffffff;
+      --border: rgba(0, 0, 0, 0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236, 72, 153, 0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21, 21, 30, 0.7); --card: #15151e;
+      --border: rgba(255, 255, 255, 0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236, 72, 153, 0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+    nav { position: sticky; top: 0; z-index: 200; display: flex; align-items: center; padding: 0 2rem; height: 64px; background: var(--surface); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; text-transform: uppercase; }
+    .nav-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .container { max-width: 1200px; margin: 2rem auto; width: 100%; padding: 0 20px; display: grid; grid-template-columns: 1fr 350px; gap: 2rem; flex: 1; }
+    @media(max-width:900px){ .container { grid-template-columns: 1fr; } }
+    .canvas-area { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; position: relative; }
+    .canvas-wrapper { max-width: 100%; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; background: #000; }
+    canvas { display: block; max-width: 100%; height: auto; }
+    .sidebar-controls { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px; height: fit-content; }
+    h1 { font-family: 'Syne', sans-serif; font-size: 1.5rem; margin-bottom: 4px; }
+    .control-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+    input[type="text"], select, input[type="color"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; font-family: inherit; }
+    .btn { background: var(--text); color: var(--bg); border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn:hover { background: var(--accent); color: white; }
+    .file-input { display: none; }
+  </style>
+</head>
+<body>
+  <nav><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></nav>
+  
+  <div class="container">
+    <div class="canvas-area">
+      <div class="canvas-wrapper">
+        <canvas id="thumbCanvas" width="1280" height="720"></canvas>
+      </div>
+    </div>
+
+    <div class="sidebar-controls">
+      <div>
+        <h1>Thumbnail Maker</h1>
+        <p style="font-size:13px; color:var(--muted)">Generate custom streaming & social cards.</p>
+      </div>
+      
+      <div class="control-group">
+        <label>Background Image</label>
+        <button class="btn" onclick="document.getElementById('bgUpload').click()"><i class="fa-solid fa-image"></i> Upload Image</button>
+        <input type="file" id="bgUpload" class="file-input" accept="image/*">
+      </div>
+
+      <div class="control-group">
+        <label>Overlay Text</label>
+        <input type="text" id="overlayText" value="AMAZING NEW TOOL!">
+      </div>
+
+      <div class="control-group">
+        <label>Text Color</label>
+        <input type="color" id="textColor" value="#ffffff">
+      </div>
+
+      <div class="control-group">
+        <label>Background Banner</label>
+        <input type="color" id="bannerColor" value="#ec4899">
+      </div>
+
+      <div class="control-group">
+        <label>Template Layout</label>
+        <select id="layoutSelect">
+          <option value="bottom">Bottom Banner</option>
+          <option value="center">Centered Minimal</option>
+          <option value="top">Top Banner</option>
+        </select>
+      </div>
+
+      <button class="btn" id="downloadBtn" style="background:linear-gradient(135deg, var(--accent), var(--accent2)); color:white;"><i class="fa-solid fa-download"></i> Download Thumbnail</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('thumbCanvas');
+    const ctx = canvas.getContext('2d');
+    let bgImg = null;
+
+    // Load System Theme
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
+
+    function drawThumbnail() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (bgImg) {
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+      } else {
+        let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, '#1e1e2f');
+        grad.addColorStop(1, '#0f0f15');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      const text = document.getElementById('overlayText').value;
+      const textColor = document.getElementById('textColor').value;
+      const bannerColor = document.getElementById('bannerColor').value;
+      const layout = document.getElementById('layoutSelect').value;
+
+      ctx.font = "bold 70px 'DM Sans', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const textWidth = ctx.measureText(text).width + 60;
+
+      let yPos = canvas.height / 2;
+      if (layout === 'bottom') yPos = canvas.height - 120;
+      if (layout === 'top') yPos = 120;
+
+      // Draw Banner Background
+      ctx.fillStyle = bannerColor;
+      ctx.fillRect((canvas.width - textWidth)/2, yPos - 60, textWidth, 120);
+
+      // Draw Text
+      ctx.fillStyle = textColor;
+      ctx.fillText(text, canvas.width / 2, yPos + 5);
+    }
+
+    document.getElementById('bgUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bgImg = new Image();
+        bgImg.onload = drawThumbnail;
+        bgImg.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    ['overlayText', 'textColor', 'bannerColor', 'layoutSelect'].forEach(id => {
+      document.getElementById(id).addEventListener('input', drawThumbnail);
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'pixelpress-thumbnail.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+
+    drawThumbnail();
+  </script>
+</body>
+</html>

@@ -1,180 +1,330 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Shortener - PixelPress</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>URL Shortener – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f5f5f7; color: #1d1d1f;
-      min-height: 100vh; display: flex; flex-direction: column;
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+      --fhead: 'Syne', sans-serif; --fbody: system-ui, -apple-system, sans-serif; --fmono: 'JetBrains Mono', monospace;
     }
-    [data-theme="dark"] body { background: #09090e; color: #e8e8f0; }
-    nav {
-      background: rgba(255,255,255,0.75); backdrop-filter: blur(20px);
-      padding: 0 2rem; height: 64px; display: flex; align-items: center;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
     }
-    [data-theme="dark"] nav { background: rgba(21,21,30,0.7); border-color: rgba(255,255,255,0.08); }
-    .nav-logo {
-      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem;
-      text-transform: uppercase; text-decoration: none; color: inherit;
-    }
-    .nav-logo span {
-      background: linear-gradient(135deg, #ec4899, #a78bfa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .container {
-      max-width: 700px; margin: 3rem auto; padding: 2rem; flex: 1;
-    }
-    h1 {
-      font-size: 2rem; margin-bottom: 1rem;
-      background: linear-gradient(135deg, #ec4899, #a78bfa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .input-group {
-      display: flex; gap: 10px; margin-bottom: 2rem;
-    }
-    input {
-      flex: 1; padding: 12px 16px; border: 1px solid #ddd;
-      border-radius: 12px; font-size: 15px; outline: none;
-    }
-    [data-theme="dark"] input { background: #1e1e2e; color: #e8e8f0; border-color: #333; }
-    button {
-      background: #ec4899; color: white; border: none;
-      padding: 12px 24px; border-radius: 12px; font-weight: 600;
-      cursor: pointer; transition: transform 0.2s;
-    }
-    button:hover { transform: scale(1.05); }
-    .result-box {
-      background: white; padding: 20px; border-radius: 12px;
-      margin-top: 1rem; display: none;
-    }
-    [data-theme="dark"] .result-box { background: #1e1e2e; }
-    .short-url {
-      font-size: 1.2rem; color: #ec4899; word-break: break-all;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .history {
-      margin-top: 2rem;
-    }
-    .history-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px; background: white; margin-bottom: 8px;
-      border-radius: 10px; font-size: 14px;
-    }
-    [data-theme="dark"] .history-item { background: #1e1e2e; }
-    .back-link {
-      display: inline-block; margin-top: 1rem; color: #ec4899;
-      text-decoration: none; font-weight: 600;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:var(--fbody); min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:var(--fhead); font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:900px; margin:0 auto; width:100%; padding:2rem 20px; }
+    .hero { text-align:center; margin-bottom:2rem; }
+    .hero h1 { font-family:var(--fhead); font-size:clamp(2rem,5vw,2.5rem); font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:2rem; box-shadow:0 4px 20px rgba(0,0,0,0.02); }
+    .input-group { display:flex; gap:12px; margin-bottom:1.5rem; flex-wrap:wrap; }
+    input, select { flex:1; padding:12px 16px; border:1px solid var(--border); border-radius:12px; font-size:15px; background:var(--bg); color:var(--text); outline:none; min-width:200px; }
+    input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--glow); }
+    .btn { padding:12px 24px; border:none; border-radius:12px; font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; font-size:0.95rem; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 25px var(--glow); }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .result-box { background:var(--bg); border-radius:12px; padding:16px; display:flex; align-items:center; gap:12px; margin:1.5rem 0; flex-wrap:wrap; }
+    .short-url { font-family:var(--fmono); font-size:1.1rem; color:var(--accent); word-break:break-all; flex:1; }
+    .qr-container { display:inline-block; background:white; padding:10px; border-radius:12px; }
+    .history { margin-top:2rem; }
+    .history-item { display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg); margin-bottom:8px; border-radius:10px; font-size:14px; gap:10px; flex-wrap:wrap; }
+    .history-item .actions { display:flex; gap:8px; }
+    .toolbar { display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap; }
+    .batch-textarea { width:100%; min-height:80px; margin-top:10px; border-radius:10px; padding:10px; background:var(--bg); color:var(--text); border:1px solid var(--border); font-family:var(--fmono); font-size:0.9rem; }
+    .expired { opacity:0.6; text-decoration:line-through; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
 <body>
   <nav>
-    <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
   </nav>
-
-  <div class="container">
-    <h1>URL Shortener</h1>
-    <p style="margin-bottom:1.5rem; color:#6e6e73;">Shorten long URLs instantly — all processing happens locally in your browser.</p>
-    <div class="input-group">
-      <input type="url" id="longUrl" placeholder="Enter long URL..." />
-      <button onclick="shortenURL()">Shorten</button>
+  <div class="main">
+    <div class="hero">
+      <h1>URL Shortener</h1>
+      <p style="color:var(--muted); margin-top:0.5rem;">Shorten, customize, track – all client‑side</p>
     </div>
-    
-    <div class="result-box" id="resultBox">
-      <strong>Shortened URL:</strong>
-      <div class="short-url" id="shortUrlDisplay"></div>
-      <button onclick="copyURL()" style="margin-top:10px; background:#a78bfa;">
-        <i class="fa-solid fa-copy"></i> Copy
-      </button>
+    <div class="card">
+      <div class="input-group">
+        <input type="url" id="longUrl" placeholder="Enter long URL (https://...)" />
+        <input type="text" id="customAlias" placeholder="Custom alias (optional)" maxlength="30" />
+        <select id="expirySelect">
+          <option value="">No expiry</option>
+          <option value="1h">1 hour</option>
+          <option value="24h">24 hours</option>
+          <option value="7d">7 days</option>
+          <option value="30d">30 days</option>
+        </select>
+        <button class="btn btn-primary" id="shortenBtn"><i class="fa-solid fa-link"></i> Shorten</button>
+      </div>
+      <div id="resultSection" style="display:none;">
+        <div class="result-box">
+          <div class="short-url" id="shortUrlDisplay"></div>
+          <div class="qr-container" id="qrContainer"></div>
+          <button class="btn btn-outline" id="copyBtn"><i class="fa-solid fa-copy"></i> Copy</button>
+          <button class="btn btn-outline" id="openBtn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-outline" id="batchBtn"><i class="fa-solid fa-layer-group"></i> Batch Shorten</button>
+        <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-download"></i> Export</button>
+        <button class="btn btn-outline" id="importBtn"><i class="fa-solid fa-upload"></i> Import</button>
+        <button class="btn btn-outline" id="clearHistoryBtn"><i class="fa-solid fa-trash"></i> Clear All</button>
+      </div>
+      <textarea class="batch-textarea" id="batchInput" placeholder="Paste multiple URLs (one per line)" style="display:none;"></textarea>
+      <div class="history">
+        <h3 style="margin-bottom:12px;">Your Shortened URLs</h3>
+        <div id="historyList"></div>
+      </div>
     </div>
-
-    <div class="history" id="historySection">
-      <h3 style="margin-bottom:12px;">Recent Shortcuts</h3>
-      <div id="historyList"></div>
-    </div>
-    
-    <a href="./index.html" class="back-link">← Back to Tools</a>
   </div>
+  <footer>© 2026 PixelPress – No server, all data stays in your browser</footer>
 
   <script>
-    let currentShortURL = '';
+    (function() {
+      // Theme sync
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
 
-    function shortenURL() {
-      const longUrl = document.getElementById('longUrl').value.trim();
-      if (!longUrl) return alert('Please enter a URL');
-      
-      try {
-        new URL(longUrl);
-      } catch {
-        return alert('Please enter a valid URL (include http:// or https://)');
+      const longUrlInput = document.getElementById('longUrl');
+      const customAliasInput = document.getElementById('customAlias');
+      const expirySelect = document.getElementById('expirySelect');
+      const shortenBtn = document.getElementById('shortenBtn');
+      const resultSection = document.getElementById('resultSection');
+      const shortUrlDisplay = document.getElementById('shortUrlDisplay');
+      const qrContainer = document.getElementById('qrContainer');
+      const historyList = document.getElementById('historyList');
+
+      let currentShortURL = '';
+      let currentQR = null;
+
+      function generateShortId() {
+        const arr = new Uint8Array(6);
+        crypto.getRandomValues(arr);
+        return Array.from(arr, b => b.toString(36).padStart(2, '0')).join('');
       }
 
-      // Generate short ID using browser-native crypto
-      const array = new Uint8Array(6);
-      crypto.getRandomValues(array);
-      const shortId = Array.from(array, byte => byte.toString(36).padStart(2, '0')).join('');
-      
-      currentShortURL = `${window.location.origin}/s/${shortId}`;
-      
-      // Store in localStorage
-      const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
-      history.unshift({ long: longUrl, short: currentShortURL, id: shortId, time: new Date().toLocaleString() });
-      localStorage.setItem('pixelpress_urls', JSON.stringify(history.slice(0, 20))); // Keep last 20
-      localStorage.setItem(`redirect_${shortId}`, longUrl);
+      function getExpiryTimestamp(expiry) {
+        if (!expiry) return null;
+        const now = Date.now();
+        switch(expiry) {
+          case '1h': return now + 3600000;
+          case '24h': return now + 86400000;
+          case '7d': return now + 604800000;
+          case '30d': return now + 2592000000;
+          default: return null;
+        }
+      }
 
-      document.getElementById('shortUrlDisplay').textContent = currentShortURL;
-      document.getElementById('resultBox').style.display = 'block';
-      renderHistory();
-    }
+      function shortenURL(longUrl, customAlias, expiry) {
+        if (!longUrl) return alert('Please enter a URL');
+        try { new URL(longUrl); } catch { return alert('Invalid URL. Include http:// or https://'); }
 
-    function copyURL() {
-      navigator.clipboard.writeText(currentShortURL).then(() => {
-        alert('URL copied to clipboard!');
-      });
-    }
+        let shortId = customAlias.trim();
+        if (shortId) {
+          if (localStorage.getItem(`redirect_${shortId}`)) {
+            return alert('Alias already taken. Try another.');
+          }
+        } else {
+          shortId = generateShortId();
+        }
+        const shortURL = `${window.location.origin}/s/${shortId}`;
+        const entry = {
+          id: shortId,
+          long: longUrl,
+          short: shortURL,
+          time: new Date().toISOString(),
+          expiry: getExpiryTimestamp(expiry),
+          clicks: 0
+        };
+        localStorage.setItem(`redirect_${shortId}`, JSON.stringify(entry));
+        const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
+        history.unshift(entry);
+        localStorage.setItem('pixelpress_urls', JSON.stringify(history.slice(0, 50)));
 
-    function renderHistory() {
-      const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
-      const list = document.getElementById('historyList');
-      list.innerHTML = history.length ? '' : '<p style="color:#6e6e73;">No shortened URLs yet.</p>';
-      history.forEach(item => {
-        list.innerHTML += `
-          <div class="history-item">
-            <div>
-              <strong>${item.short}</strong><br>
-              <small style="color:#6e6e73;">${item.long.substring(0, 50)}... · ${item.time}</small>
+        return entry;
+      }
+
+      function renderQR(url) {
+        qrContainer.innerHTML = '';
+        if (currentQR) currentQR.clear();
+        currentQR = new QRCode(qrContainer, {
+          text: url,
+          width: 100,
+          height: 100,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+
+      function displayResult(entry) {
+        currentShortURL = entry.short;
+        shortUrlDisplay.textContent = entry.short;
+        resultSection.style.display = 'block';
+        renderQR(entry.short);
+        document.getElementById('openBtn').onclick = () => window.open(entry.short, '_blank');
+        document.getElementById('copyBtn').onclick = () => {
+          navigator.clipboard.writeText(entry.short).then(() => alert('Copied!'));
+        };
+      }
+
+      function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
+        historyList.innerHTML = history.length ? '' : '<p style="color:var(--muted);">No URLs yet.</p>';
+        history.forEach((item, idx) => {
+          const isExpired = item.expiry && Date.now() > item.expiry;
+          const div = document.createElement('div');
+          div.className = `history-item ${isExpired ? 'expired' : ''}`;
+          div.innerHTML = `
+            <div style="flex:1;">
+              <strong>${item.short}</strong>${isExpired ? ' (Expired)' : ''}<br>
+              <small style="color:var(--muted);">${item.long.substring(0, 60)}... · ${new Date(item.time).toLocaleString()} · Clicks: ${item.clicks || 0}</small>
             </div>
-            <button onclick="copyText('${item.short}')" style="padding:6px 12px; font-size:12px;">
-              <i class="fa-solid fa-copy"></i>
-            </button>
-          </div>`;
-      });
-    }
-
-    function copyText(text) {
-      navigator.clipboard.writeText(text).then(() => alert('Copied!'));
-    }
-
-    // Handle redirects when user visits /s/shortId
-    if (window.location.pathname.startsWith('/s/')) {
-      const shortId = window.location.pathname.split('/s/')[1];
-      const longUrl = localStorage.getItem(`redirect_${shortId}`);
-      if (longUrl) {
-        window.location.href = longUrl;
-      } else {
-        document.body.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>URL not found</h2><p>This shortened URL doesn\'t exist or has expired.</p><a href="./index.html">Go Home</a></div>';
+            <div class="actions">
+              <button class="btn btn-outline btn-small" onclick="copyText('${item.short}')"><i class="fa-solid fa-copy"></i></button>
+              <button class="btn btn-outline btn-small" onclick="deleteEntry(${idx})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          `;
+          historyList.appendChild(div);
+        });
       }
-    }
 
-    renderHistory();
-    const theme = localStorage.getItem('pixelpress-theme') || 'light';
-    document.documentElement.setAttribute('data-theme', theme);
+      window.copyText = (text) => {
+        navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+      };
+      window.deleteEntry = (index) => {
+        const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
+        const removed = history.splice(index, 1)[0];
+        localStorage.setItem('pixelpress_urls', JSON.stringify(history));
+        localStorage.removeItem(`redirect_${removed.id}`);
+        renderHistory();
+      };
+
+      shortenBtn.addEventListener('click', () => {
+        const longUrl = longUrlInput.value.trim();
+        const alias = customAliasInput.value.trim();
+        const expiry = expirySelect.value;
+        if (!longUrl) return alert('Enter URL');
+        const entry = shortenURL(longUrl, alias, expiry);
+        if (entry) {
+          displayResult(entry);
+          renderHistory();
+          longUrlInput.value = '';
+          customAliasInput.value = '';
+          expirySelect.value = '';
+        }
+      });
+
+      // Batch shorten
+      document.getElementById('batchBtn').addEventListener('click', () => {
+        const batchInput = document.getElementById('batchInput');
+        batchInput.style.display = batchInput.style.display === 'none' ? 'block' : 'none';
+        if (batchInput.style.display === 'block') batchInput.focus();
+      });
+
+      document.getElementById('batchInput').addEventListener('change', () => {
+        const lines = document.getElementById('batchInput').value.split('\n').filter(l => l.trim());
+        lines.forEach(url => {
+          try { new URL(url); shortenURL(url, '', ''); } catch {}
+        });
+        document.getElementById('batchInput').value = '';
+        document.getElementById('batchInput').style.display = 'none';
+        renderHistory();
+        alert(`Shortened ${lines.length} URLs.`);
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
+        const blob = new Blob([JSON.stringify(history, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'pixelpress_urls.json';
+        a.click();
+      });
+
+      document.getElementById('importBtn').addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try {
+              const data = JSON.parse(ev.target.result);
+              if (Array.isArray(data)) {
+                localStorage.setItem('pixelpress_urls', JSON.stringify(data));
+                data.forEach(item => localStorage.setItem(`redirect_${item.id}`, JSON.stringify(item)));
+                renderHistory();
+                alert('Imported successfully.');
+              }
+            } catch { alert('Invalid file.'); }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      });
+
+      document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        if (confirm('Delete all shortened URLs?')) {
+          const history = JSON.parse(localStorage.getItem('pixelpress_urls') || '[]');
+          history.forEach(item => localStorage.removeItem(`redirect_${item.id}`));
+          localStorage.removeItem('pixelpress_urls');
+          renderHistory();
+        }
+      });
+
+      // Redirect handler
+      if (window.location.pathname.startsWith('/s/')) {
+        const shortId = window.location.pathname.split('/s/')[1];
+        const stored = localStorage.getItem(`redirect_${shortId}`);
+        if (stored) {
+          const entry = JSON.parse(stored);
+          if (entry.expiry && Date.now() > entry.expiry) {
+            document.body.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>Link Expired</h2><a href="./index.html">Go Home</a></div>';
+          } else {
+            entry.clicks = (entry.clicks || 0) + 1;
+            localStorage.setItem(`redirect_${shortId}`, JSON.stringify(entry));
+            window.location.href = entry.long;
+          }
+        } else {
+          document.body.innerHTML = '<div style="text-align:center;padding:4rem;"><h2>URL not found</h2><a href="./index.html">Go Home</a></div>';
+        }
+      }
+
+      renderHistory();
+    })();
   </script>
 </body>
 </html>

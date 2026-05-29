@@ -1,113 +1,854 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photo Editor — PixelPress</title>
+  <title>Advanced Photo Editor – PixelPress</title>
+  <!-- Background Removal AI -->
+  <script src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#f1f5f9; font-family:system-ui,-apple-system,sans-serif; color:#0f172a; padding:15px; }
-    .container { max-width:1400px; margin:auto; background:white; border-radius:24px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.12); }
-    .header { background:linear-gradient(135deg,#ec4899,#7e22ce); color:white; text-align:center; padding:30px 20px; }
-    .header h1 { font-size:36px; }
-    .top-back { display:inline-block; margin-top:15px; text-decoration:none; color:white; background:rgba(255,255,255,0.15); padding:10px 18px; border-radius:12px; }
-    .upload-area { margin:30px; border:4px dashed #94a3b8; border-radius:20px; padding:60px 20px; text-align:center; cursor:pointer; transition:0.3s; }
-    .upload-area:hover { border-color:#ec4899; background:#fdf4ff; }
-    .editor { display:none; padding:20px; }
-    .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px; background:#f1f5f9; padding:10px; border-radius:12px; }
-    .toolbar button, .toolbar select, .toolbar input { padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; background:white; cursor:pointer; font-size:14px; }
-    .toolbar button.active { background:#ec4899; color:white; }
-    .workspace { display:flex; gap:15px; flex-wrap:wrap; }
-    .canvas-container { flex:3; min-width:300px; text-align:center; background:#e2e8f0; border-radius:16px; padding:20px; position:relative; overflow:hidden; }
-    canvas { max-width:100%; height:auto; border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.2); }
-    .side-panel { flex:1; min-width:250px; background:#f8fafc; border-radius:16px; padding:15px; display:flex; flex-direction:column; gap:12px; }
-    .layers-list { list-style:none; max-height:200px; overflow-y:auto; }
-    .layer-item { display:flex; align-items:center; gap:8px; padding:6px; border-radius:8px; cursor:pointer; }
-    .layer-item.active { background:#e0f2fe; }
-    .layer-thumb { width:40px; height:40px; object-fit:cover; border-radius:4px; }
-    .slider-group label { display:block; font-weight:600; margin-bottom:4px; }
-    input[type="range"] { width:100%; }
-    .status { font-size:13px; color:#64748b; margin-top:5px; }
-    @media(max-width:768px) {
-      .workspace { flex-direction:column; }
-      .toolbar { justify-content:center; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: rgba(255,255,255,0.75);
+      --card: #ffffff;
+      --border: rgba(0,0,0,0.06);
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #ec4899;
+      --accent2: #a78bfa;
+      --glow: rgba(236,72,153,0.1);
+      --r: 16px;
+      --fhead: 'Syne', sans-serif;
+      --fbody: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
+
+    [data-theme="dark"] {
+      --bg: #09090e;
+      --surface: rgba(21,21,30,0.7);
+      --card: #15151e;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8f0;
+      --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg); color: var(--text); font-family: var(--fbody);
+      min-height:100vh; display:flex; flex-direction:column;
+      transition: background 0.3s, color 0.3s;
+    }
+    nav {
+      position:sticky; top:0; z-index:200; display:flex; align-items:center;
+      justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px;
+      background: var(--surface); backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn {
+      background: var(--card); border:1px solid var(--border); width:42px; height:42px;
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      color: var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: var(--accent); transform: scale(1.05); }
+    .nav-logo {
+      font-family: var(--fhead); font-weight:800; font-size:1.25rem;
+      text-transform:uppercase; text-decoration:none; color:inherit;
+    }
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .main {
+      flex:1; display:flex; flex-direction:column; max-width:1400px; margin:0 auto; width:100%; padding:1rem;
+    }
+    .upload-section { 
+      flex:1; display:flex; align-items:center; justify-content:center;
+    }
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--r); padding:4rem;
+      text-align:center; cursor:pointer; transition:0.2s;
+      background: var(--card);
+    }
+    .upload-zone:hover { border-color: var(--accent); background: var(--glow); }
+    .upload-zone i { font-size:3rem; color:var(--accent); }
+    .toolbar {
+      display:flex; flex-wrap:wrap; gap:6px; padding:12px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .tool-btn, .tool-select {
+      padding:8px 14px; border:1px solid var(--border); border-radius:10px;
+      background: var(--card); color:var(--text); cursor:pointer; font-size:13px;
+      display:flex; align-items:center; gap:6px; transition:0.2s;
+    }
+    .tool-btn:hover, .tool-select:hover { border-color: var(--accent); }
+    .tool-btn.active { background: var(--accent); color:white; border-color:var(--accent); }
+    .workspace {
+      display:flex; gap:1rem; flex:1; min-height:0; padding:1rem 0;
+    }
+    .canvas-container {
+      flex:1; background: repeating-conic-gradient(#80808020 0% 25%, transparent 0% 50%) 50% / 20px 20px;
+      border-radius: var(--r); display:flex; align-items:center; justify-content:center;
+      overflow:auto; position:relative;
+    }
+    canvas { max-width:100%; max-height:80vh; box-shadow:0 8px 30px rgba(0,0,0,0.15); }
+    .side-panel {
+      width:280px; background: var(--card); border:1px solid var(--border);
+      border-radius: var(--r); padding:1rem; display:flex; flex-direction:column; gap:1rem;
+      overflow-y:auto;
+    }
+    @media (max-width:900px) { .workspace { flex-direction:column; } .side-panel { width:100%; } }
+    .section-title { font-weight:700; font-size:14px; margin-bottom:6px; }
+    .layers-list { list-style:none; max-height:200px; overflow-y:auto; }
+    .layer-item {
+      display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px;
+      cursor:pointer; border:1px solid transparent;
+    }
+    .layer-item.active { border-color:var(--accent); background:var(--glow); }
+    .layer-thumb { width:40px; height:40px; object-fit:cover; border-radius:4px; }
+    .layer-info { flex:1; font-size:12px; }
+    .layer-actions { display:flex; gap:4px; }
+    .slider-group { display:flex; align-items:center; gap:8px; font-size:13px; }
+    input[type="range"] { flex:1; accent-color:var(--accent); }
+    button, select, input { font-family:inherit; }
+    .hidden { display:none !important; }
+    .filter-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+    .filter-grid button { padding:6px; font-size:12px; }
+    footer { text-align:center; padding:1rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h1>✨ Advanced Photo Editor</h1>
-    <p>Layers • AI Tools • Non‑destructive</p>
-    <a href="./index.html" class="top-back">← Back Home</a>
-  </div>
-
-  <div id="uploadSection">
-    <div class="upload-area" id="dropZone">
-      <h2>📸 Upload Photo</h2>
-      <p>Click or Drag & Drop Image Here</p>
-      <small>JPG, PNG, WEBP, AVIF supported</small>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
     </div>
-    <input type="file" id="fileInput" accept="image/*" hidden>
-  </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
 
-  <div class="editor" id="editorSection">
-    <div class="toolbar" id="toolbar">
-      <button id="cropBtn" title="Crop">✂️ Crop</button>
-      <button id="drawBtn" title="Draw">🖌 Draw</button>
-      <button id="textBtn" title="Text">🔤 Text</button>
-      <button id="shapeBtn" title="Shapes">⏺ Shapes</button>
-      <button id="watermarkBtn" title="Watermark">💧 Watermark</button>
-      <button id="bgRemoveBtn" title="Remove Background">🫥 Remove BG</button>
-      <button id="autoEnhanceBtn" title="Auto Enhance">✨ Enhance</button>
-      <button id="undoBtn" title="Undo">↩️</button>
-      <button id="redoBtn" title="Redo">↪️</button>
-      <select id="layerBlend" style="width:auto;">
-        <option value="normal">Normal</option>
-        <option value="multiply">Multiply</option>
-        <option value="screen">Screen</option>
-      </select>
-      <input type="color" id="colorPicker" value="#000000" title="Color">
-      <input type="range" id="brushSize" min="1" max="50" value="5" title="Brush Size">
-    </div>
-
-    <div class="workspace">
-      <div class="canvas-container" id="canvasContainer">
-        <canvas id="mainCanvas"></canvas>
+  <div class="main">
+    <!-- Upload Section -->
+    <div class="upload-section" id="uploadSection">
+      <div class="upload-zone" id="dropZone">
+        <i class="fa-solid fa-cloud-upload"></i>
+        <h2 style="margin:1rem 0 0.5rem;">Upload a Photo</h2>
+        <p>Drag & drop or click to browse</p>
       </div>
-      <div class="side-panel">
-        <div>
-          <h4>Layers</h4>
+      <input type="file" id="fileInput" accept="image/*" hidden />
+    </div>
+
+    <!-- Editor Section (hidden initially) -->
+    <div id="editorSection" class="hidden" style="display:flex; flex-direction:column; flex:1;">
+      <!-- Toolbar -->
+      <div class="toolbar" id="toolbar">
+        <button class="tool-btn" data-tool="select" title="Select / Move"><i class="fa-solid fa-hand-pointer"></i></button>
+        <button class="tool-btn" data-tool="crop" title="Crop"><i class="fa-solid fa-crop"></i></button>
+        <button class="tool-btn" data-tool="draw" title="Draw"><i class="fa-solid fa-pencil"></i></button>
+        <button class="tool-btn" data-tool="eraser" title="Eraser"><i class="fa-solid fa-eraser"></i></button>
+        <button class="tool-btn" data-tool="line" title="Line"><i class="fa-solid fa-minus"></i></button>
+        <button class="tool-btn" data-tool="rect" title="Rectangle"><i class="fa-regular fa-square"></i></button>
+        <button class="tool-btn" data-tool="circle" title="Circle"><i class="fa-regular fa-circle"></i></button>
+        <button class="tool-btn" data-tool="text" title="Text"><i class="fa-solid fa-font"></i></button>
+        <button class="tool-btn" data-tool="sticker" title="Sticker"><i class="fa-solid fa-face-smile"></i></button>
+        <input type="color" id="colorPicker" value="#000000" title="Color" style="width:40px; height:38px; padding:2px; border:1px solid var(--border); border-radius:8px;" />
+        <select id="brushSize" class="tool-select" style="width:70px;">
+          <option value="2">2px</option>
+          <option value="5" selected>5px</option>
+          <option value="10">10px</option>
+          <option value="20">20px</option>
+        </select>
+        <button class="tool-btn" id="undoBtn" title="Undo (Ctrl+Z)"><i class="fa-solid fa-undo"></i></button>
+        <button class="tool-btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)"><i class="fa-solid fa-redo"></i></button>
+        <button class="tool-btn" id="downloadBtn" title="Download"><i class="fa-solid fa-download"></i></button>
+      </div>
+
+      <!-- Workspace -->
+      <div class="workspace">
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="mainCanvas"></canvas>
+        </div>
+        <!-- Side panel -->
+        <div class="side-panel">
+          <div class="section-title">Layers</div>
           <ul class="layers-list" id="layersList"></ul>
-          <button id="addLayerBtn" style="margin-top:5px;">+ Add Layer</button>
-          <button id="deleteLayerBtn">🗑 Delete</button>
+          <div style="display:flex; gap:4px;">
+            <button id="addLayerBtn" class="tool-btn" style="flex:1;">+ Layer</button>
+            <button id="deleteLayerBtn" class="tool-btn">🗑</button>
+            <button id="duplicateLayerBtn" class="tool-btn">📋</button>
+          </div>
+          <div class="slider-group">
+            <span>Opacity</span>
+            <input type="range" id="layerOpacity" min="0" max="1" step="0.05" value="1" />
+          </div>
+          <div class="slider-group">
+            <span>Blend</span>
+            <select id="layerBlend" class="tool-select">
+              <option value="normal">Normal</option>
+              <option value="multiply">Multiply</option>
+              <option value="screen">Screen</option>
+              <option value="overlay">Overlay</option>
+              <option value="darken">Darken</option>
+              <option value="lighten">Lighten</option>
+              <option value="color-dodge">Dodge</option>
+              <option value="color-burn">Burn</option>
+            </select>
+          </div>
+          <div class="section-title">Adjust</div>
+          <div class="slider-group"><span>Brightness</span><input type="range" id="brightness" min="-100" max="100" value="0" /></div>
+          <div class="slider-group"><span>Contrast</span><input type="range" id="contrast" min="-100" max="100" value="0" /></div>
+          <div class="slider-group"><span>Saturation</span><input type="range" id="saturation" min="-100" max="100" value="0" /></div>
+          <div class="slider-group"><span>Blur</span><input type="range" id="blurRadius" min="0" max="20" value="0" /></div>
+          <div class="section-title">Filters</div>
+          <div class="filter-grid">
+            <button id="filterNone" class="tool-btn">Original</button>
+            <button id="filterGrayscale" class="tool-btn">B&W</button>
+            <button id="filterSepia" class="tool-btn">Sepia</button>
+            <button id="filterInvert" class="tool-btn">Invert</button>
+            <button id="filterVintage" class="tool-btn">Vintage</button>
+            <button id="autoEnhanceBtn" class="tool-btn">✨ Enhance</button>
+          </div>
+          <div class="section-title">AI Tools</div>
+          <button id="bgRemoveBtn" class="tool-btn"><i class="fa-solid fa-ghost"></i> Remove Background</button>
+          <button id="watermarkBtn" class="tool-btn">💧 Watermark</button>
+          <button id="resetBtn" class="tool-btn">🔄 Reset All</button>
+          <div class="slider-group" style="font-size:11px; color:var(--muted);" id="statusBar">Ready</div>
         </div>
-        <div class="slider-group">
-          <label>Opacity</label>
-          <input type="range" id="layerOpacity" min="0" max="1" step="0.01" value="1">
-        </div>
-        <div>
-          <button id="flattenBtn">Flatten Image</button>
-          <button id="resetAllBtn">🔄 Reset All</button>
-          <button id="downloadBtn">📥 Download</button>
-        </div>
-        <div class="status" id="statusBar">Ready</div>
       </div>
     </div>
   </div>
-</div>
+  <footer>© 2026 PixelPress – Client‑side Photo Editor</footer>
 
-<script src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
-<script src="./js/photo-editor-layers.js"></script>
-<script src="./js/photo-editor.js"></script>
+  <script>
+    (function(){
+      // ===================== THEME SYNC =====================
+      const themeToggle = document.getElementById('themeToggle');
+      const getTheme = () => localStorage.getItem('pixelpress-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', getTheme());
+      themeToggle.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+
+      // ===================== DOM ELEMENTS =====================
+      const uploadSection = document.getElementById('uploadSection');
+      const editorSection = document.getElementById('editorSection');
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const mainCanvas = document.getElementById('mainCanvas');
+      const mainCtx = mainCanvas.getContext('2d');
+      const layersList = document.getElementById('layersList');
+      const statusBar = document.getElementById('statusBar');
+
+      // ===================== LAYER SYSTEM =====================
+      class Layer {
+        constructor(name, width, height) {
+          this.name = name;
+          this.canvas = document.createElement('canvas');
+          this.canvas.width = width;
+          this.canvas.height = height;
+          this.ctx = this.canvas.getContext('2d');
+          this.visible = true;
+          this.opacity = 1;
+          this.blendMode = 'normal';
+        }
+        getDataURL() { return this.canvas.toDataURL(); }
+        clear() { this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); }
+        drawImage(img, x=0, y=0, w, h) {
+          if (w && h) this.ctx.drawImage(img, x, y, w, h);
+          else this.ctx.drawImage(img, x, y);
+        }
+        fill(color) { this.ctx.fillStyle = color; this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height); }
+      }
+
+      class LayerManager {
+        constructor(mainCanvas) {
+          this.mainCanvas = mainCanvas;
+          this.mainCtx = mainCanvas.getContext('2d');
+          this.layers = [];
+          this.activeLayerIndex = -1;
+        }
+        addLayer(name, width, height) {
+          const w = width || this.mainCanvas.width;
+          const h = height || this.mainCanvas.height;
+          const layer = new Layer(name, w, h);
+          this.layers.push(layer);
+          this.activeLayerIndex = this.layers.length - 1;
+          return layer;
+        }
+        removeLayer(index) {
+          if (this.layers.length <= 1) return false;
+          this.layers.splice(index, 1);
+          if (this.activeLayerIndex >= this.layers.length) this.activeLayerIndex = this.layers.length - 1;
+          if (this.activeLayerIndex < 0) this.activeLayerIndex = 0;
+          return true;
+        }
+        getActiveLayer() { return this.layers[this.activeLayerIndex]; }
+        setActiveLayer(index) {
+          if (index >= 0 && index < this.layers.length) this.activeLayerIndex = index;
+        }
+        composite() {
+          const ctx = this.mainCtx;
+          ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+          for (const layer of this.layers) {
+            if (!layer.visible) continue;
+            ctx.save();
+            ctx.globalAlpha = layer.opacity;
+            ctx.globalCompositeOperation = layer.blendMode;
+            ctx.drawImage(layer.canvas, 0, 0);
+            ctx.restore();
+          }
+        }
+        flatten() {
+          const flat = new Layer('flattened', this.mainCanvas.width, this.mainCanvas.height);
+          flat.ctx.drawImage(this.mainCanvas, 0, 0);
+          this.layers = [flat];
+          this.activeLayerIndex = 0;
+          this.composite();
+        }
+        reset(img) {
+          this.layers = [];
+          this.mainCanvas.width = img.width;
+          this.mainCanvas.height = img.height;
+          this.addLayer('Background', img.width, img.height);
+          this.getActiveLayer().drawImage(img);
+          this.composite();
+        }
+      }
+
+      let layerManager = null;
+      let originalImage = null;
+      let currentTool = 'select';
+      let isDrawing = false;
+      let startX, startY;
+      let cropRect = null;
+      let tempCanvas = null; // For crop preview
+
+      // ===================== HISTORY (UNDO/REDO) =====================
+      let historyStack = [];
+      let historyIndex = -1;
+      const MAX_HISTORY = 50;
+
+      function pushHistory() {
+        const snap = mainCanvas.toDataURL();
+        if (historyIndex < historyStack.length - 1) {
+          historyStack = historyStack.slice(0, historyIndex + 1);
+        }
+        historyStack.push(snap);
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+        historyIndex = historyStack.length - 1;
+      }
+
+      function undo() {
+        if (historyIndex > 0) {
+          historyIndex--;
+          loadSnapshot(historyStack[historyIndex]);
+        }
+      }
+
+      function redo() {
+        if (historyIndex < historyStack.length - 1) {
+          historyIndex++;
+          loadSnapshot(historyStack[historyIndex]);
+        }
+      }
+
+      function loadSnapshot(dataUrl) {
+        const img = new Image();
+        img.onload = () => {
+          mainCanvas.width = img.width;
+          mainCanvas.height = img.height;
+          mainCtx.drawImage(img, 0, 0);
+          // Update active layer canvas to match
+          const active = layerManager.getActiveLayer();
+          if (active) {
+            active.canvas.width = img.width;
+            active.canvas.height = img.height;
+            active.ctx.clearRect(0,0,img.width,img.height);
+            active.ctx.drawImage(img,0,0);
+          }
+          layerManager.composite();
+          renderLayers();
+          status('Undo/Redo');
+        };
+        img.src = dataUrl;
+      }
+
+      // ===================== UI HELPERS =====================
+      function status(msg) { statusBar.textContent = msg; }
+      function renderLayers() {
+        if (!layerManager) return;
+        layersList.innerHTML = layerManager.layers.map((layer, i) => `
+          <li class="layer-item ${i === layerManager.activeLayerIndex ? 'active' : ''}" data-index="${i}">
+            <img class="layer-thumb" src="${layer.getDataURL()}" alt="thumb" />
+            <div class="layer-info">${layer.name}</div>
+            <div class="layer-actions">
+              <button class="layer-vis-btn" data-idx="${i}"><i class="fa-solid ${layer.visible ? 'fa-eye' : 'fa-eye-slash'}"></i></button>
+            </div>
+          </li>
+        `).join('');
+        // Click to select
+        document.querySelectorAll('.layer-item').forEach(li => {
+          li.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            const idx = parseInt(li.dataset.index);
+            layerManager.setActiveLayer(idx);
+            renderLayers();
+            updateLayerUI();
+            status(`Active: ${layerManager.getActiveLayer().name}`);
+          });
+        });
+        // Visibility toggle
+        document.querySelectorAll('.layer-vis-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.idx);
+            const layer = layerManager.layers[idx];
+            layer.visible = !layer.visible;
+            layerManager.composite();
+            renderLayers();
+            pushHistory();
+          });
+        });
+      }
+
+      function updateLayerUI() {
+        const active = layerManager.getActiveLayer();
+        if (!active) return;
+        document.getElementById('layerOpacity').value = active.opacity;
+        document.getElementById('layerBlend').value = active.blendMode;
+      }
+
+      // ===================== TOOL HANDLING =====================
+      document.getElementById('toolbar').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn || !btn.dataset.tool) return;
+        currentTool = btn.dataset.tool;
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+        if (currentTool !== 'select') btn.classList.add('active');
+        cropRect = null;
+        status(`Tool: ${currentTool}`);
+      });
+
+      // Canvas events
+      function getPos(e) {
+        const rect = mainCanvas.getBoundingClientRect();
+        const scaleX = mainCanvas.width / rect.width;
+        const scaleY = mainCanvas.height / rect.height;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      }
+
+      mainCanvas.addEventListener('mousedown', onStart);
+      mainCanvas.addEventListener('mousemove', onMove);
+      mainCanvas.addEventListener('mouseup', onEnd);
+      mainCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); onStart(e); });
+      mainCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); onMove(e); });
+      mainCanvas.addEventListener('touchend', onEnd);
+
+      function onStart(e) {
+        const pos = getPos(e);
+        const activeLayer = layerManager?.getActiveLayer();
+        if (!activeLayer) return;
+
+        if (currentTool === 'draw' || currentTool === 'eraser') {
+          isDrawing = true;
+          startX = pos.x; startY = pos.y;
+          activeLayer.ctx.beginPath();
+          activeLayer.ctx.moveTo(pos.x, pos.y);
+          if (currentTool === 'eraser') {
+            activeLayer.ctx.globalCompositeOperation = 'destination-out';
+            activeLayer.ctx.lineWidth = parseInt(document.getElementById('brushSize').value);
+          } else {
+            activeLayer.ctx.globalCompositeOperation = 'source-over';
+            activeLayer.ctx.strokeStyle = document.getElementById('colorPicker').value;
+            activeLayer.ctx.lineWidth = parseInt(document.getElementById('brushSize').value);
+            activeLayer.ctx.lineCap = 'round';
+          }
+        } else if (currentTool === 'line' || currentTool === 'rect' || currentTool === 'circle') {
+          isDrawing = true;
+          startX = pos.x; startY = pos.y;
+        } else if (currentTool === 'crop') {
+          cropRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
+        } else if (currentTool === 'text') {
+          const text = prompt('Enter text:', 'Hello');
+          if (text) {
+            activeLayer.ctx.font = '30px sans-serif';
+            activeLayer.ctx.fillStyle = document.getElementById('colorPicker').value;
+            activeLayer.ctx.fillText(text, pos.x, pos.y);
+            layerManager.composite();
+            pushHistory();
+            status('Text added');
+          }
+          currentTool = 'select';
+          document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+        } else if (currentTool === 'sticker') {
+          const emoji = prompt('Enter emoji (e.g., 😂):', '😂');
+          if (emoji) {
+            activeLayer.ctx.font = '50px Arial';
+            activeLayer.ctx.fillText(emoji, pos.x, pos.y);
+            layerManager.composite();
+            pushHistory();
+            status('Sticker added');
+          }
+          currentTool = 'select';
+        }
+      }
+
+      function onMove(e) {
+        if (!isDrawing) return;
+        const pos = getPos(e);
+        const activeLayer = layerManager?.getActiveLayer();
+        if (!activeLayer) return;
+
+        if (currentTool === 'draw' || currentTool === 'eraser') {
+          activeLayer.ctx.lineTo(pos.x, pos.y);
+          activeLayer.ctx.stroke();
+          layerManager.composite();
+        } else if (currentTool === 'line') {
+          // preview temporary
+          layerManager.composite(); // restore base first
+          mainCtx.save();
+          mainCtx.strokeStyle = document.getElementById('colorPicker').value;
+          mainCtx.lineWidth = parseInt(document.getElementById('brushSize').value);
+          mainCtx.beginPath();
+          mainCtx.moveTo(startX, startY);
+          mainCtx.lineTo(pos.x, pos.y);
+          mainCtx.stroke();
+          mainCtx.restore();
+        } else if (currentTool === 'rect') {
+          layerManager.composite();
+          mainCtx.save();
+          mainCtx.strokeStyle = document.getElementById('colorPicker').value;
+          mainCtx.lineWidth = 2;
+          mainCtx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+          mainCtx.restore();
+        } else if (currentTool === 'circle') {
+          layerManager.composite();
+          mainCtx.save();
+          mainCtx.strokeStyle = document.getElementById('colorPicker').value;
+          mainCtx.lineWidth = 2;
+          const r = Math.hypot(pos.x - startX, pos.y - startY);
+          mainCtx.beginPath();
+          mainCtx.arc(startX, startY, r, 0, Math.PI * 2);
+          mainCtx.stroke();
+          mainCtx.restore();
+        } else if (currentTool === 'crop' && cropRect) {
+          cropRect.w = pos.x - cropRect.x;
+          cropRect.h = pos.y - cropRect.y;
+          layerManager.composite();
+          mainCtx.save();
+          mainCtx.strokeStyle = 'var(--accent)';
+          mainCtx.lineWidth = 2;
+          mainCtx.setLineDash([5,3]);
+          mainCtx.strokeRect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+          mainCtx.restore();
+        }
+      }
+
+      function onEnd(e) {
+        if (!isDrawing && !cropRect) return;
+        const activeLayer = layerManager?.getActiveLayer();
+        if (activeLayer && (currentTool === 'line' || currentTool === 'rect' || currentTool === 'circle')) {
+          const pos = getPos(e);
+          activeLayer.ctx.fillStyle = document.getElementById('colorPicker').value;
+          activeLayer.ctx.strokeStyle = document.getElementById('colorPicker').value;
+          activeLayer.ctx.lineWidth = 2;
+          if (currentTool === 'line') {
+            activeLayer.ctx.beginPath();
+            activeLayer.ctx.moveTo(startX, startY);
+            activeLayer.ctx.lineTo(pos.x, pos.y);
+            activeLayer.ctx.stroke();
+          } else if (currentTool === 'rect') {
+            activeLayer.ctx.fillRect(startX, startY, pos.x - startX, pos.y - startY);
+          } else if (currentTool === 'circle') {
+            const r = Math.hypot(pos.x - startX, pos.y - startY);
+            activeLayer.ctx.beginPath();
+            activeLayer.ctx.arc(startX, startY, r, 0, Math.PI * 2);
+            activeLayer.ctx.fill();
+          }
+          layerManager.composite();
+          pushHistory();
+        } else if (currentTool === 'crop' && cropRect) {
+          applyCrop(cropRect);
+          cropRect = null;
+          pushHistory();
+        }
+        isDrawing = false;
+        // reset composite after draw preview
+        if (activeLayer) layerManager.composite();
+        if (currentTool === 'draw' || currentTool === 'eraser') {
+          pushHistory();
+          activeLayer.ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+
+      function applyCrop(rect) {
+        const w = Math.abs(rect.w), h = Math.abs(rect.h);
+        if (w < 5 || h < 5) return;
+        const x = Math.min(rect.x, rect.x + rect.w);
+        const y = Math.min(rect.y, rect.y + rect.h);
+        const imageData = mainCtx.getImageData(x, y, w, h);
+        mainCanvas.width = w;
+        mainCanvas.height = h;
+        mainCtx.putImageData(imageData, 0, 0);
+        // rebuild layers to match
+        layerManager.layers = [new Layer('Background', w, h)];
+        layerManager.getActiveLayer().ctx.drawImage(mainCanvas, 0, 0);
+        layerManager.activeLayerIndex = 0;
+        layerManager.composite();
+        renderLayers();
+        currentTool = 'select';
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+        status('Cropped');
+      }
+
+      // ===================== IMAGE LOADING =====================
+      function loadImage(file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            originalImage = img;
+            layerManager = new LayerManager(mainCanvas);
+            layerManager.reset(img);
+            historyStack = [mainCanvas.toDataURL()];
+            historyIndex = 0;
+            uploadSection.classList.add('hidden');
+            editorSection.classList.remove('hidden');
+            renderLayers();
+            updateLayerUI();
+            status('Image loaded');
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => { if (e.target.files[0]) loadImage(e.target.files[0]); });
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+      dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--border)'; });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--border)';
+        if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+      });
+
+      // ===================== BUTTONS =====================
+      document.getElementById('undoBtn').addEventListener('click', undo);
+      document.getElementById('redoBtn').addEventListener('click', redo);
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) redo(); else undo();
+        }
+      });
+
+      document.getElementById('addLayerBtn').addEventListener('click', () => {
+        layerManager.addLayer(`Layer ${layerManager.layers.length + 1}`);
+        renderLayers();
+        pushHistory();
+        layerManager.composite();
+      });
+      document.getElementById('deleteLayerBtn').addEventListener('click', () => {
+        if (layerManager.removeLayer(layerManager.activeLayerIndex)) {
+          renderLayers();
+          pushHistory();
+          layerManager.composite();
+        }
+      });
+      document.getElementById('duplicateLayerBtn').addEventListener('click', () => {
+        const active = layerManager.getActiveLayer();
+        const newLayer = layerManager.addLayer(active.name + ' copy');
+        newLayer.ctx.drawImage(active.canvas, 0, 0);
+        layerManager.composite();
+        renderLayers();
+        pushHistory();
+      });
+      document.getElementById('layerOpacity').addEventListener('input', (e) => {
+        const active = layerManager.getActiveLayer();
+        if (active) {
+          active.opacity = parseFloat(e.target.value);
+          layerManager.composite();
+          pushHistory();
+        }
+      });
+      document.getElementById('layerBlend').addEventListener('change', (e) => {
+        const active = layerManager.getActiveLayer();
+        if (active) {
+          active.blendMode = e.target.value;
+          layerManager.composite();
+          pushHistory();
+        }
+      });
+
+      // Adjustment sliders (apply to entire composite image by adjusting active layer? we adjust whole image on active layer)
+      function applyAdjustment() {
+        if (!layerManager) return;
+        const brightness = parseInt(document.getElementById('brightness').value);
+        const contrast = parseInt(document.getElementById('contrast').value);
+        const saturation = parseInt(document.getElementById('saturation').value);
+        const blur = parseInt(document.getElementById('blurRadius').value);
+        const active = layerManager.getActiveLayer();
+        if (!active) return;
+        // Restore from snapshot? We'll apply filter to active layer canvas using offscreen canvas
+        const img = new Image();
+        img.onload = () => {
+          active.ctx.clearRect(0,0,active.canvas.width,active.canvas.height);
+          active.ctx.drawImage(img,0,0);
+          // Apply filters via CSS filter string on canvas (simplified)
+          const filterStr = `brightness(${100 + brightness}%) contrast(${100 + contrast}%) saturate(${100 + saturation}%) blur(${blur}px)`;
+          active.ctx.filter = filterStr;
+          active.ctx.drawImage(active.canvas,0,0); // redraw itself with filter
+          active.ctx.filter = 'none';
+          layerManager.composite();
+          pushHistory();
+        };
+        img.src = mainCanvas.toDataURL();
+      }
+
+      ['brightness', 'contrast', 'saturation', 'blurRadius'].forEach(id => {
+        document.getElementById(id).addEventListener('input', applyAdjustment);
+      });
+
+      // Filters
+      function applyFilter(type) {
+        if (!layerManager) return;
+        const active = layerManager.getActiveLayer();
+        const imgData = active.ctx.getImageData(0,0,active.canvas.width,active.canvas.height);
+        const data = imgData.data;
+        if (type === 'grayscale') {
+          for (let i=0;i<data.length;i+=4) {
+            const avg = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+            data[i] = data[i+1] = data[i+2] = avg;
+          }
+        } else if (type === 'sepia') {
+          for (let i=0;i<data.length;i+=4) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            data[i] = Math.min(255, (r*0.393)+(g*0.769)+(b*0.189));
+            data[i+1] = Math.min(255, (r*0.349)+(g*0.686)+(b*0.168));
+            data[i+2] = Math.min(255, (r*0.272)+(g*0.534)+(b*0.131));
+          }
+        } else if (type === 'invert') {
+          for (let i=0;i<data.length;i+=4) {
+            data[i] = 255 - data[i];
+            data[i+1] = 255 - data[i+1];
+            data[i+2] = 255 - data[i+2];
+          }
+        } else if (type === 'vintage') {
+          // combine sepia + noise
+          for (let i=0;i<data.length;i+=4) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            data[i] = Math.min(255, r*1.1);
+            data[i+2] = Math.max(0, b*0.9);
+          }
+        }
+        active.ctx.putImageData(imgData,0,0);
+        layerManager.composite();
+        pushHistory();
+        status('Filter applied');
+      }
+
+      document.getElementById('filterNone').addEventListener('click', () => { loadSnapshot(historyStack[historyIndex]); });
+      document.getElementById('filterGrayscale').addEventListener('click', () => applyFilter('grayscale'));
+      document.getElementById('filterSepia').addEventListener('click', () => applyFilter('sepia'));
+      document.getElementById('filterInvert').addEventListener('click', () => applyFilter('invert'));
+      document.getElementById('filterVintage').addEventListener('click', () => applyFilter('vintage'));
+
+      document.getElementById('autoEnhanceBtn').addEventListener('click', () => {
+        if (!layerManager) return;
+        const active = layerManager.getActiveLayer();
+        const imgData = active.ctx.getImageData(0,0,active.canvas.width,active.canvas.height);
+        const data = imgData.data;
+        let min=255, max=0;
+        for (let i=0;i<data.length;i+=4) {
+          const gray = 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
+          if (gray<min) min=gray;
+          if (gray>max) max=gray;
+        }
+        if (max===min) return;
+        const range = max-min;
+        for (let i=0;i<data.length;i+=4) {
+          data[i] = ((data[i]-min)/range)*255;
+          data[i+1] = ((data[i+1]-min)/range)*255;
+          data[i+2] = ((data[i+2]-min)/range)*255;
+        }
+        active.ctx.putImageData(imgData,0,0);
+        layerManager.composite();
+        pushHistory();
+        status('Enhanced');
+      });
+
+      // AI Background Removal
+      document.getElementById('bgRemoveBtn').addEventListener('click', async () => {
+        if (!window.removeBackground) { alert('Background removal library not loaded.'); return; }
+        status('Removing background...');
+        try {
+          const blob = await (await fetch(mainCanvas.toDataURL())).blob();
+          const resultBlob = await removeBackground(blob, { model:'medium', output:{ format:'image/png' } });
+          const url = URL.createObjectURL(resultBlob);
+          const img = new Image();
+          img.onload = () => {
+            const newLayer = layerManager.addLayer('No BG');
+            newLayer.ctx.clearRect(0,0,newLayer.canvas.width,newLayer.canvas.height);
+            newLayer.ctx.drawImage(img, 0,0);
+            layerManager.composite();
+            renderLayers();
+            pushHistory();
+            status('Background removed');
+          };
+          img.src = url;
+        } catch(err) { alert('Error: '+err.message); status('Error'); }
+      });
+
+      // Watermark (text)
+      document.getElementById('watermarkBtn').addEventListener('click', () => {
+        const text = prompt('Watermark text:', '© PixelPress');
+        if (!text) return;
+        const active = layerManager.getActiveLayer();
+        active.ctx.save();
+        active.ctx.globalAlpha = 0.5;
+        active.ctx.font = 'bold 30px sans-serif';
+        active.ctx.fillStyle = 'white';
+        active.ctx.fillText(text, 20, mainCanvas.height - 20);
+        active.ctx.restore();
+        layerManager.composite();
+        pushHistory();
+        status('Watermark added');
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        if (originalImage) {
+          layerManager.reset(originalImage);
+          pushHistory();
+          renderLayers();
+          status('Reset');
+        }
+      });
+
+      document.getElementById('downloadBtn').addEventListener('click', () => {
+        const format = prompt('Format (png/jpeg/webp):', 'png');
+        if (!format) return;
+        const link = document.createElement('a');
+        link.download = `pixelpress_edited.${format}`;
+        link.href = mainCanvas.toDataURL(`image/${format}`, 0.92);
+        link.click();
+      });
+
+      // Init
+      status('Upload an image to start');
+    })();
+  </script>
 </body>
 </html>

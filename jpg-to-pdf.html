@@ -1,62 +1,275 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JPG to PDF — PixelPress</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#f1f5f9; font-family:system-ui,-apple-system,sans-serif; color:#0f172a; padding:15px; }
-    .container { max-width:900px; margin:auto; background:white; border-radius:24px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.12); }
-    .header { background:linear-gradient(135deg,#ec4899,#7e22ce); color:white; text-align:center; padding:40px 20px; }
-    .header h1 { font-size:36px; margin-bottom:10px; }
-    .top-back { display:inline-block; margin-top:15px; text-decoration:none; color:white; background:rgba(255,255,255,0.15); padding:8px 16px; border-radius:12px; font-weight:600; }
-    .upload-area { margin:30px; border:4px dashed #94a3b8; border-radius:20px; padding:60px 20px; text-align:center; cursor:pointer; transition:0.3s; }
-    .upload-area:hover, .upload-area.dragover { border-color:#ec4899; background:#fdf4ff; }
-    .work-area { display:none; padding:30px; }
-    .btn { border:none; padding:12px 24px; border-radius:12px; cursor:pointer; font-weight:600; background:#ec4899; color:white; transition:0.3s; text-decoration:none; display:inline-block; }
-    .btn:hover { background:#db2777; }
-    .preview-container { display:flex; flex-wrap:wrap; gap:15px; margin:25px 0; background:#f8fafc; padding:20px; border-radius:16px; min-height:100px; }
-    .thumb-wrapper { width:100px; position:relative; text-align:center; }
-    .thumb-wrapper img { width:100px; height:100px; object-fit:cover; border-radius:10px; border:2px solid #e2e8f0; }
-    .thumb-wrapper span { font-size:11px; color:#64748b; display:block; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JPG to PDF – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+      --fhead: 'Syne', sans-serif; --fbody: system-ui, -apple-system, sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:var(--fbody); min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:var(--fhead); font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:1000px; margin:0 auto; width:100%; padding:2rem 20px; display:grid; grid-template-columns:1fr 340px; gap:2rem; }
+    @media (max-width:800px) { .main { grid-template-columns:1fr; } }
+    .drop-zone { border:2px dashed var(--border); border-radius:var(--r); padding:2.5rem; text-align:center; cursor:pointer; transition:0.2s; background:var(--card); margin-bottom:1rem; }
+    .drop-zone:hover { border-color:var(--accent); background:var(--glow); }
+    .drop-zone i { font-size:2.5rem; color:var(--accent); }
+    .drop-zone input { display:none; }
+    .image-list { display:flex; flex-wrap:wrap; gap:10px; margin-top:1rem; min-height:60px; }
+    .image-item { position:relative; width:100px; height:100px; border-radius:8px; overflow:hidden; border:2px solid var(--border); cursor:grab; }
+    .image-item img { width:100%; height:100%; object-fit:cover; }
+    .image-item .remove-btn { position:absolute; top:2px; right:2px; background:rgba(239,68,68,0.9); color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .image-item .order-badge { position:absolute; bottom:2px; left:2px; background:rgba(0,0,0,0.7); color:white; font-size:0.65rem; padding:1px 6px; border-radius:4px; }
+    .settings-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,0.02); height:fit-content; position:sticky; top:80px; }
+    .section-title { font-family:var(--fhead); font-size:1rem; font-weight:800; margin-bottom:1rem; }
+    .input-group { margin-bottom:1rem; }
+    .input-group label { display:block; font-size:0.8rem; font-weight:600; color:var(--muted); margin-bottom:4px; }
+    .input-group select, .input-group input { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:0.9rem; }
+    .btn { padding:10px 20px; border:none; border-radius:10px; font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; width:100%; justify-content:center; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px var(--glow); }
+    .btn:disabled { opacity:0.5; pointer-events:none; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
+  </style>
 </head>
 <body>
-
-<div class="container">
-  <div class="header">
-    <h1>🖼️ JPG to PDF Converter</h1>
-    <p>Convert multiple JPG, PNG, or WEBP images into a single PDF document</p>
-    <a href="./index.html" class="top-back">← Back Home</a>
-  </div>
-
-  <div>
-    <div class="upload-area" id="dropZone">
-      <h2>Select Images</h2>
-      <p>Click or Drag & Drop Multiple Images (JPG, PNG, WEBP)</p>
+  <nav>
+    <div class="nav-left"><a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+  <div class="main">
+    <div>
+      <div class="drop-zone" id="dropZone">
+        <i class="fa-solid fa-cloud-upload"></i>
+        <h2>Drop images or click to upload</h2>
+        <p style="color:var(--muted);">JPG, PNG, WebP – multiple at once</p>
+        <input type="file" id="fileInput" accept="image/*" multiple />
+      </div>
+      <div class="image-list" id="imageList"></div>
+      <p style="font-size:0.8rem; color:var(--muted); margin-top:0.5rem;" id="imageCount">0 images added</p>
     </div>
-    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    <div class="settings-panel">
+      <div class="section-title"><i class="fa-solid fa-sliders"></i> PDF Settings</div>
+      <div class="input-group">
+        <label>Page Size</label>
+        <select id="pageSize">
+          <option value="a4">A4</option>
+          <option value="letter">Letter</option>
+          <option value="fit">Fit to Image</option>
+          <option value="original">Original Size</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Image Fit</label>
+        <select id="imageFit">
+          <option value="contain">Fit (contain)</option>
+          <option value="cover">Fill (cover)</option>
+          <option value="stretch">Stretch</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Orientation</label>
+        <select id="orientation">
+          <option value="auto">Auto (per image)</option>
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Margin (mm)</label>
+        <input type="number" id="margin" value="5" min="0" max="50" />
+      </div>
+      <div class="input-group">
+        <label>Compression</label>
+        <select id="compression">
+          <option value="NONE">None (best quality)</option>
+          <option value="FAST">Fast</option>
+          <option value="MEDIUM" selected>Medium</option>
+          <option value="SLOW">Slow (smallest)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="generateBtn" disabled><i class="fa-solid fa-file-pdf"></i> Generate PDF</button>
+    </div>
   </div>
+  <footer>© 2026 PixelPress – All processing is local & private</footer>
+  <script>
+    (function() {
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
 
-  <div class="work-area" id="workSection">
-    <h3>Images to Convert:</h3>
-    <div class="preview-container" id="previewContainer"></div>
-    <button id="generatePdfBtn" class="btn">⚡ Generate PDF Document</button>
-  </div>
-</div>
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const imageList = document.getElementById('imageList');
+      const imageCount = document.getElementById('imageCount');
+      const generateBtn = document.getElementById('generateBtn');
 
-<script src="./js/common.js"></script>
-<script src="./js/jpg-to-pdf.js"></script>
+      let images = []; // { file, dataURL, width, height }
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => addFiles([...e.target.files]));
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+      dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--border)'; });
+      dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; addFiles([...e.dataTransfer.files]); });
+
+      function addFiles(files) {
+        const imageFiles = files.filter(f => f.type.startsWith('image/')).slice(0, 30 - images.length);
+        imageFiles.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              images.push({ file, dataURL: e.target.result, width: img.width, height: img.height });
+              renderImages();
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+        fileInput.value = '';
+      }
+
+      function renderImages() {
+        imageList.innerHTML = images.map((img, i) => `
+          <div class="image-item" draggable="true" data-idx="${i}">
+            <img src="${img.dataURL}" alt="image ${i+1}" />
+            <span class="order-badge">${i+1}</span>
+            <button class="remove-btn" data-remove="${i}">×</button>
+          </div>
+        `).join('');
+        imageCount.textContent = `${images.length} image(s) added`;
+        generateBtn.disabled = images.length === 0;
+
+        // Remove buttons
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.remove);
+            images.splice(idx, 1);
+            renderImages();
+          });
+        });
+
+        // Drag and drop reorder
+        let dragIdx = -1;
+        document.querySelectorAll('.image-item').forEach(item => {
+          item.addEventListener('dragstart', (e) => {
+            dragIdx = parseInt(item.dataset.idx);
+            item.style.opacity = '0.5';
+          });
+          item.addEventListener('dragend', () => {
+            item.style.opacity = '1';
+            dragIdx = -1;
+          });
+          item.addEventListener('dragover', (e) => { e.preventDefault(); });
+          item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const dropIdx = parseInt(item.dataset.idx);
+            if (dragIdx !== -1 && dragIdx !== dropIdx) {
+              const [moved] = images.splice(dragIdx, 1);
+              images.splice(dropIdx, 0, moved);
+              renderImages();
+            }
+          });
+        });
+      }
+
+      generateBtn.addEventListener('click', async () => {
+        if (!images.length) return;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+
+        const { jsPDF } = window.jspdf;
+        const pageSize = document.getElementById('pageSize').value;
+        const imageFit = document.getElementById('imageFit').value;
+        const orientation = document.getElementById('orientation').value;
+        const margin = parseInt(document.getElementById('margin').value);
+        const compression = document.getElementById('compression').value;
+
+        const doc = new jsPDF({
+          orientation: orientation === 'auto' ? 'portrait' : orientation,
+          unit: 'mm',
+          compress: compression !== 'NONE',
+        });
+
+        for (let i = 0; i < images.length; i++) {
+          const img = images[i];
+          if (i > 0) doc.addPage();
+
+          let pageW, pageH;
+          if (pageSize === 'a4') { pageW = 210; pageH = 297; }
+          else if (pageSize === 'letter') { pageW = 215.9; pageH = 279.4; }
+          else if (pageSize === 'original' || pageSize === 'fit') {
+            // Use image dimensions converted to mm (1px ≈ 0.264583 mm at 96 DPI)
+            pageW = img.width * 0.264583;
+            pageH = img.height * 0.264583;
+          }
+
+          // Auto orientation
+          if (orientation === 'auto') {
+            if (pageW > pageH && img.width < img.height) {
+              [pageW, pageH] = [pageH, pageW]; // swap for portrait image
+            }
+          } else if (orientation === 'landscape' && pageW < pageH) {
+            [pageW, pageH] = [pageH, pageW];
+          } else if (orientation === 'portrait' && pageW > pageH) {
+            [pageW, pageH] = [pageH, pageW];
+          }
+
+          const drawW = pageW - margin * 2;
+          const drawH = pageH - margin * 2;
+
+          if (imageFit === 'contain') {
+            const ratio = Math.min(drawW / img.width, drawH / img.height);
+            const w = img.width * ratio * 0.264583;
+            const h = img.height * ratio * 0.264583;
+            const x = margin + (drawW - w) / 2;
+            const y = margin + (drawH - h) / 2;
+            doc.addImage(img.dataURL, 'JPEG', x, y, w, h, undefined, compression);
+          } else if (imageFit === 'cover') {
+            const ratio = Math.max(drawW / (img.width * 0.264583), drawH / (img.height * 0.264583));
+            const w = img.width * 0.264583 * ratio;
+            const h = img.height * 0.264583 * ratio;
+            const x = margin + (drawW - w) / 2;
+            const y = margin + (drawH - h) / 2;
+            doc.addImage(img.dataURL, 'JPEG', x, y, w, h, undefined, compression);
+          } else {
+            doc.addImage(img.dataURL, 'JPEG', margin, margin, drawW, drawH, undefined, compression);
+          }
+        }
+
+        doc.save('pixelpress-images-to-pdf.pdf');
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generate PDF';
+      });
+    })();
+  </script>
 </body>
 </html>

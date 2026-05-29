@@ -1,5 +1,8 @@
 function generateSecurePassword() {
-  const length = parseInt(document.getElementById('passLength').value);
+  const lengthInput = document.getElementById('passLength');
+  if (!lengthInput) return; // Failsafe
+  
+  const length = parseInt(lengthInput.value);
   const includeUpper = document.getElementById('upCase').checked;
   const includeNumbers = document.getElementById('numCase').checked;
   const includeSymbols = document.getElementById('symCase').checked;
@@ -9,8 +12,7 @@ function generateSecurePassword() {
   if (includeNumbers) charPool += "0123456789";
   if (includeSymbols) charPool += "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
-  // Prevent pool crash matrix if all checkmarks are cleared by user
-  if(charPool === "") charPool = "abcdefghijklmnopqrstuvwxyz";
+  if(charPool === "") charPool = "abcdefghijklmnopqrstuvwxyz"; // Fallback
 
   let password = "";
   const cryptoArray = new Uint32Array(length);
@@ -24,26 +26,34 @@ function generateSecurePassword() {
 
 function copyPassword() {
   const txt = document.getElementById('passwordOutput').innerText;
-  if (!txt || txt.startsWith("Loading")) return;
+  if (!txt || txt === "Loading...") return;
+  
   navigator.clipboard.writeText(txt).then(() => {
-    alert('Password copied securely to clipboard!');
+    alert('Password copied securely!');
   }).catch(() => {
-    alert('Clipboard transfer intercept error.');
+    // Fallback for older devices/browsers
+    const tempInput = document.createElement("input");
+    tempInput.value = txt;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    alert('Password copied securely!');
   });
 }
 
-const syncThemeMode = () => {
+function syncThemeMode() {
   const theme = localStorage.getItem('pixelpress-theme') || 'light';
   document.documentElement.setAttribute('data-theme', theme);
-};
+}
 
+// Attach Events
 document.getElementById('passLength').addEventListener('input', (e) => {
   document.getElementById('lenVal').innerText = e.target.value;
 });
 document.getElementById('generateBtn').addEventListener('click', generateSecurePassword);
 document.getElementById('copyBtn').addEventListener('click', copyPassword);
 
-window.addEventListener('DOMContentLoaded', () => {
-  syncThemeMode();
-  generateSecurePassword();
-});
+// Direct Execution
+syncThemeMode();
+generateSecurePassword();

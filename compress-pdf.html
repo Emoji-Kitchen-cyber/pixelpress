@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compress PDF - PixelPress</title>
+  <title>Compress PDF — PixelPress</title>
+  <!-- pdf-lib for creating new PDF, pdf.js for rendering pages to canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-  <!-- No external dependencies needed beyond pdf-lib -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -19,7 +20,7 @@
       background: rgba(255,255,255,0.75); backdrop-filter: blur(20px);
       padding: 0 2rem; height: 64px; display: flex; align-items: center;
       border-bottom: 1px solid rgba(0,0,0,0.06);
-      position: sticky; top: 0;
+      position: sticky; top: 0; z-index: 10;
     }
     [data-theme="dark"] nav { background: rgba(21,21,30,0.7); border-color: rgba(255,255,255,0.08); }
     .nav-logo {
@@ -38,11 +39,11 @@
     }
     .subtitle { color: #6e6e73; margin-bottom: 2rem; font-size: 14px; }
     .upload-area {
-      border: 2px dashed #ddd; border-radius: 16px; padding: 3rem;
+      border: 2px dashed #ccc; border-radius: 16px; padding: 3rem;
       text-align: center; cursor: pointer; margin-bottom: 1.5rem;
-      transition: border-color 0.3s;
+      transition: border-color 0.3s; background: rgba(255,255,255,0.5);
     }
-    [data-theme="dark"] .upload-area { border-color: #333; }
+    [data-theme="dark"] .upload-area { background: rgba(21,21,30,0.5); border-color: #444; }
     .upload-area:hover { border-color: #ec4899; }
     input[type="file"] { display: none; }
     .settings {
@@ -59,7 +60,7 @@
       padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd;
       font-size: 14px; background: white;
     }
-    [data-theme="dark"] select, 
+    [data-theme="dark"] select,
     [data-theme="dark"] input[type="range"] { background: #2d2d3d; color: #e8e8f0; border-color: #444; }
     .stats {
       display: flex; gap: 15px; margin-bottom: 1.5rem; flex-wrap: wrap;
@@ -89,15 +90,15 @@
       border-radius: 10px; transition: width 0.3s;
     }
     .message { color: #6e6e73; margin-top: 12px; font-size: 14px; }
-    .back-link {
-      display: inline-block; margin-top: 1.5rem; color: #ec4899;
-      text-decoration: none; font-weight: 600;
-    }
     .note {
       background: #fef3c7; padding: 10px; border-radius: 8px; font-size: 13px;
       margin-top: 1rem; color: #92400e;
     }
     [data-theme="dark"] .note { background: #422006; color: #fcd34d; }
+    .back-link {
+      display: inline-block; margin-top: 1.5rem; color: #ec4899;
+      text-decoration: none; font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -106,9 +107,9 @@
   </nav>
 
   <div class="container">
-    <h1>Advanced PDF Compressor</h1>
-    <p class="subtitle">True image re-compression inside PDF — up to 80% size reduction</p>
-    
+    <h1>Compress PDF – True Size Reduction</h1>
+    <p class="subtitle">Re‑renders each page as JPEG with adjustable quality → massive compression (up to 90%)</p>
+
     <div class="upload-area" onclick="document.getElementById('fileInput').click()">
       <i class="fa-solid fa-cloud-upload" style="font-size:3rem;color:#ec4899;"></i>
       <p id="uploadText">Click to upload PDF</p>
@@ -117,17 +118,17 @@
 
     <div class="settings" id="settingsPanel" style="display:none;">
       <div class="setting-row">
-        <label for="qualitySelect">Image Quality</label>
+        <label for="qualitySelect">JPEG Quality</label>
         <select id="qualitySelect">
-          <option value="low">Low (max compression)</option>
-          <option value="medium" selected>Medium (balanced)</option>
-          <option value="high">High (less compression)</option>
+          <option value="0.3">Low (maximum compression)</option>
+          <option value="0.5" selected>Medium (balanced)</option>
+          <option value="0.75">High (good quality)</option>
         </select>
       </div>
       <div class="setting-row">
-        <label for="maxWidth">Max Image Width (px)</label>
-        <input type="range" id="maxWidth" min="300" max="2000" value="1200" step="100" />
-        <span id="maxWidthValue">1200px</span>
+        <label for="resolutionScale">Resolution Scale (1 = original)</label>
+        <input type="range" id="resolutionScale" min="0.5" max="2" value="1" step="0.1" />
+        <span id="resolutionValue">1.0x</span>
       </div>
     </div>
 
@@ -154,20 +155,25 @@
     <div class="message" id="messageBox"></div>
 
     <div class="note">
-      ⚡ Entirely client-side – no file leaves your device. For maximum compression, use "Low" quality.
-      Large PDFs with many images may take a few seconds.
+      ⚡ Entirely client‑side – no file leaves your device.<br>
+      <strong>Note:</strong> This method rasterizes all pages (text becomes image). Ideal for scanned documents & image‑heavy PDFs.
     </div>
 
     <a href="./index.html" class="back-link">← Back to Tools</a>
   </div>
 
   <script>
+    // Set PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
     let pdfBytes = null;
     let originalFileName = '';
 
-    // Update range slider value display
-    document.getElementById('maxWidth').addEventListener('input', function() {
-      document.getElementById('maxWidthValue').textContent = this.value + 'px';
+    // UI helpers
+    const resolutionSlider = document.getElementById('resolutionScale');
+    const resolutionValue = document.getElementById('resolutionValue');
+    resolutionSlider.addEventListener('input', () => {
+      resolutionValue.textContent = parseFloat(resolutionSlider.value).toFixed(1) + 'x';
     });
 
     function handleFile(event) {
@@ -176,9 +182,9 @@
         alert('Please upload a PDF file');
         return;
       }
-      originalFileName = file.name.replace('.pdf', '');
+      originalFileName = file.name.replace(/\.pdf$/i, '');
       document.getElementById('uploadText').textContent = `📄 ${file.name}`;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         pdfBytes = new Uint8Array(e.target.result);
@@ -199,212 +205,84 @@
       const progressBar = document.getElementById('progressBar');
       const progressFill = document.getElementById('progressFill');
       const msgBox = document.getElementById('messageBox');
-      
+
       btn.disabled = true;
       btn.textContent = 'Compressing...';
       progressBar.style.display = 'block';
       progressFill.style.width = '0%';
-      msgBox.textContent = 'Reading PDF...';
+      msgBox.textContent = 'Loading PDF...';
 
       try {
-        // Load original PDF
-        const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes, {
-          ignoreEncryption: true,
-        });
-        
-        const pages = pdfDoc.getPages();
-        const totalPages = pages.length;
-        const qualityMap = { low: 0.3, medium: 0.6, high: 0.85 };
-        const quality = qualityMap[document.getElementById('qualitySelect').value];
-        const maxWidth = parseInt(document.getElementById('maxWidth').value);
-        
-        msgBox.textContent = `Processing ${totalPages} pages...`;
-        
-        // Process each page
-        for (let i = 0; i < totalPages; i++) {
-          const page = pages[i];
-          progressFill.style.width = ((i / totalPages) * 80) + '%'; // first 80% for image processing
-          
-          // Extract all images from the page
-          const { images } = await extractImagesFromPage(pdfDoc, page, i);
-          
-          // Compress and replace each image
-          for (const imgInfo of images) {
-            await compressAndReplaceImage(pdfDoc, imgInfo, quality, maxWidth);
-          }
+        // Load PDF using pdf.js
+        const loadingTask = pdfjsLib.getDocument({ data: pdfBytes.slice() });
+        const pdfDoc = await loadingTask.promise;
+        const totalPages = pdfDoc.numPages;
+        const quality = parseFloat(document.getElementById('qualitySelect').value);
+        const scale = parseFloat(resolutionSlider.value);
+
+        // Create new PDF-lib document
+        const newPdf = await PDFLib.PDFDocument.create();
+
+        for (let i = 1; i <= totalPages; i++) {
+          progressFill.style.width = ((i / totalPages) * 80) + '%';
+          msgBox.textContent = `Rendering page ${i} of ${totalPages}...`;
+
+          // Render page to canvas
+          const page = await pdfDoc.getPage(i);
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+
+          // Convert canvas to JPEG blob with chosen quality
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+          const imgBytes = await blob.arrayBuffer();
+
+          // Embed JPEG into new PDF
+          const jpgImage = await newPdf.embedJpg(new Uint8Array(imgBytes));
+          const newPage = newPdf.addPage([canvas.width, canvas.height]);
+          newPage.drawImage(jpgImage, {
+            x: 0,
+            y: 0,
+            width: canvas.width,
+            height: canvas.height,
+          });
         }
-        
-        progressFill.style.width = '85%';
+
+        progressFill.style.width = '90%';
         msgBox.textContent = 'Saving compressed PDF...';
-        
-        // Remove metadata for extra size reduction
-        pdfDoc.setTitle('');
-        pdfDoc.setAuthor('');
-        pdfDoc.setSubject('');
-        pdfDoc.setKeywords([]);
-        pdfDoc.setProducer('PixelPress');
-        pdfDoc.setCreator('PixelPress Advanced Compressor');
-        
-        // Save with object streams
-        const compressedBytes = await pdfDoc.save({
-          useObjectStreams: true,
-          addDefaultPage: false,
-        });
-        
+
+        // Save new PDF
+        const compressedPdfBytes = await newPdf.save();
         progressFill.style.width = '100%';
-        
+
         const originalSize = pdfBytes.length;
-        const newSize = compressedBytes.length;
+        const newSize = compressedPdfBytes.length;
         const savingsPercent = ((originalSize - newSize) / originalSize * 100).toFixed(1);
-        
+
         document.getElementById('compressedSize').textContent = formatBytes(newSize);
         document.getElementById('savings').textContent = savingsPercent + '%';
-        
-        // Trigger download
-        const blob = new Blob([compressedBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
+
+        // Download
+        const blobOut = new Blob([compressedPdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blobOut);
         const a = document.createElement('a');
         a.href = url;
         a.download = `${originalFileName}_compressed.pdf`;
         a.click();
-        
-        msgBox.textContent = `✓ Done! File reduced by ${savingsPercent}%`;
-        
-        // Re-enable for another run if needed
+        URL.revokeObjectURL(url);
+
+        msgBox.textContent = `✓ Done! Reduced by ${savingsPercent}%`;
         btn.textContent = 'Compress Again';
         btn.disabled = false;
-        
-      } catch (error) {
-        console.error(error);
-        msgBox.textContent = '❌ Error: ' + error.message;
+      } catch (err) {
+        console.error(err);
+        msgBox.textContent = '❌ Error: ' + err.message;
         btn.disabled = false;
         btn.textContent = 'Try Again';
-      }
-    }
-
-    // Helper: extract all image objects from a page
-    async function extractImagesFromPage(pdfDoc, page, pageIndex) {
-      const images = [];
-      // pdf-lib doesn't directly expose a list of images; we need to access the page's content streams
-      // and find image XObjects. We'll use a lower-level approach:
-      const pageRef = pdfDoc.context.getPageRef(pageIndex);
-      const pageNode = pdfDoc.context.lookup(pageRef);
-      
-      // Get resources dictionary
-      const resources = pageNode.lookup(PDFLib.PDFName.of('Resources'));
-      if (!resources) return { images };
-      
-      const xobj = resources.lookup(PDFLib.PDFName.of('XObject'));
-      if (!xobj) return { images };
-      
-      const xobjDict = xobj;
-      const keys = xobjDict.keys ? xobjDict.keys() : [];
-      
-      for (const key of keys) {
-        const obj = xobjDict.lookup(key);
-        if (obj && obj instanceof PDFLib.PDFRawStream) {
-          const subtype = obj.dict.lookup(PDFLib.PDFName.of('Subtype'));
-          if (subtype === PDFLib.PDFName.of('Image')) {
-            images.push({
-              ref: obj,
-              name: key,
-              width: obj.dict.lookup(PDFLib.PDFName.of('Width')),
-              height: obj.dict.lookup(PDFLib.PDFName.of('Height')),
-              filter: obj.dict.lookup(PDFLib.PDFName.of('Filter')),
-            });
-          }
-        }
-      }
-      return { images };
-    }
-
-    // Helper: decompress image data from PDF stream
-    async function decompressImageData(stream) {
-      // stream.getContents() returns the raw bytes (possibly compressed with FlateDecode etc.)
-      // pdf-lib can decompress FlateDecode automatically when we use getContents()
-      const contents = stream.getContents();
-      return contents;
-    }
-
-    // Helper: compress image using canvas
-    async function compressImageData(imageBytes, originalWidth, originalHeight, quality, maxWidth) {
-      // Convert raw image bytes to a blob and then to an Image
-      // The image may be in JPEG, PNG, etc. We'll create a blob with the bytes and see if browser can decode.
-      const blob = new Blob([imageBytes]);
-      const url = URL.createObjectURL(blob);
-      
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          // Calculate new dimensions (keep aspect ratio, limit width)
-          let newWidth = originalWidth;
-          let newHeight = originalHeight;
-          if (originalWidth > maxWidth) {
-            newWidth = maxWidth;
-            newHeight = Math.round((originalHeight * maxWidth) / originalWidth);
-          }
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = newWidth;
-          canvas.height = newHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, newWidth, newHeight);
-          
-          // Convert to blob with specified quality (JPEG output is good for compression)
-          canvas.toBlob((compressedBlob) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              resolve(new Uint8Array(reader.result));
-            };
-            reader.readAsArrayBuffer(compressedBlob);
-          }, 'image/jpeg', quality);
-          
-          URL.revokeObjectURL(url);
-        };
-        img.onerror = () => {
-          // If image can't be decoded, return original bytes
-          resolve(imageBytes);
-          URL.revokeObjectURL(url);
-        };
-        img.src = url;
-      });
-    }
-
-    // Helper: replace image in PDF with compressed version
-    async function compressAndReplaceImage(pdfDoc, imgInfo, quality, maxWidth) {
-      try {
-        const stream = imgInfo.ref;
-        const imageBytes = await decompressImageData(stream);
-        const width = imgInfo.width;
-        const height = imgInfo.height;
-        
-        // Compress the image data
-        const compressed = await compressImageData(imageBytes, width, height, quality, maxWidth);
-        
-        // If compression produced smaller data, embed it back
-        if (compressed.length < imageBytes.length) {
-          // Create a new stream with the compressed data
-          // pdf-lib doesn't have a direct method to replace stream data, but we can create a new PDFImage
-          // and then replace the XObject reference. This is a simplified approach:
-          const newImage = await pdfDoc.embedJpg(compressed); // embed as JPEG
-          // Now we need to replace the existing XObject with newImage.ref
-          // We'll get the page's XObject dictionary and modify it
-          // This requires navigating the PDF structure, which is a bit tricky.
-          // For simplicity, we'll skip the replacement if it's too complex; instead we'll 
-          // just re-embed all images by rebuilding the page content? That would be too heavy.
-          // As a practical compromise, we'll embed the image and then overwrite the stream data directly.
-          
-          // Direct stream replacement using low-level API:
-          const streamObj = imgInfo.ref;
-          // Overwrite the stream's contents (pdf-lib allows setting contents)
-          streamObj.setContents(compressed);
-          // Update filter to DCTDecode (JPEG)
-          streamObj.dict.set(PDFLib.PDFName.of('Filter'), PDFLib.PDFName.of('DCTDecode'));
-          // Remove any other filters
-          streamObj.dict.delete(PDFLib.PDFName.of('DecodeParms'));
-        }
-      } catch (e) {
-        console.warn('Could not compress image:', e);
+        progressFill.style.width = '0%';
       }
     }
 
@@ -414,22 +292,22 @@
       return (bytes / 1048576).toFixed(2) + ' MB';
     }
 
-    // Sync theme
+    // Dark mode sync
     const theme = localStorage.getItem('pixelpress-theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
-    
-    // Drag & drop support
+
+    // Drag & drop
     const uploadArea = document.querySelector('.upload-area');
-    uploadArea.addEventListener('dragover', (e) => {
+    uploadArea.addEventListener('dragover', e => {
       e.preventDefault();
       uploadArea.style.borderColor = '#ec4899';
     });
     uploadArea.addEventListener('dragleave', () => {
-      uploadArea.style.borderColor = 'var(--border, #ddd)';
+      uploadArea.style.borderColor = '';
     });
-    uploadArea.addEventListener('drop', (e) => {
+    uploadArea.addEventListener('drop', e => {
       e.preventDefault();
-      uploadArea.style.borderColor = 'var(--border, #ddd)';
+      uploadArea.style.borderColor = '';
       const file = e.dataTransfer.files[0];
       if (file) {
         const input = document.getElementById('fileInput');

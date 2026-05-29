@@ -1,508 +1,254 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDF to JPG — PixelPress</title>
-  
-  <!-- External Libraries from CDN (no local files needed) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF to JPG – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
     :root {
-      --primary: #ec4899;
-      --primary-hover: #db2777;
-      --text-dark: #0f172a;
-      --text-muted: #64748b;
-      --bg-main: #f8fafc;
-      --bg-card: #ffffff;
-      --border: #e2e8f0;
-      --radius: 16px;
-      --shadow: 0 15px 40px rgba(0,0,0,0.12);
-      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+      --fhead: 'Syne', sans-serif; --fbody: system-ui, -apple-system, sans-serif;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: var(--bg-main);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: var(--text-dark);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      line-height: 1.5;
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
     }
-
-    .container {
-      width: 100%;
-      max-width: 1100px;
-      background: var(--bg-card);
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-
-    .header {
-      background: linear-gradient(135deg, #ec4899 0%, #7e22ce 100%);
-      color: white;
-      text-align: center;
-      padding: 40px 20px 30px;
-    }
-
-    .header h1 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      font-size: 1rem;
-      opacity: 0.9;
-      margin-bottom: 20px;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: white;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      padding: 10px 20px;
-      border-radius: 40px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: all var(--transition);
-    }
-
-    .back-link:hover {
-      background: rgba(255,255,255,0.25);
-      transform: translateY(-1px);
-    }
-
-    .upload-section {
-      padding: 40px 30px;
-    }
-
-    .drop-zone {
-      border: 3px dashed #cbd5e1;
-      border-radius: var(--radius);
-      padding: 70px 30px;
-      text-align: center;
-      cursor: pointer;
-      transition: all var(--transition);
-      background: #f8fafc;
-    }
-
-    .drop-zone:hover,
-    .drop-zone.drag-over {
-      border-color: var(--primary);
-      background: #fdf4ff;
-      transform: scale(1.01);
-    }
-
-    .drop-zone-icon {
-      font-size: 3.5rem;
-      margin-bottom: 15px;
-      display: block;
-    }
-
-    .drop-zone h2 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text-dark);
-    }
-
-    .drop-zone p { color: var(--text-muted); font-size: 0.95rem; }
-
-    .file-input { display: none; }
-
-    .work-area {
-      display: none;
-      padding: 30px;
-    }
-
-    .work-area.active {
-      display: block;
-      animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .controls-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 30px;
-      padding: 16px 20px;
-      background: #f8fafc;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-
-    .quality-selector {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .quality-selector label {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-
-    .quality-selector select {
-      padding: 8px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: white;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .btn {
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 0.9rem;
-      background: var(--primary);
-      color: white;
-      transition: all var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      background: var(--primary-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
-    }
-
-    .btn:active { transform: translateY(0); }
-    .btn:disabled { opacity: 0.5; pointer-events: none; }
-
-    .status-badge {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #2563eb;
-      background: #dbeafe;
-      padding: 8px 16px;
-      border-radius: 20px;
-    }
-
-    .status-badge.error {
-      color: #dc2626;
-      background: #fee2e2;
-    }
-
-    .status-badge.success {
-      color: #059669;
-      background: #d1fae5;
-    }
-
-    .preview-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
-    }
-
-    .page-card {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px;
-      text-align: center;
-      transition: all var(--transition);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .page-card:hover {
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-      transform: translateY(-4px);
-    }
-
-    .page-card canvas {
-      width: 100%;
-      border-radius: 10px;
-      background: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin-bottom: 10px;
-    }
-
-    .page-label {
-      font-weight: 700;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-      color: var(--text-dark);
-    }
-
-    .download-single {
-      margin-top: auto;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all var(--transition);
-    }
-
-    .download-single:hover { background: var(--primary-hover); }
-
-    @media (max-width: 640px) {
-      .header h1 { font-size: 1.6rem; }
-      .controls-bar { flex-direction: column; align-items: stretch; }
-      .preview-grid { grid-template-columns: 1fr; }
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:var(--fbody); min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:var(--fhead); font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:1100px; margin:0 auto; width:100%; padding:2rem 20px; }
+    .drop-zone { border:2px dashed var(--border); border-radius:var(--r); padding:3rem; text-align:center; cursor:pointer; transition:0.2s; background:var(--card); margin-bottom:1.5rem; }
+    .drop-zone:hover { border-color:var(--accent); background:var(--glow); }
+    .drop-zone i { font-size:2.5rem; color:var(--accent); }
+    .drop-zone input { display:none; }
+    .settings-bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:12px 16px; margin-bottom:1rem; }
+    .setting-group { display:flex; align-items:center; gap:6px; font-size:0.85rem; }
+    .setting-group label { color:var(--muted); white-space:nowrap; }
+    .setting-group select, .setting-group input { background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:0.8rem; }
+    .btn { padding:10px 20px; border:none; border-radius:10px; font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px var(--glow); }
+    .btn-success { background:#10b981; color:white; }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .btn:disabled { opacity:0.5; pointer-events:none; }
+    .progress-bar { height:6px; background:var(--border); border-radius:10px; margin:1rem 0; display:none; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); width:0%; border-radius:10px; transition:width 0.3s; }
+    .page-selection { display:flex; flex-wrap:wrap; gap:8px; margin:1rem 0; }
+    .page-chip { padding:6px 12px; border-radius:999px; background:var(--bg); border:1px solid var(--border); font-size:0.8rem; cursor:pointer; transition:0.2s; }
+    .page-chip.selected { background:var(--accent); color:white; border-color:var(--accent); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; display:flex; flex-direction:column; }
+    .card canvas { width:100%; display:block; background:#fff; }
+    .card-body { padding:8px; display:flex; flex-direction:column; gap:4px; }
+    .card-body .page-label { font-size:0.8rem; font-weight:600; }
+    .card-body .btn { font-size:0.75rem; padding:6px 10px; width:100%; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>📄 PDF to JPG Converter</h1>
-      <p>Extract high‑quality JPG images from your PDF instantly</p>
-      <a href="./index.html" class="back-link">← Back to PixelPress</a>
+  <nav>
+    <div class="nav-left"><a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+  <div class="main">
+    <div class="drop-zone" id="dropZone">
+      <i class="fa-solid fa-file-pdf"></i>
+      <h2>Drop PDF or click to upload</h2>
+      <p style="color:var(--muted);">Extract pages as high-quality images</p>
+      <input type="file" id="fileInput" accept="application/pdf" />
     </div>
-
-    <div id="uploadSection" class="upload-section">
-      <div class="drop-zone" id="dropZone">
-        <span class="drop-zone-icon">📤</span>
-        <h2>Select PDF File</h2>
-        <p>Click or drag & drop a PDF here</p>
+    <div id="workArea" style="display:none;">
+      <div class="settings-bar">
+        <div class="setting-group"><label>Format</label><select id="formatSelect"><option value="jpg">JPG</option><option value="png">PNG</option><option value="webp">WebP</option></select></div>
+        <div class="setting-group"><label>Quality</label><input type="range" id="qualitySlider" min="10" max="100" value="85"><span id="qualityVal">85%</span></div>
+        <div class="setting-group"><label>Scale</label><select id="scaleSelect"><option value="1">1x</option><option value="1.5">1.5x</option><option value="2" selected>2x</option><option value="3">3x</option></select></div>
+        <button class="btn btn-outline" id="selectAllBtn">Select All</button>
+        <button class="btn btn-outline" id="deselectAllBtn">Deselect All</button>
+        <button class="btn btn-primary" id="convertBtn">Convert Selected</button>
+        <button class="btn btn-success" id="downloadZipBtn" disabled>Download ZIP</button>
       </div>
-      <input type="file" id="fileInput" class="file-input" accept="application/pdf">
-    </div>
-
-    <div id="workSection" class="work-area">
-      <div class="controls-bar">
-        <div class="quality-selector">
-          <label for="qualitySelect">Quality:</label>
-          <select id="qualitySelect">
-            <option value="0.6">Draft (smaller size)</option>
-            <option value="0.8" selected>High (recommended)</option>
-            <option value="0.95">Maximum</option>
-          </select>
-        </div>
-        <span id="statusMessage" class="status-badge">⚡ Ready</span>
-        <button id="downloadAllBtn" class="btn" style="display:none;">
-          📥 Download All (ZIP)
-        </button>
-      </div>
-      <div id="previewGrid" class="preview-grid"></div>
+      <div class="page-selection" id="pageChips"></div>
+      <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="grid" id="previewGrid"></div>
     </div>
   </div>
-
-  <!-- Complete JavaScript inline, no external files -->
+  <footer>© 2026 PixelPress – All processing is local & private</footer>
   <script>
     (function() {
-      // Ensure DOM is ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start);
-      } else {
-        start();
+      // Theme
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const workArea = document.getElementById('workArea');
+      const previewGrid = document.getElementById('previewGrid');
+      const pageChips = document.getElementById('pageChips');
+      const progressBar = document.getElementById('progressBar');
+      const progressFill = document.getElementById('progressFill');
+      const formatSelect = document.getElementById('formatSelect');
+      const qualitySlider = document.getElementById('qualitySlider');
+      const qualityVal = document.getElementById('qualityVal');
+      const scaleSelect = document.getElementById('scaleSelect');
+      const convertBtn = document.getElementById('convertBtn');
+      const downloadZipBtn = document.getElementById('downloadZipBtn');
+
+      let pdfDoc = null;
+      let totalPages = 0;
+      let pageData = []; // { selected: bool, dataURL: null, canvas: null }
+
+      qualitySlider.addEventListener('input', () => qualityVal.textContent = qualitySlider.value + '%');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => { if (e.target.files[0]) loadPDF(e.target.files[0]); });
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+      dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--border)'; });
+      dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; if (e.dataTransfer.files[0]) loadPDF(e.dataTransfer.files[0]); });
+
+      async function loadPDF(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        totalPages = pdfDoc.numPages;
+        pageData = Array.from({ length: totalPages }, (_, i) => ({ selected: true, dataURL: null, canvas: null, pageNum: i + 1 }));
+        dropZone.style.display = 'none';
+        workArea.style.display = 'block';
+        renderChips();
+        renderAllPages();
       }
 
-      function start() {
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const uploadSection = document.getElementById('uploadSection');
-        const workSection = document.getElementById('workSection');
-        const previewGrid = document.getElementById('previewGrid');
-        const statusMessage = document.getElementById('statusMessage');
-        const downloadAllBtn = document.getElementById('downloadAllBtn');
-        const qualitySelect = document.getElementById('qualitySelect');
-
-        let pdfDoc = null;
-        let pageImages = {};
-        let renderedCanvases = {};
-
-        // PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        // Event listeners
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-          if (e.target.files && e.target.files.length) processPDF(e.target.files[0]);
+      function renderChips() {
+        pageChips.innerHTML = pageData.map((p, i) => 
+          `<span class="page-chip selected" data-idx="${i}">Page ${p.pageNum}</span>`
+        ).join('');
+        document.querySelectorAll('.page-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const idx = parseInt(chip.dataset.idx);
+            pageData[idx].selected = !pageData[idx].selected;
+            chip.classList.toggle('selected', pageData[idx].selected);
+            updateConvertButton();
+          });
         });
+      }
 
-        dropZone.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          dropZone.classList.add('drag-over');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          dropZone.classList.remove('drag-over');
-          if (e.dataTransfer.files && e.dataTransfer.files.length) processPDF(e.dataTransfer.files[0]);
-        });
+      function updateConvertButton() {
+        const anySelected = pageData.some(p => p.selected);
+        convertBtn.disabled = !anySelected;
+      }
 
-        downloadAllBtn.addEventListener('click', downloadAllAsZip);
-
-        async function processPDF(file) {
-          pdfDoc = null;
-          pageImages = {};
-          renderedCanvases = {};
-          previewGrid.innerHTML = '';
-
-          uploadSection.style.display = 'none';
-          workSection.classList.add('active');
-          setStatus('Reading PDF…', 'loading');
-
-          try {
-            const arrayBuffer = await file.arrayBuffer();
-            pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const totalPages = pdfDoc.numPages;
-            setStatus(`Rendering ${totalPages} pages…`, 'loading');
-
-            for (let i = 1; i <= totalPages; i++) {
-              createPageCard(i);
-            }
-
-            const concurrency = 4; // parallel rendering
-            const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-            for (let i = 0; i < pages.length; i += concurrency) {
-              const chunk = pages.slice(i, i + concurrency);
-              await Promise.all(chunk.map(num => renderPage(num)));
-            }
-
-            setStatus(`✅ All ${totalPages} pages extracted`, 'success');
-            downloadAllBtn.style.display = 'inline-flex';
-          } catch (err) {
-            console.error(err);
-            setStatus('Failed to process PDF. Please try another file.', 'error');
-          }
-        }
-
-        function createPageCard(pageNum) {
+      async function renderAllPages() {
+        previewGrid.innerHTML = '';
+        const scale = parseFloat(scaleSelect.value);
+        for (let i = 0; i < totalPages; i++) {
           const card = document.createElement('div');
-          card.className = 'page-card';
-          card.id = 'card-' + pageNum;
-
+          card.className = 'card';
           const canvas = document.createElement('canvas');
-          canvas.style.aspectRatio = '3/4';
-
-          const label = document.createElement('div');
-          label.className = 'page-label';
-          label.textContent = 'Page ' + pageNum;
-
-          const downloadBtn = document.createElement('button');
-          downloadBtn.className = 'download-single';
-          downloadBtn.textContent = '⬇ Download';
-          downloadBtn.disabled = true;
-
           card.appendChild(canvas);
-          card.appendChild(label);
-          card.appendChild(downloadBtn);
+          const body = document.createElement('div');
+          body.className = 'card-body';
+          body.innerHTML = `<span class="page-label">Page ${i+1}</span><button class="btn btn-primary download-single" data-idx="${i}"><i class="fa-solid fa-download"></i> Download</button>`;
+          card.appendChild(body);
           previewGrid.appendChild(card);
+          pageData[i].canvas = canvas;
 
-          renderedCanvases[pageNum] = { canvas, downloadBtn };
-        }
-
-        async function renderPage(pageNum) {
-          const page = await pdfDoc.getPage(pageNum);
-          const quality = parseFloat(qualitySelect.value);
-          const viewport = page.getViewport({ scale: 2.0 });
-
-          const { canvas, downloadBtn } = renderedCanvases[pageNum];
-          const ctx = canvas.getContext('2d');
+          const page = await pdfDoc.getPage(i + 1);
+          const viewport = page.getViewport({ scale });
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-
+          const ctx = canvas.getContext('2d');
           await page.render({ canvasContext: ctx, viewport }).promise;
-          pageImages[pageNum] = canvas.toDataURL('image/jpeg', quality);
-
-          downloadBtn.disabled = false;
-          downloadBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            downloadSingle(pageNum);
-          });
-
-          canvas.style.aspectRatio = '';
+          pageData[i].dataURL = canvas.toDataURL('image/' + (formatSelect.value === 'jpg' ? 'jpeg' : formatSelect.value), parseInt(qualitySlider.value) / 100);
         }
-
-        function downloadSingle(pageNum) {
-          const dataURL = pageImages[pageNum];
-          if (!dataURL) return;
-          const a = document.createElement('a');
-          a.href = dataURL;
-          a.download = 'page-' + pageNum + '.jpg';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }
-
-        async function downloadAllAsZip() {
-          if (Object.keys(pageImages).length === 0) return;
-          downloadAllBtn.disabled = true;
-          downloadAllBtn.textContent = '⏳ Creating ZIP…';
-
-          try {
-            const zip = new JSZip();
-            for (const [num, dataURL] of Object.entries(pageImages)) {
-              const base64 = dataURL.split(',')[1];
-              zip.file('page-' + num + '.jpg', base64, { base64: true });
-            }
-            const blob = await zip.generateAsync({
-              type: 'blob',
-              compression: 'DEFLATE',
-              compressionOptions: { level: 6 }
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'pixelpress-pages.zip';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            downloadAllBtn.textContent = '📥 Download All (ZIP)';
-          } catch (err) {
-            console.error(err);
-            setStatus('ZIP creation failed. Try individual downloads.', 'error');
-          } finally {
-            downloadAllBtn.disabled = false;
-          }
-        }
-
-        function setStatus(text, type) {
-          statusMessage.textContent = text;
-          statusMessage.className = 'status-badge';
-          if (type === 'error') statusMessage.classList.add('error');
-          if (type === 'success') statusMessage.classList.add('success');
-        }
+        attachDownloadListeners();
+        updateConvertButton();
       }
+
+      function attachDownloadListeners() {
+        document.querySelectorAll('.download-single').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt(btn.dataset.idx);
+            if (pageData[idx].dataURL) {
+              const a = document.createElement('a');
+              a.href = pageData[idx].dataURL;
+              a.download = `page-${idx+1}.${formatSelect.value}`;
+              a.click();
+            }
+          });
+        });
+      }
+
+      convertBtn.addEventListener('click', async () => {
+        progressBar.style.display = 'block';
+        progressFill.style.width = '0%';
+        const selected = pageData.filter(p => p.selected);
+        const format = formatSelect.value;
+        const quality = parseInt(qualitySlider.value) / 100;
+        const scale = parseFloat(scaleSelect.value);
+        for (let i = 0; i < selected.length; i++) {
+          const p = selected[i];
+          const page = await pdfDoc.getPage(p.pageNum);
+          const viewport = page.getViewport({ scale });
+          p.canvas.width = viewport.width;
+          p.canvas.height = viewport.height;
+          const ctx = p.canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          p.dataURL = p.canvas.toDataURL('image/' + (format === 'jpg' ? 'jpeg' : format), quality);
+          progressFill.style.width = ((i+1) / selected.length * 100) + '%';
+        }
+        downloadZipBtn.disabled = false;
+        setTimeout(() => progressBar.style.display = 'none', 2000);
+        attachDownloadListeners();
+      });
+
+      downloadZipBtn.addEventListener('click', async () => {
+        const selected = pageData.filter(p => p.selected && p.dataURL);
+        if (!selected.length) return;
+        const zip = new JSZip();
+        const ext = formatSelect.value;
+        selected.forEach(p => {
+          zip.file(`page-${p.pageNum}.${ext}`, p.dataURL.split(',')[1], { base64: true });
+        });
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'pixelpress-pdf-to-images.zip'; a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById('selectAllBtn').addEventListener('click', () => {
+        pageData.forEach(p => p.selected = true);
+        document.querySelectorAll('.page-chip').forEach(c => c.classList.add('selected'));
+        updateConvertButton();
+      });
+      document.getElementById('deselectAllBtn').addEventListener('click', () => {
+        pageData.forEach(p => p.selected = false);
+        document.querySelectorAll('.page-chip').forEach(c => c.classList.remove('selected'));
+        updateConvertButton();
+      });
     })();
   </script>
 </body>
 </html>
-

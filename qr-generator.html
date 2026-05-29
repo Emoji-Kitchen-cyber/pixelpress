@@ -23,6 +23,7 @@
       --r: 16px;
       --fhead: 'Syne', sans-serif;
       --fbody: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --fmono: 'JetBrains Mono', monospace;
     }
 
     [data-theme="dark"] {
@@ -74,7 +75,7 @@
 
     .main {
       flex: 1;
-      max-width: 960px;
+      max-width: 980px;
       margin: 0 auto;
       width: 100%;
       padding: 2rem 20px 5rem;
@@ -96,6 +97,27 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.02);
     }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
     .input-group {
       margin-bottom: 1.5rem;
     }
@@ -105,50 +127,55 @@
       font-weight: 600;
       font-size: 0.95rem;
     }
-    textarea {
+    input, textarea, select {
       width: 100%;
-      padding: 16px;
+      padding: 14px 16px;
       border: 1px solid var(--border);
       border-radius: 12px;
       background: var(--bg);
       color: var(--text);
-      min-height: 140px;
-      font-family: monospace;
-      resize: vertical;
     }
-    textarea:focus {
+    input:focus, textarea:focus, select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 4px var(--glow);
       outline: none;
     }
 
+    textarea { min-height: 130px; font-family: var(--fmono); }
+
     .qr-container {
       display: flex;
       justify-content: center;
-      margin: 2.5rem 0;
-      padding: 35px;
+      margin: 2rem 0;
+      padding: 30px;
       background: #ffffff;
-      border-radius: 20px;
+      border-radius: 16px;
       border: 1px solid var(--border);
-      min-height: 380px;
+      min-height: 360px;
     }
 
-    #qrcode {
-      padding: 20px;
-      background: white;
+    #qrcode { 
+      padding: 15px; 
+      background: white; 
       border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+
+    .warning {
+      font-size: 0.85rem;
+      color: #f59e0b;
+      margin-top: 6px;
     }
 
     .btn-group {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
     }
 
     button {
-      padding: 14px 28px;
+      padding: 13px 26px;
       border: none;
       border-radius: 12px;
       font-weight: 600;
@@ -163,10 +190,7 @@
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       color: white;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px var(--glow);
-    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px var(--glow); }
 
     footer {
       text-align: center;
@@ -190,13 +214,26 @@
   <div class="main">
     <div class="tool-header">
       <h1>QR Code Generator</h1>
-      <p>Maximum Reliability • Tested for Real Scanning</p>
+      <p>Optimized for maximum scan reliability</p>
     </div>
 
     <div class="card">
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-mode="text">Text / URL</div>
+        <div class="tab" data-mode="wifi">WiFi</div>
+        <div class="tab" data-mode="contact">Contact</div>
+        <div class="tab" data-mode="image">Image (Advanced)</div>
+      </div>
+
+      <div id="inputArea"></div>
+
       <div class="input-group">
-        <label>Enter Content (URL, Text, etc.)</label>
-        <textarea id="qrContent" placeholder="https://example.com or any text...">https://pixelpress-smoky.vercel.app</textarea>
+        <label>Size</label>
+        <select id="qrSize">
+          <option value="400">400 px</option>
+          <option value="512" selected>512 px (Recommended)</option>
+          <option value="640">640 px</option>
+        </select>
       </div>
 
       <div class="qr-container">
@@ -208,13 +245,17 @@
           <i class="fa-solid fa-qrcode"></i> Generate QR Code
         </button>
         <button onclick="downloadQR()" class="btn-primary">
-          <i class="fa-solid fa-download"></i> Download High Quality PNG
+          <i class="fa-solid fa-download"></i> Download PNG
         </button>
       </div>
+
+      <p style="text-align:center; margin-top:15px; color:var(--muted); font-size:0.9rem;">
+        ✅ Test with your phone camera or any QR scanner app
+      </p>
     </div>
   </div>
 
-  <footer>© 2026 PixelPress — All processing in your browser</footer>
+  <footer>© 2026 PixelPress — Client-side • Private</footer>
 
   <script>
     let currentQR = null;
@@ -226,60 +267,121 @@
     }
 
     document.getElementById('themeToggle').addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
+      const curr = document.documentElement.getAttribute('data-theme');
+      const next = curr === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('pixelpress-theme', next);
     });
 
-    function generateQR() {
-      const content = document.getElementById('qrContent').value.trim();
-      if (!content) {
-        alert("Please enter some content");
-        return;
+    // Tab handling
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderInputFields(tab.dataset.mode);
+      });
+    });
+
+    function renderInputFields(mode) {
+      const area = document.getElementById('inputArea');
+      let html = '';
+
+      if (mode === 'text') {
+        html = `<div class="input-group">
+                  <label>Content</label>
+                  <textarea id="content" placeholder="Paste URL or text here...">https://pixelpress-smoky.vercel.app</textarea>
+                </div>`;
+      } else if (mode === 'wifi') {
+        html = `
+          <div class="input-group"><label>Network Name (SSID)</label><input type="text" id="ssid" value="MyWiFi"></div>
+          <div class="input-group"><label>Password</label><input type="text" id="wifiPass" value="password123"></div>`;
+      } else if (mode === 'contact') {
+        html = `
+          <div class="input-group"><label>Name</label><input type="text" id="name" value="Ahmed Ali"></div>
+          <div class="input-group"><label>Phone</label><input type="tel" id="phone" value="+966501234567"></div>`;
+      } else if (mode === 'image') {
+        html = `
+          <div class="input-group">
+            <label>Upload Image</label>
+            <input type="file" id="imageUpload" accept="image/*">
+            <div class="warning">⚠️ Image mode creates very dense QR codes. Use small images only.</div>
+          </div>`;
       }
 
-      const container = document.getElementById('qrcode');
-      container.innerHTML = '';
+      area.innerHTML = html;
 
-      currentQR = new QRCode(container, {
-        text: content,
-        width: 512,
-        height: 512,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H,     // Maximum error correction
-        margin: 4
-      });
+      // Live update
+      const inputs = area.querySelectorAll('input, textarea');
+      inputs.forEach(el => el.addEventListener('input', generateQR));
+    }
+
+    async function getContent(mode) {
+      if (mode === 'text') return document.getElementById('content').value.trim() || "https://pixelpress-smoky.vercel.app";
+      
+      if (mode === 'wifi') {
+        const ssid = document.getElementById('ssid').value.trim();
+        const pass = document.getElementById('wifiPass').value.trim();
+        return `WIFI:S:\( {ssid};T:WPA;P: \){pass};;`;
+      }
+      
+      if (mode === 'contact') {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        return `BEGIN:VCARD\nVERSION:3.0\nFN:\( {name}\nTEL: \){phone}\nEND:VCARD`;
+      }
+      
+      if (mode === 'image') {
+        const file = document.getElementById('imageUpload').files[0];
+        if (!file) throw new Error("Please select an image");
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    async function generateQR() {
+      const mode = document.querySelector('.tab.active').dataset.mode;
+      const size = parseInt(document.getElementById('qrSize').value);
+
+      try {
+        const content = await getContent(mode);
+        if (!content) return;
+
+        const container = document.getElementById('qrcode');
+        container.innerHTML = '';
+
+        currentQR = new QRCode(container, {
+          text: content,
+          width: size,
+          height: size,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H   // Maximum error correction
+        });
+
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     function downloadQR() {
-      if (!currentQR) {
-        alert("Please generate QR code first");
-        return;
-      }
+      if (!currentQR) return alert("Generate QR first");
       const canvas = document.querySelector('#qrcode canvas');
       if (!canvas) return;
-
+      
       const link = document.createElement('a');
-      link.download = `qr-code-${Date.now()}.png`;
+      link.download = `qr-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
     }
 
-    // Live generation
-    document.getElementById('qrContent').addEventListener('input', () => {
-      if (document.getElementById('qrContent').value.trim().length > 3) {
-        generateQR();
-      }
-    });
-
     // Initialize
     window.onload = () => {
       syncTheme();
-      setTimeout(() => {
-        generateQR();
-      }, 150);
+      renderInputFields('text');
+      setTimeout(generateQR, 200);
     };
   </script>
 </body>

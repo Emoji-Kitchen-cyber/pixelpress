@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Background Remover – PixelPress</title>
-  <meta name="description" content="Remove image background online free with AI. Bulk upload, instant download, manual refine brush.">
-  <!-- AI Background Removal (optional) -->
+  <meta name="description" content="Remove image background online free. Bulk upload, instant download, no signup.">
   <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
-  <!-- JSZip for batch download -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -237,16 +235,14 @@
       const applyRefine = document.getElementById('applyRefine');
       const cancelRefine = document.getElementById('cancelRefine');
 
-      // State
       let items = [];
-      let currentMode = 'fast'; // 'fast' | 'ai'
-      let refineItem = null; // item being refined
-      let refineMask = null; // Uint8Array mask
-      let refineOrigImage = null; // Image for refine preview
-      let refineBrushType = 'fg'; // 'fg' | 'bg'
+      let currentMode = 'fast';
+      let refineItem = null;
+      let refineMask = null;
+      let refineOrigImage = null;
+      let refineBrushType = 'fg';
       let isRefineDrawing = false;
 
-      // Settings elements
       const toleranceInput = document.getElementById('tolerance');
       const toleranceVal = document.getElementById('toleranceVal');
       const featherInput = document.getElementById('feather');
@@ -296,7 +292,7 @@
           const id = Date.now() + Math.random();
           const url = URL.createObjectURL(file);
           items.push({
-            id, file, url, status: 'queue', // queue, processing, done, fail
+            id, file, url, status: 'queue',
             resultBlob: null,
             resultUrl: null,
             showOriginal: false,
@@ -308,7 +304,6 @@
         updateStats();
       }
 
-      // Render card
       function renderCard(item) {
         const card = document.createElement('div');
         card.className = 'card';
@@ -332,14 +327,13 @@
           </div>
         `;
         grid.appendChild(card);
-        // slider logic
         const slider = document.getElementById('slider-' + item.id);
         if (slider) {
           let dragging = false;
           slider.addEventListener('mousedown', () => dragging = true);
           window.addEventListener('mouseup', () => dragging = false);
           window.addEventListener('mousemove', (e) => {
-            if (!dragging || !slider.style.display === 'block') return;
+            if (!dragging || slider.style.display !== 'block') return;
             const container = document.getElementById('imgContainer-' + item.id);
             if (!container) return;
             const rect = container.getBoundingClientRect();
@@ -348,7 +342,6 @@
             document.getElementById('origImg-' + item.id).style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
             slider.style.left = percent + '%';
           });
-          slider.addEventListener('click', (e) => e.stopPropagation());
         }
       }
 
@@ -363,12 +356,10 @@
       }
 
       function updateStats() {
-        const total = items.length;
         const done = items.filter(i => i.status === 'done').length;
         downloadZipBtn.disabled = done === 0;
       }
 
-      // Process all
       processAllBtn.addEventListener('click', async () => {
         if (!items.length) return;
         processAllBtn.disabled = true;
@@ -381,7 +372,6 @@
           updateBadge(item);
           try {
             if (currentMode === 'fast') {
-              // Custom algorithm
               const opts = {
                 tol: parseInt(toleranceInput.value),
                 fea: parseInt(featherInput.value),
@@ -395,7 +385,6 @@
               item.resultUrl = URL.createObjectURL(blob);
               item.status = 'done';
             } else {
-              // AI mode
               const blob = await processWithAI(item.url);
               item.resultBlob = blob;
               item.resultUrl = URL.createObjectURL(blob);
@@ -410,6 +399,7 @@
           if (item.status === 'done') {
             document.getElementById('resImg-' + item.id).src = item.resultUrl;
             document.getElementById('resImg-' + item.id).style.display = 'block';
+            document.getElementById('slider-' + item.id).style.display = 'block';
           }
           progressFill.style.width = ((i + 1) / queue.length * 100) + '%';
         }
@@ -443,7 +433,6 @@
           resetBtn.disabled = false;
           if (slider) slider.style.display = 'block';
         }
-        // Event listeners for each button
         dlBtn.onclick = () => downloadSingle(item);
         refineBtn.onclick = () => openRefine(item);
         compareBtn.onclick = () => toggleCompare(item);
@@ -479,6 +468,7 @@
         item.resultUrl = null;
         item.showOriginal = false;
         document.getElementById('resImg-' + item.id).style.display = 'none';
+        document.getElementById('slider-' + item.id).style.display = 'none';
         updateBadge(item);
         updateCardButtons(item);
         downloadZipBtn.disabled = true;
@@ -510,7 +500,6 @@
         updateStats();
       });
 
-      // ZIP download
       downloadZipBtn.addEventListener('click', async () => {
         const done = items.filter(i => i.status === 'done' && i.resultBlob);
         if (!done.length) return;
@@ -529,7 +518,9 @@
         URL.revokeObjectURL(url);
       });
 
-      // ---- Background Removal Algorithms ----
+      // ================================================
+      // FIXED EDGE-FILL BACKGROUND REMOVAL ALGORITHM
+      // ================================================
       function processWithEdgeFill(imageUrl, opts) {
         return new Promise((resolve, reject) => {
           const img = new Image();
@@ -543,14 +534,24 @@
               ctx.drawImage(img, 0, 0);
               const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
               const { tol, fea, bgm, bgc, bgImage } = opts;
-              // Edge fill algorithm (same as original but improved)
               const W = canvas.width, H = canvas.height;
               const d = imageData.data;
-              // Sample background color from edges (average)
-              const bgSample = sampleBg(d, W, H);
-              const bgR = bgSample.r, bgG = bgSample.g, bgB = bgSample.b;
-              // Distance tolerance mask
-              const mask = new Uint8Array(W * H);
+
+              // 1. Sample background from edges
+              const samples = [
+                [0,0], [W-1,0], [0,H-1], [W-1,H-1],
+                [Math.floor(W/2),0], [Math.floor(W/2),H-1],
+                [0,Math.floor(H/2)], [W-1,Math.floor(H/2)]
+              ];
+              let r=0,g=0,b=0;
+              samples.forEach(([x,y]) => {
+                const i = (y*W + x) * 4;
+                r += d[i]; g += d[i+1]; b += d[i+2];
+              });
+              const bgR = r/samples.length, bgG = g/samples.length, bgB = b/samples.length;
+
+              // 2. Flood-fill mask from edges
+              const mask = new Uint8Array(W * H);  // 0=unvisited, 1=background, 2=foreground
               const queue = [];
               function enq(x, y) {
                 if (x < 0 || x >= W || y < 0 || y >= H) return;
@@ -565,17 +566,21 @@
                   mask[idx] = 2; // foreground
                 }
               }
-              // Start from edges
               for (let x = 0; x < W; x++) { enq(x, 0); enq(x, H-1); }
               for (let y = 1; y < H-1; y++) { enq(0, y); enq(W-1, y); }
+
               let qi = 0;
               while (qi < queue.length) {
-                const cx = queue[qi++];
-                const cy = queue[qi++];
-                const neighbors = [[cx-1, cy], [cx+1, cy], [cx, cy-1], [cx, cy+1]];
-                for (const [nx, ny] of neighbors) enq(nx, ny);
+                const cx = queue[qi++], cy = queue[qi++];
+                enq(cx-1, cy); enq(cx+1, cy); enq(cx, cy-1); enq(cx, cy+1);
               }
-              // Feather
+
+              // 3. Set any remaining unvisited pixels as foreground (CRITICAL FIX)
+              for (let i = 0; i < mask.length; i++) {
+                if (mask[i] === 0) mask[i] = 2;
+              }
+
+              // 4. Feather mask
               if (fea > 0) {
                 const tmp = new Uint8Array(W * H);
                 for (let pass = 0; pass < fea; pass++) {
@@ -585,16 +590,19 @@
                       for (let dy = -1; dy <= 1; dy++) {
                         for (let dx = -1; dx <= 1; dx++) {
                           const nx = x+dx, ny = y+dy;
-                          if (nx>=0 && nx<W && ny>=0 && ny<H) { sum += mask[ny*W+nx]; cnt++; }
+                          if (nx >= 0 && nx < W && ny >= 0 && ny < H) {
+                            sum += mask[ny*W + nx]; cnt++;
+                          }
                         }
                       }
-                      tmp[y*W+x] = Math.round(sum / cnt);
+                      tmp[y*W + x] = Math.round(sum / cnt);
                     }
                   }
                   mask.set(tmp);
                 }
               }
-              // Apply background replacement
+
+              // 5. Apply background
               applyBackground(canvas, ctx, imageData, mask, bgm, bgc, bgImage, () => {
                 canvas.toBlob(blob => {
                   if (blob) resolve(blob);
@@ -606,21 +614,6 @@
           img.onerror = reject;
           img.src = imageUrl;
         });
-      }
-
-      function sampleBg(d, W, H) {
-        const samples = [
-          [0,0], [W-1,0], [0,H-1], [W-1,H-1],
-          [Math.floor(W/2),0], [Math.floor(W/2),H-1],
-          [0, Math.floor(H/2)], [W-1, Math.floor(H/2)]
-        ];
-        let r=0,g=0,b=0;
-        samples.forEach(([x,y]) => {
-          const i = (y*W + x) * 4;
-          r += d[i]; g += d[i+1]; b += d[i+2];
-        });
-        const n = samples.length;
-        return { r: r/n, g: g/n, b: b/n };
       }
 
       function applyBackground(canvas, ctx, imageData, mask, bgm, bgc, bgImage, callback) {
@@ -641,7 +634,7 @@
             bgB = parseInt(bgc.slice(5,7), 16);
           }
           for (let i = 0; i < W * H; i++) {
-            const alpha = mask[i] === 1 ? 0 : 255;
+            const alpha = mask[i] === 1 ? 0 : 255; // 1 = background
             const a = alpha / 255;
             d[i*4] = Math.round(d[i*4] * a + bgR * (1-a));
             d[i*4+1] = Math.round(d[i*4+1] * a + bgG * (1-a));
@@ -656,7 +649,6 @@
             ctx.globalCompositeOperation = 'destination-over';
             ctx.drawImage(bgImg, 0, 0, W, H);
             ctx.globalCompositeOperation = 'source-over';
-            // Re-draw original with mask
             ctx.putImageData(imageData, 0, 0);
             callback();
           };
@@ -673,7 +665,7 @@
         return resultBlob;
       }
 
-      // ---- Manual Refine Modal ----
+      // Refine modal functions (same as before)
       function openRefine(item) {
         if (!item.resultUrl) return;
         refineItem = item;
@@ -685,7 +677,6 @@
           refineCanvas.height = origImg.naturalHeight;
           const ctx = refineCanvas.getContext('2d');
           ctx.drawImage(origImg, 0, 0);
-          // Initialize mask from current result alpha
           const tmpCanvas = document.createElement('canvas');
           tmpCanvas.width = origImg.width;
           tmpCanvas.height = origImg.height;
@@ -696,7 +687,7 @@
             const imgData = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
             refineMask = new Uint8Array(origImg.width * origImg.height);
             for (let i = 0; i < refineMask.length; i++) {
-              refineMask[i] = imgData.data[i*4+3] > 128 ? 255 : 0; // 255 = foreground, 0 = background
+              refineMask[i] = imgData.data[i*4+3] > 128 ? 255 : 0;
             }
             drawRefineCanvas();
           };
@@ -708,13 +699,12 @@
       function drawRefineCanvas() {
         const ctx = refineCanvas.getContext('2d');
         ctx.drawImage(refineOrigImage, 0, 0);
-        // Overlay mask semi-transparent
         ctx.save();
         ctx.globalAlpha = 0.4;
         for (let y = 0; y < refineCanvas.height; y++) {
           for (let x = 0; x < refineCanvas.width; x++) {
             const idx = y * refineCanvas.width + x;
-            if (refineMask[idx] === 0) { // background
+            if (refineMask[idx] === 0) {
               ctx.fillStyle = '#ff0000';
               ctx.fillRect(x, y, 1, 1);
             }
@@ -725,8 +715,7 @@
 
       function refinePaint(x, y) {
         if (!refineMask) return;
-        const brushSize = parseInt(brushSizeInput.value);
-        const radius = Math.floor(brushSize / 2);
+        const radius = Math.floor(parseInt(brushSizeInput.value) / 2);
         const val = refineBrushType === 'fg' ? 255 : 0;
         for (let dy = -radius; dy <= radius; dy++) {
           for (let dx = -radius; dx <= radius; dx++) {
@@ -738,8 +727,20 @@
         drawRefineCanvas();
       }
 
-      refineCanvas.addEventListener('mousedown', (e) => { isRefineDrawing = true; const rect = refineCanvas.getBoundingClientRect(); const x = Math.floor((e.clientX - rect.left) * (refineCanvas.width / rect.width)); const y = Math.floor((e.clientY - rect.top) * (refineCanvas.height / rect.height)); refinePaint(x, y); });
-      window.addEventListener('mousemove', (e) => { if (!isRefineDrawing) return; const rect = refineCanvas.getBoundingClientRect(); const x = Math.floor((e.clientX - rect.left) * (refineCanvas.width / rect.width)); const y = Math.floor((e.clientY - rect.top) * (refineCanvas.height / rect.height)); refinePaint(x, y); });
+      refineCanvas.addEventListener('mousedown', (e) => {
+        isRefineDrawing = true;
+        const rect = refineCanvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (refineCanvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (refineCanvas.height / rect.height));
+        refinePaint(x, y);
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!isRefineDrawing) return;
+        const rect = refineCanvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (refineCanvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (refineCanvas.height / rect.height));
+        refinePaint(x, y);
+      });
       window.addEventListener('mouseup', () => { isRefineDrawing = false; });
 
       brushFg.addEventListener('click', () => refineBrushType = 'fg');
@@ -768,7 +769,6 @@
       cancelRefine.addEventListener('click', () => { refineOverlay.style.display = 'none'; });
       closeRefine.addEventListener('click', () => { refineOverlay.style.display = 'none'; });
 
-      // Initial render
       renderGrid();
     })();
   </script>

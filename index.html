@@ -6,310 +6,280 @@
   <meta name="google-site-verification" content="S_xtKI5JCRkkoHtqpOZ35xBeybTS056a9DXNtNMAUZ0" />
   <title id="siteTitle">PixelPress — Free Online Image & Document Toolkit</title>
   <meta name="description" content="Free online image tools: compress, resize, crop, convert, remove background, blur faces, and more. All processing happens in your browser – private and fast." />
-  <!-- Modern Font Awesome Icons for Sidebar & Layout -->
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/" />
+  
+  <!-- Font Awesome + Premium Google Fonts Matrix -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3P7QPQKV3K');
+  </script>
+
   <style>
     :root {
-      --primary: #ec4899;
-      --primary-hover: #db2777;
-      --text-dark: #0f172a;
-      --text-muted: #64748b;
-      --bg-main: #f8fafc;
-      --bg-card: #ffffff;
-      --border-color: #e2e8f0;
+      /* LIGHT MODE ARCHITECTURE (APPLE CRISP) */
+      --bg: #f5f5f7;
+      --surface: rgba(255, 255, 255, 0.75);
+      --card: #ffffff;
+      --border: rgba(0, 0, 0, 0.06);
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #ec4899;
+      --accent2: #a78bfa;
+      --glow: rgba(236, 72, 153, 0.1);
+      --r: 16px;
+      --fhead: 'Syne', sans-serif;
+      --fbody: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --fmono: 'JetBrains Mono', monospace;
     }
+
+    [data-theme="dark"] {
+      /* DARK MODE ARCHITECTURE (MIDNIGHT OBSIDIAN) */
+      --bg: #09090e;
+      --surface: rgba(21, 21, 30, 0.7);
+      --card: #15151e;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8e8f0;
+      --muted: #86868b;
+      --glow: rgba(236, 72, 153, 0.25);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-dark);
-      padding: 0;
-      transition: direction 0.3s ease;
+      background: var(--bg); color: var(--text); font-family: var(--fbody);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column; 
+      transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s ease, direction 0.3s ease;
     }
     
-    /* Support for Arabic RTL Dynamic Shift */
-    body.rtl {
-      direction: rtl;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    /* Top Sticky Navbar */
-    .brand-header {
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      display: flex; 
-      align-items: center; 
-      justify-content: center;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      padding: 15px 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    }
-    
-    .menu-btn {
-      position: absolute; 
-      left: 20px; 
-      background: none; 
-      border: none;
-      font-size: 24px; 
-      color: var(--text-dark); 
-      cursor: pointer;
-      padding: 8px; 
-      border-radius: 8px; 
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-    }
-    body.rtl .menu-btn { left: auto; right: 20px; }
-    .menu-btn:hover { background: #f1f5f9; color: var(--primary); }
-    
-    .brand-logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; }
-    .brand-logo span { color: var(--primary); }
+    body.rtl { direction: rtl; }
+    a { color: inherit; text-decoration: none; }
 
-    /* Beautiful Right-Side Language Switcher Pill */
-    .lang-switcher {
-      position: absolute;
-      right: 20px;
-      display: flex;
-      align-items: center;
+    /* ── PREMIUM STICKY GLASS NAVBAR ── */
+    nav {
+      position: sticky; top: 0; z-index: 200; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 clamp(1rem, 5vw, 3rem); height: 64px;
+      background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
     }
-    body.rtl .lang-switcher { right: auto; left: 20px; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .menu-trigger { background: none; border: none; color: var(--text); font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; transition: color 0.2s; }
+    .menu-trigger:hover { color: var(--accent); }
     
-    .lang-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-      margin-right: 8px;
-      text-transform: uppercase;
+    .nav-logo {
+      font-family: var(--fhead); font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; text-transform: uppercase;
     }
-    body.rtl .lang-label { margin-right: 0; margin-left: 8px; }
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    
+    /* INTERACTIVE PILLED CONTROL SYSTEM */
+    .control-btn {
+      background: var(--card); border: 1px solid var(--border); width: 38px; height: 38px;
+      border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: var(--text); font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: transform 0.2s, border-color 0.2s;
+    }
+    .control-btn:hover { transform: scale(1.05); border-color: var(--accent); }
 
-    .switch-btn {
-      position: relative;
-      width: 54px;
-      height: 28px;
-      background-color: #cbd5e1;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      border: none;
-      outline: none;
-    }
-    .switch-btn::before {
-      content: '';
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background-color: white;
-      top: 3px;
-      left: 3px;
-      transition: transform 0.3s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    /* When Switch is Active (English Mode) */
-    .switch-btn.active {
-      background-color: var(--primary);
-    }
-    .switch-btn.active::before {
-      transform: translateX(26px);
-    }
+    /* BEAUTIFUL LANG PILLED SWITCH BUTTON */
+    .lang-pill-container { display: flex; align-items: center; gap: 8px; }
+    .lang-p-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    @media (max-width: 600px) { .lang-p-label { display: none; } }
 
-    .container { width: 100%; max-width: 1100px; margin: auto; padding: 40px 20px; }
-    
-    /* Premium Sidebar Menu layout overrides */
-    .menu-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.3); z-index: 9998; display: none;
-      opacity: 0; transition: opacity 0.3s ease;
-      backdrop-filter: blur(2px);
+    .switch-p-btn {
+      position: relative; width: 50px; height: 26px; background-color: #cbd5e1;
+      border-radius: 20px; cursor: pointer; border: 1px solid var(--border); outline: none; transition: background 0.3s;
     }
-    .menu-overlay.show { display: block; opacity: 1; }
-    
-    .side-menu {
-      position: fixed; top: 0; left: -300px; width: 290px; height: 100%;
-      background: white; box-shadow: 4px 0 25px rgba(0,0,0,0.08);
-      z-index: 9999; transition: left 0.3s ease, right 0.3s ease; display: flex;
-      flex-direction: column; padding: 25px 20px; overflow-y: auto;
+    [data-theme="dark"] .switch-p-btn { background-color: #2d2d3d; }
+    .switch-p-btn::before {
+      content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+      background-color: white; top: 2px; left: 2px; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
-    .side-menu.open { left: 0; }
-    
-    body.rtl .side-menu { left: auto; right: -300px; box-shadow: -4px 0 25px rgba(0,0,0,0.08); }
-    body.rtl .side-menu.open { right: 0; }
+    .switch-p-btn.active { background-color: var(--accent); }
+    .switch-p-btn.active::before { transform: translateX(24px); }
+    body.rtl .switch-p-btn::before { left: auto; right: 2px; }
+    body.rtl .switch-p-btn.active::before { transform: translateX(-24px); }
 
-    .menu-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9;
-    }
-    .menu-header .brand-logo { font-size: 20px; }
-    .close-btn {
-      background: #f1f5f9; border: none; font-size: 16px; color: #64748b;
-      cursor: pointer; width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .close-btn:hover { background: #fee2e2; color: #ef4444; }
-    
-    .menu-links { display: flex; flex-direction: column; gap: 4px; }
-    .menu-links a {
-      text-decoration: none; color: #334155; font-size: 14.5px;
-      font-weight: 500; padding: 10px 14px; border-radius: 8px;
-      display: flex; align-items: center; gap: 12px; transition: all 0.2s;
-    }
-    .menu-links a i { width: 20px; font-size: 16px; color: #94a3b8; text-align: center; }
-    .menu-links a:hover { background: #fdf4ff; color: var(--primary); }
-    .menu-links a:hover i { color: var(--primary); }
-    
-    .menu-section-title {
-      font-size: 12px; font-weight: 700; color: #94a3b8;
-      text-transform: uppercase; letter-spacing: 0.8px; padding: 15px 14px 6px;
-    }
+    /* ── HIGH-FIDELITY SIDEBAR DRAWER ── */
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.15); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 299; display: none; }
+    .sidebar-overlay.show { display: block; }
 
-    /* Modern Hero Header */
-    .hero-section { text-align: center; margin-bottom: 40px; }
-    .hero-section h1 { font-size: 34px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; line-height: 1.25; letter-spacing: -0.5px; }
-    .hero-section p { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+    .sidebar {
+      position: fixed; top: 0; left: -290px; width: 290px; height: 100%;
+      background: var(--card); border-right: 1px solid var(--border);
+      z-index: 300; padding: 25px 20px; display: flex; flex-direction: column;
+      overflow-y: auto; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.rtl .sidebar { left: auto; right: -290px; border-right: none; border-left: 1px solid var(--border); }
+    .sidebar.open { left: 0; box-shadow: 20px 0 40px rgba(0,0,0,0.03); }
+    body.rtl .sidebar.open { right: 0; left: auto; box-shadow: -20px 0 40px rgba(0,0,0,0.03); }
+
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+    .sidebar-close { background: var(--bg); border: none; color: var(--muted); font-size: 0.9rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .sidebar-close:hover { background: #fee2e2; color: #ef4444; }
     
-    /* Elegant Categories Filters */
-    .filter-container {
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 40px;
+    .sidebar-links { display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-links a { padding: 10px 14px; border-radius: 10px; font-size: 14.5px; color: var(--text); display: flex; align-items: center; gap: 12px; font-weight: 500; transition: all 0.2s; }
+    .sidebar-links a i { width: 20px; font-size: 15px; color: var(--muted); text-align: center; }
+    .sidebar-links a:hover, .sidebar-links a.active { background: var(--bg); color: var(--accent); }
+    .sidebar-links a:hover i, .sidebar-links a.active i { color: var(--accent); }
+    .menu-section-title { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 16px 14px 6px; }
+
+    /* ── WORKSPACE CORE ENGINE ── */
+    .hero { text-align: center; padding: clamp(2.5rem, 6vw, 4.5rem) 1rem 2rem; }
+    .hero h1 { font-family: var(--fhead); font-size: clamp(1.8rem, 4.5vw, 3.2rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 12px; color: var(--text); }
+    .hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 15.5px; color: var(--muted); max-width: 580px; margin: 0 auto; line-height: 1.5; }
+
+    .main { max-width: 1140px; margin: 0 auto; width: 100%; padding: 0 20px 5rem; flex: 1; }
+
+    /* PREMIUM SEARCH COMMAND CONSOLE */
+    .search-container { max-width: 580px; margin: 0 auto 2.5rem; position: relative; }
+    .search-bar {
+      width: 100%; padding: 14px 20px 14px 45px; font-family: inherit; font-size: 15.5px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; color: var(--text);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01); outline: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .filter-btn {
-      border: 1px solid var(--border-color); background: white; color: #475569;
-      padding: 9px 22px; border-radius: 30px; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s ease;
+    body.rtl .search-bar { padding: 14px 45px 14px 20px; }
+    .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--glow); }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 15px; pointer-events: none; }
+    body.rtl .search-icon { left: auto; right: 16px; }
+    .search-kbd { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-family: var(--fmono); font-size: 11px; color: var(--muted); background: var(--bg); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); pointer-events: none; }
+    body.rtl .search-kbd { right: auto; left: 16px; }
+
+    /* DYNAMIC FILTER METRICS */
+    .filter-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 2.5rem; flex-wrap: wrap; }
+    .filter-pill {
+      background: var(--card); border: 1px solid var(--border); color: var(--muted);
+      padding: 8px 20px; border-radius: 99px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .filter-btn:hover { border-color: #cbd5e1; background: #f8fafc; color: var(--text-dark); }
-    .filter-btn.active { background: var(--text-dark); color: white; border-color: var(--text-dark); }
+    .filter-pill:hover { border-color: var(--accent); color: var(--text); }
+    .filter-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    /* 2-COLUMN PREMIUM MATRIX LAYOUT */
+    .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    @media (max-width: 850px) { .tools-grid { grid-template-columns: 1fr; gap: 15px; } }
     
-    /* 2-Column Premium Tools Grid Layout */
-    .tools-list { 
-      display: grid; 
-      grid-template-columns: repeat(2, 1fr); 
-      gap: 20px; 
-    }
     .tool-link { text-decoration: none; color: inherit; display: block; }
     .tool-link.hidden { display: none; }
-    
-    /* Premium iLoveIMG Style Cards */
+
+    /* PREMIUM CARD HOVER LOGIC FRAMEWORKS */
     .tool-card {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
-      padding: 24px; display: flex; align-items: flex-start; gap: 18px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01); 
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer; height: 100%;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 24px; display: flex; align-items: flex-start; gap: 18px; height: 100%;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .tool-card:hover {
-      transform: translateY(-3px); border-color: var(--primary);
-      box-shadow: 0 12px 20px -3px rgba(236, 72, 153, 0.12);
-    }
-    .tool-icon {
-      font-size: 24px; background: #fdf4ff; padding: 12px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; min-width: 54px;
-      height: 54px; border: 1px solid #fbcfe8; transition: all 0.2s;
-    }
-    .tool-card:hover .tool-icon {
-      background: var(--primary); color: white !important; border-color: var(--primary);
-    }
-    .tool-info { flex: 1; }
-    .tool-info h2 { font-size: 17px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; text-transform: uppercase; letter-spacing: -0.2px; }
-    .tool-info p { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+    .tool-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 12px 24px -4px var(--glow); }
     
-    /* Footer Style */
-    footer {
-      text-align: center; margin-top: 60px; padding: 35px 20px; font-size: 13.5px;
-      color: var(--text-muted); border-top: 1px solid var(--border-color);
+    .tool-icon-wrapper {
+      font-size: 24px; background: var(--bg); padding: 12px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; min-width: 54px; height: 54px;
+      border: 1px solid var(--border); transition: all 0.25s; color: var(--accent);
     }
-    footer a { color: #475569; text-decoration: none; font-weight: 500; margin: 0 10px; transition: color 0.2s; }
-    footer a:hover { color: var(--primary); text-decoration: underline; }
-    .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .tool-card:hover .tool-icon-wrapper { background: var(--accent); color: #ffffff; border-color: var(--accent); }
     
-    /* Responsive System */
-    @media (max-width: 850px) {
-      .tools-list { grid-template-columns: 1fr; gap: 15px; }
-      .hero-section h1 { font-size: 28px; }
-      .lang-label { display: none; } /* Hide label on small devices to keep bar clean */
-    }
-    @media (max-width: 480px) {
-      .hero-section h1 { font-size: 24px; }
-      .tool-card { padding: 18px; gap: 14px; }
-      .tool-icon { font-size: 20px; min-width: 48px; height: 48px; }
-      .tool-info h2 { font-size: 16px; }
-      .tool-info p { font-size: 13px; }
-      .menu-btn { left: 10px; }
-      body.rtl .menu-btn { right: 10px; left: auto; }
-    }
+    .tool-info-pane { flex: 1; }
+    .tool-info-pane h2 { font-size: 16.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; letter-spacing: -0.2px; text-transform: uppercase; }
+    .tool-info-pane p { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+    .tool-info-pane p strong { color: var(--text); font-weight: 600; }
+
+    #noResults { text-align: center; color: var(--muted); padding: 4rem 0; width: 100%; display: none; font-size: 15px; }
+
+    /* FOOTER INTEGRATION LAYERS */
+    footer { text-align: center; margin-top: 60px; padding: 35px 20px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--border); background: var(--card); }
+    .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; }
+    .footer-links a { color: var(--muted); font-weight: 500; }
+    .footer-links a:hover { color: var(--accent); text-decoration: underline; }
   </style>
 </head>
 <body>
-  <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
+
+  <div class="sidebar-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
   
-  <!-- Premium Sidebar Menu -->
-  <div class="side-menu" id="sideMenu">
-    <div class="menu-header">
-      <div class="brand-logo">PIXEL<span>PRESS</span></div>
-      <button class="close-btn" onclick="toggleMenu(false)">✕</button>
+  <!-- Premium Unified Sidebar Menu Drawer -->
+  <aside class="sidebar" id="sideMenu">
+    <div class="sidebar-header">
+      <div class="nav-logo">PIXEL<span>PRESS</span></div>
+      <button class="sidebar-close" onclick="toggleMenu(false)">✕</button>
     </div>
-    <div class="menu-links" id="sidebarLinks">
-      <!-- Injected Dynamically by JS Switcher -->
+    <div class="sidebar-links" id="sidebarLinks">
+      <!-- Generated Sequentially via Localization Matrix -->
     </div>
-  </div>
+  </aside>
 
-  <!-- Top Sticky Navbar -->
-  <header class="brand-header">
-    <button class="menu-btn" onclick="toggleMenu(true)"><i class="fa-solid fa-bars"></i></button>
-    <div class="brand-logo">PIXEL<span>PRESS</span></div>
-    
-    <!-- Beautiful Switch Toggle -->
-    <div class="lang-switcher">
-      <span class="lang-label" id="langText">English</span>
-      <button class="switch-btn active" id="langToggleBtn" onclick="toggleLanguage()"></button>
+  <!-- Top Fluid Glass Sticky Navbar Navigation -->
+  <nav>
+    <div class="nav-left">
+      <button class="menu-trigger" onclick="toggleMenu(true)"><i class="fa-solid fa-bars"></i></button>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
     </div>
-  </header>
+    <div class="nav-actions">
+      <!-- Language Pilled Interactive Trigger Matrix -->
+      <div class="lang-pill-container">
+        <span class="lang-p-label" id="langText">English</span>
+        <button class="switch-p-btn active" id="langToggleBtn" onclick="toggleLanguage()"></button>
+      </div>
+      <!-- Theme Switch Modular UI Toggle -->
+      <button class="control-btn" id="themeToggle" title="Toggle System Theme">🌓</button>
+    </div>
+  </nav>
 
-  <div class="container">
-    <section class="hero-section">
+  <div class="main">
+    <section class="hero">
       <h1 id="heroTitle">Every tool you could want to<br>edit images in bulk</h1>
       <p id="heroDesc">Your online photo editor is here and forever free!</p>
     </section>
 
-    <!-- Filter Section -->
-    <div class="filter-container" id="filterContainer">
-      <!-- Filters dynamically loaded -->
+    <!-- Command Center Execution Search Terminal -->
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-bar" id="toolSearch" placeholder="Search parameters or operational utilities..." autocomplete="off">
+      <span class="search-kbd">⌘ K</span>
     </div>
 
-    <!-- Main Tools Matrix Grid -->
-    <section class="tools-list" id="toolsList">
-       <!-- Tools cards content dynamically handled for smooth conversion -->
+    <!-- Category Control Selection System Filters -->
+    <div class="filter-row" id="filterContainer">
+      <!-- Rendered dynamically depending on language configuration matrices -->
+    </div>
+
+    <!-- Active Grid Processing Pipeline Modules -->
+    <section class="tools-grid" id="toolsList">
+       <!-- Loaded via client translation engine -->
     </section>
 
-    <!-- Clean Footer Navigation -->
-    <footer>
-      <div class="footer-links" id="footerLinks">
-         <!-- Footer items -->
-      </div>
-      <p id="footerCopyright">© 2026 PixelPress — All Rights Reserved</p>
-    </footer>
+    <div id="noResults">No operational utility suite detected matching query parameter.</div>
   </div>
 
+  <!-- Footnote Structure Wrapper -->
+  <footer>
+    <div class="footer-links" id="footerLinks">
+       <!-- Synced dynamic endpoints -->
+    </div>
+    <p id="footerCopyright">© 2026 PixelPress — All Rights Reserved</p>
+  </footer>
+
   <script>
-    // System Data Matrix for Seamless Translation without loading secondary pages
+    // CORE SYSTEM MULTI-LANGUAGE DATABASE (COMPREHENSIVE MAP ACCORDING TO 1000200133.PNG)
     const languageData = {
       en: {
         title: "PixelPress — Free Online Image & Document Toolkit",
         labelText: "English",
-        heroTitle: "Every tool you could want to<br>edit images in bulk",
+        heroTitle: "Every tool you could want to<br><span>edit images in bulk</span>",
         heroDesc: "Your online photo editor is here and forever free!",
         copyright: "© 2026 PixelPress — All Rights Reserved",
+        searchPlaceholder: "Search operational tools or utilities...",
+        noResultsText: "No operational utility suite detected matching query parameter.",
         filters: [
           { id: 'all', text: 'All' },
           { id: 'optimize', text: 'Optimize' },
@@ -357,24 +327,26 @@
           { href: "./watermark.html", cat: "security create", emoji: "💧", title: "Watermark IMAGE", desc: "Protect your visual assets. Stamp an image or text over your images with custom transparency and positions." },
           { href: "./pdf-to-jpg.html", cat: "convert", emoji: "📄", title: "PDF to JPG", desc: "Extract all pages from a <strong>PDF</strong> file or convert PDF pages into high-quality <strong>JPG</strong> images instantly." },
           { href: "./jpg-to-pdf.html", cat: "convert", emoji: "🖼️", title: "JPG to PDF", desc: "Convert your <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> images into a single compact <strong>PDF</strong> document easily." },
-          { href: "./remove-bg.html", cat: "edit create", emoji: "🫥", title: "Remove Background", desc: "AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser." },
+          { href: "./remove-bg.html", cat: "edit create ai", emoji: "🫥", title: "Remove Background", desc: "AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser." },
           { href: "./meme-generator.html", cat: "create", emoji: "😂", title: "Meme Generator", desc: "Create memes with templates, custom images, draggable text, stickers and more. Export as JPG, PNG, or WEBP." },
           { href: "./crop.html", cat: "edit", emoji: "✂️", title: "Advanced Crop", desc: "Precise cropping tool with fixed aspect ratios and social media presets." },
-          { href: "./blur-face.html", cat: "security edit", emoji: "👤", title: "Blur Face", desc: "Automatically detect and blur faces for privacy using AI." }
+          { href: "./blur-face.html", cat: "security edit ai", emoji: "👤", title: "Blur Face", desc: "Automatically detect and blur faces for privacy using high-speed local computer vision model engines." }
         ]
       },
       ar: {
         title: "PixelPress — أدوات مجانية تعديل الصور وملفات PDF",
         labelText: "العربية",
-        heroTitle: "كل الأدوات التي تحتاجها<br>لتعديل الصور دفعة واحدة",
+        heroTitle: "كل الأدوات التي تحتاجها<br>لتعديل <span>الصور دفعة واحدة</span>",
         heroDesc: "محرر الصور الخاص بك عبر الإنترنت هنا ومجاني إلى الأبد!",
         copyright: "© 2026 PixelPress — جميع الحقوق محفوظة",
+        searchPlaceholder: "البحث عن الأدوات أو الخدمات المتاحة...",
+        noResultsText: "لم يتم العثور على أي أداة تطابق معايير الاستعلام المدخلة.",
         filters: [
           { id: 'all', text: 'الكل' },
           { id: 'optimize', text: 'تحسين الكفاءة' },
           { id: 'create', text: 'إنشاء' },
           { id: 'edit', text: 'تعديل' },
-          { id: 'convert', text: 'تحويل وتحوير' },
+          { id: 'convert', text: 'تحويل الصيغ' },
           { id: 'security', text: 'الأمان والحماية' }
         ],
         sidebarTitles: { image: "أدوات الصور", doc: "أدوات المستندات", info: "المعلومات والصفحات" },
@@ -416,46 +388,51 @@
           { href: "./watermark.html", cat: "security create", emoji: "💧", title: "إضافة علامة مائية", desc: "احمِ أصولك المرئية وحقوقك. اطبع صورة أو نصًا فوق صورك بشفافية ومواضع مخصصة بالكامل." },
           { href: "./pdf-to-jpg.html", cat: "convert", emoji: "📄", title: "تحويل من PDF إلى JPG", desc: "قم باستخراج جميع الصفحات من ملف <strong>PDF</strong> أو تحويل صفحات PDF إلى صور <strong>JPG</strong> عالية الجودة على الفور." },
           { href: "./jpg-to-pdf.html", cat: "convert", emoji: "🖼️", title: "تحويل من JPG إلى PDF", desc: "قم بتحويل صور <strong>JPG</strong> أو <strong>PNG</strong> أو <strong>WEBP</strong> إلى مستند <strong>PDF</strong> واحد مدمج ومنظم بكل سهولة." },
-          { href: "./remove-bg.html", cat: "edit create", emoji: "🫥", title: "إزالة خلفية الصور", desc: "مزيل الخلفية بالذكاء الاصطناعي لتوفير صور PNG شفافة، أو معالجة جماعية مخصصة بالكامل داخل متصفحك." },
+          { href: "./remove-bg.html", cat: "edit create ai", emoji: "🫥", title: "إزالة خلفية الصور", desc: "مزيل الخلفية بالذكاء الاصطناعي لتوفير صور PNG شفافة، أو معالجة جماعية مخصصة بالكامل داخل متصفحك." },
           { href: "./meme-generator.html", cat: "create", emoji: "😂", title: "صانع صور الميمز", desc: "أنشئ صور ميمز مضحكة باستخدام قوالب مخصصة، ونصوص قابلة للسحب، وملصقات تصدير سريعة." },
           { href: "./crop.html", cat: "edit", emoji: "✂️", title: "قص الصور احترافي", desc: "أداة قص دقيقة للغاية مع نسب أبعاد ثابتة وإعدادات مسبقة مخصصة لوسائل التواصل الاجتماعي." },
-          { href: "./blur-face.html", cat: "security edit", emoji: "👤", title: "تغبيش وطمس الوجوه", desc: "اكتشف الوجوه تلقائيًا وقم بتغبيشها لحماية الخصوصية والأمان باستخدام تقنيات الذاء الاصطناعي." }
+          { href: "./blur-face.html", cat: "security edit ai", emoji: "👤", title: "تغبيش وطمس الوجوه", desc: "اكتشف الوجوه تلقائيًا وقم بتغبيشها لحماية الخصوصية والأمان باستخدام تقنيات الذكاء الاصطناعي المتطورة." }
         ]
       }
     };
 
     let currentLang = 'en';
 
+    // RENDER INTERFACE LOGIC COMPONENT
     function renderUI() {
       const data = languageData[currentLang];
       
-      // Update HTML attributes & Document Title
       document.getElementById('siteTitle').innerText = data.title;
       document.getElementById('langText').innerText = data.labelText;
       document.getElementById('heroTitle').innerHTML = data.heroTitle;
       document.getElementById('heroDesc').innerText = data.heroDesc;
       document.getElementById('footerCopyright').innerText = data.copyright;
+      document.getElementById('noResults').innerText = data.noResultsText;
+      
+      const searchBox = document.getElementById('toolSearch');
+      searchBox.placeholder = data.searchPlaceholder;
 
-      // Render Filters Elements
+      // Render Filters System
       const filterBox = document.getElementById('filterContainer');
       filterBox.innerHTML = '';
       data.filters.forEach((f, i) => {
         const btn = document.createElement('button');
-        btn.className = `filter-btn ${i === 0 ? 'active' : ''}`;
+        btn.className = `filter-pill ${i === 0 ? 'active' : ''}`;
         btn.innerText = f.text;
-        btn.onclick = function() { filterTools(f.id, this); };
+        btn.setAttribute('data-target', f.id);
+        btn.onclick = function() { filterCategory(f.id, this); };
         filterBox.appendChild(btn);
       });
 
-      // Render Tools Matrix 
+      // Render Tools Grid Matrix
       const toolsGrid = document.getElementById('toolsList');
       toolsGrid.innerHTML = '';
       data.tools.forEach(t => {
         toolsGrid.innerHTML += `
           <a href="${t.href}" class="tool-link" data-category="${t.cat}">
             <div class="tool-card">
-              <div class="tool-icon">${t.emoji}</div>
-              <div class="tool-info">
+              <div class="tool-icon-wrapper">${t.emoji}</div>
+              <div class="tool-info-pane">
                 <h2>${t.title}</h2>
                 <p>${t.desc}</p>
               </div>
@@ -463,21 +440,20 @@
           </a>`;
       });
 
-      // Render Footer Hyperlinks Menu
+      // Render Footnotes
       const fLinks = document.getElementById('footerLinks');
       fLinks.innerHTML = '';
       data.footer.forEach(item => {
         fLinks.innerHTML += `<a href="${item.href}">${item.text}</a>`;
       });
 
-      // Render Premium Sidebar Internal Content Layout
+      // Render Dynamic Sidebar Matrix
       const sidebarBox = document.getElementById('sidebarLinks');
       sidebarBox.innerHTML = `
         <a href="${data.menu[0].href}"><i class="fa-solid ${data.menu[0].icon}"></i> ${data.menu[0].text}</a>
         <div class="menu-section-title">${data.sidebarTitles.image}</div>
       `;
       
-      // Inject standard items sequentially 
       for(let i = 1; i <= 9; i++) {
         sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
       }
@@ -486,47 +462,71 @@
         sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
       }
       sidebarBox.innerHTML += `
-        <div style="height: 1px; background: #f1f5f9; margin: 10px 0;"></div>
+        <div style="height: 1px; background: var(--border); margin: 10px 0;"></div>
         <div class="menu-section-title">${data.sidebarTitles.info}</div>
       `;
       for(let i = 12; i < data.menu.length; i++) {
         sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
       }
+      
+      // Re-trigger live sync evaluations 
+      evaluateLiveSearchFilters();
     }
 
+    // INTERACTIVE SYSTEM TRANSLATION CONTROLLERS
     function toggleLanguage() {
       const toggleBtn = document.getElementById('langToggleBtn');
       if (currentLang === 'en') {
         currentLang = 'ar';
         document.body.classList.add('rtl');
-        toggleBtn.classList.remove('active'); // Slide off for Arabic layout position
+        toggleBtn.classList.remove('active');
       } else {
         currentLang = 'en';
         document.body.classList.remove('rtl');
-        toggleBtn.classList.add('active'); // Slide on for English layout position
+        toggleBtn.classList.add('active');
       }
       renderUI();
     }
 
-    function filterTools(category, element) {
-      const buttons = document.querySelectorAll('.filter-btn');
-      buttons.forEach(btn => btn.classList.remove('active'));
-      element.classList.add('active');
+    // REALTIME LIVE SEARCH & FILTER MATRIX EVALUATION ENGINE
+    const searchInput = document.getElementById('toolSearch');
+    
+    function evaluateLiveSearchFilters() {
+      const query = searchInput.value.toLowerCase().trim();
+      const activePill = document.querySelector('.filter-pill.active');
+      const targetCategory = activePill ? activePill.getAttribute('data-target') : 'all';
+      let aggregateMatchCount = 0;
+      
       const links = document.querySelectorAll('.tool-link');
       links.forEach(link => {
-        if (category === 'all') {
+        const title = link.querySelector('h2').textContent.toLowerCase();
+        const description = link.querySelector('p').textContent.toLowerCase();
+        const categories = link.getAttribute('data-category').split(' ');
+
+        const queryMatch = title.includes(query) || description.includes(query);
+        const categoryMatch = targetCategory === 'all' || categories.includes(targetCategory);
+
+        if(queryMatch && categoryMatch) {
           link.classList.remove('hidden');
+          aggregateMatchCount++;
         } else {
-          const categories = link.getAttribute('data-category').split(' ');
-          if (categories.includes(category)) {
-            link.classList.remove('hidden');
-          } else {
-            link.classList.add('hidden');
-          }
+          link.classList.add('hidden');
         }
       });
+
+      document.getElementById('noResults').style.display = aggregateMatchCount === 0 ? 'block' : 'none';
     }
 
+    function filterCategory(category, element) {
+      const buttons = document.querySelectorAll('.filter-pill');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+      evaluateLiveSearchFilters();
+    }
+
+    searchInput.addEventListener('input', evaluateLiveSearchFilters);
+
+    // SIDEBAR DRAWER INTERRUPT CONTROL INTERFACES
     function toggleMenu(show) {
       const menu = document.getElementById('sideMenu');
       const overlay = document.getElementById('menuOverlay');
@@ -539,9 +539,31 @@
       }
     }
 
-    // Initialize System UI Rendering on boot load
+    // PREMIUM LOCALSTORAGE THEME ENGINE LAYER
+    const themeToggle = document.getElementById('themeToggle');
+    const getSystemThemeSetting = () => localStorage.getItem('pixelpress-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+    document.documentElement.setAttribute('data-theme', getSystemThemeSetting());
+
+    themeToggle.addEventListener('click', () => {
+      const currentSetting = document.documentElement.getAttribute('data-theme');
+      const targetSetting = currentSetting === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', targetSetting);
+      localStorage.setItem('pixelpress-theme', targetSetting);
+    });
+
+    // COMMAND + K PORTAL INTERCEPT TRIGGER
+    window.addEventListener('keydown', e => {
+      if((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+
+    // Initialize UI on startup
     renderUI();
   </script>
 </body>
 </html>
+
 

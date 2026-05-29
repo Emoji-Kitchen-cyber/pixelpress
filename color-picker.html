@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Picker — PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
+    激:root { --bg:#f5f5f7; --card:#ffffff; --border:rgba(0,0,0,0.06); --text:#1d1d1f; --muted:#6e6e73; --accent:#ec4899; }
+    [data-theme="dark"] { --bg:#09090e; --card:#15151e; --border:rgba(255,255,255,0.08); --text:#e8e8f0; --muted:#86868b; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; margin:0; padding:0; }
+    nav { display:flex; align-items:center; padding:0 2rem; height:64px; background:var(--card); border-bottom:1px solid var(--border); }
+    .nav-logo { font-family:'Syne'; font-weight:800; color:var(--text); text-transform:uppercase; text-decoration:none; }
+    .nav-logo span { color:var(--accent); }
+    .container { max-width:500px; margin:4rem auto; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px; text-align:center; }
+    .color-box { width:100%; height:120px; border-radius:12px; margin:20px 0; border:1px solid var(--border); transition:background 0.1s; }
+    .inp-val { width:100%; padding:12px; font-family:monospace; font-size:16px; text-align:center; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; }
+    .btn { background:var(--text); color:var(--bg); border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer; width:100%; }
+  </style>
+</head>
+<body>
+  <nav><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></nav>
+  <div class="container">
+    <h2 style="font-family:'Syne';">Color Picker</h2>
+    <input type="color" id="nativePicker" style="width:100%; height:50px; cursor:pointer; border-radius:8px; border:none; margin-top:15px;">
+    <div class="color-box" id="displayBlock" style="background:#ec4899;"></div>
+    <input type="text" class="inp-val" id="hexVal" value="#ec4899" readonly>
+    <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('hexVal').value); alert('Copied!')">Copy HEX Code</button>
+  </div>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
+    const picker = document.getElementById('nativePicker');
+    const block = document.getElementById('displayBlock');
+    const input = document.getElementById('hexVal');
+    picker.addEventListener('input', e => {
+      block.style.background = e.target.value;
+      input.value = e.target.value.toUpperCase();
+    });
+  </script>
+</body>
+</html>

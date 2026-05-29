@@ -14,7 +14,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
-      /* LIGHT MODE ARCHITECTURE (APPLE CRISP) */
       --bg: #f5f5f7;
       --surface: rgba(255, 255, 255, 0.75);
       --card: #ffffff;
@@ -31,7 +30,6 @@
     }
 
     [data-theme="dark"] {
-      /* DARK MODE ARCHITECTURE (MIDNIGHT OBSIDIAN) */
       --bg: #09090e;
       --surface: rgba(21, 21, 30, 0.7);
       --card: #15151e;
@@ -581,6 +579,31 @@
 
     // Execute Startup System Pipeline
     renderUI();
+  </script>
+
+  <!-- ==================== HASH-BASED URL SHORTENER REDIRECT ==================== -->
+  <script>
+    (function() {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/s/')) {
+        const shortId = hash.replace('#/s/', '').split('?')[0]; // remove any query params
+        const stored = localStorage.getItem(`redirect_${shortId}`);
+        if (stored) {
+          const entry = JSON.parse(stored);
+          if (entry.expiry && Date.now() > entry.expiry) {
+            document.body.innerHTML = '<div style="text-align:center;padding:4rem;font-family:system-ui;"><h2>⏰ Link Expired</h2><p>This shortened URL has expired.</p><a href="./index.html" style="color:#ec4899;">Go Home</a></div>';
+          } else {
+            // Increase click count
+            entry.clicks = (entry.clicks || 0) + 1;
+            localStorage.setItem(`redirect_${shortId}`, JSON.stringify(entry));
+            // Redirect to original URL
+            window.location.replace(entry.long);
+          }
+        } else {
+          document.body.innerHTML = '<div style="text-align:center;padding:4rem;font-family:system-ui;"><h2>🔗 URL Not Found</h2><p>The shortened link does not exist.</p><a href="./index.html" style="color:#ec4899;">Go Home</a></div>';
+        }
+      }
+    })();
   </script>
 </body>
 </html>

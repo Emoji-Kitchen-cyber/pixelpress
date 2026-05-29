@@ -293,7 +293,7 @@
           { href: "./contact.html", icon: "fa-envelope", text: "Contact" },
           { href: "./faq.html", icon: "fa-circle-question", text: "FAQ" },
           { href: "./blog/", icon: "fa-pen-to-square", text: "Blog" },
-          { href: "./privacy-policy.html", icon: "fa-shield-halved", text: "Privacy Policy" },
+          { href: "./privacy-policy.html", icon: "fa-shadow", text: "Privacy Policy" },
           { href: "./terms.html", icon: "fa-file-contract", text: "Terms of Service" },
           { href: "./disclaimer.html", icon: "fa-triangle-exclamation", text: "Disclaimer" }
         ],
@@ -354,7 +354,7 @@
           { href: "./contact.html", icon: "fa-envelope", text: "اتصل بنا" },
           { href: "./faq.html", icon: "fa-circle-question", text: "الأسئلة الشائعة" },
           { href: "./blog/", icon: "fa-pen-to-square", text: "المدونة" },
-          { href: "./privacy-policy.html", icon: "fa-shield-halved", text: "سياسة الخصوصية" },
+          { href: "./privacy-policy.html", icon: "fa-shadow", text: "سياسة الخصوصية" },
           { href: "./terms.html", icon: "fa-file-contract", text: "شروط الخدمة" },
           { href: "./disclaimer.html", icon: "fa-triangle-exclamation", text: "إخلاء المسؤولية" }
         ],
@@ -434,26 +434,43 @@
         fLinks.innerHTML += `<a href="${item.href}">${item.text}</a>`;
       });
 
-      // Render Dynamic Sidebar Matrix
+      // ── FIXED DYNAMIC SIDEBAR MATRIX DRAWER (No more undefined!) ──
       const sidebarBox = document.getElementById('sidebarLinks');
+      
+      // Index 0 explicitly bounds the Home module
       sidebarBox.innerHTML = `
         <a href="${data.menu.href}"><i class="fa-solid ${data.menu.icon}"></i> ${data.menu.text}</a>
         <div class="menu-section-title">${data.sidebarTitles.image}</div>
       `;
       
+      // Image Utilities: Indexes 1 to 9
       for(let i = 1; i <= 9; i++) {
-        sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
+        if(data.menu[i]) {
+          sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
+        }
       }
+      
+      // Document Utilities Header
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.doc}</div>`;
+      
+      // Document Utilities: Indexes 10 to 11
       for(let i = 10; i <= 11; i++) {
-        sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
+        if(data.menu[i]) {
+          sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
+        }
       }
+      
+      // Divider and Info Section
       sidebarBox.innerHTML += `
         <div style="height: 1px; background: var(--border); margin: 10px 0;"></div>
         <div class="menu-section-title">${data.sidebarTitles.info}</div>
       `;
+      
+      // Info & Legal Pages: Remaining Indexes
       for(let i = 12; i < data.menu.length; i++) {
-        sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
+        if(data.menu[i]) {
+          sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
+        }
       }
       
       evaluateLiveSearchFilters();
@@ -551,6 +568,3 @@
   </script>
 </body>
 </html>
-
-
-

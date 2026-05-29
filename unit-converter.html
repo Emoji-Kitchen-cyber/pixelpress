@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit Converter - PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: rgba(255, 255, 255, 0.75);
+      --card: #ffffff;
+      --border: rgba(0, 0, 0, 0.06);
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #ec4899;
+      --accent2: #a78bfa;
+      --r: 16px;
+      --fhead: 'Syne', sans-serif;
+      --fbody: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21, 21, 30, 0.7); --card: #15151e;
+      --border: rgba(255, 255, 255, 0.08); --text: #e8e8f0; --muted: #86868b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: var(--fbody); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Navbar */
+    nav { position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(1rem, 5vw, 3rem); height: 64px; background: var(--surface); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: var(--fhead); font-weight: 800; font-size: 1.2rem; text-decoration: none; color: var(--text); }
+    .nav-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn { display: flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-weight: 500; }
+    .back-btn:hover { color: var(--accent); }
+
+    .main { max-width: 800px; margin: 0 auto; width: 100%; padding: 3rem 20px; flex: 1; }
+    .tool-header { text-align: center; margin-bottom: 2rem; }
+    .tool-header h1 { font-family: var(--fhead); font-size: 2.5rem; margin-bottom: 10px; }
+    
+    .workspace { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; }
+    
+    /* Category Tabs */
+    .tabs { display: flex; gap: 10px; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 5px; }
+    .tab { background: var(--bg); border: 1px solid var(--border); padding: 10px 20px; border-radius: 99px; cursor: pointer; color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; transition: all 0.2s; }
+    .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+    
+    /* Converter Grid */
+    .convert-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center; }
+    @media(max-width: 600px) { .convert-grid { grid-template-columns: 1fr; } .icon-swap { transform: rotate(90deg); } }
+
+    .input-group { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .input-group input { width: 100%; background: transparent; border: none; font-size: 24px; color: var(--text); outline: none; font-family: inherit; font-weight: 600; }
+    .input-group select { width: 100%; background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-size: 14px; outline: none; cursor: pointer; }
+    
+    .icon-swap { font-size: 20px; color: var(--muted); display: flex; justify-content: center; align-items: center; background: var(--card); width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    <div style="width: 70px;"></div>
+  </nav>
+
+  <div class="main">
+    <div class="tool-header">
+      <h1>Unit Converter</h1>
+      <p style="color: var(--muted);">High performance responsive digital metrics calculator.</p>
+    </div>
+
+    <div class="workspace">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-cat="length">Length</button>
+        <button class="tab" data-cat="weight">Weight</button>
+        <button class="tab" data-cat="temp">Temperature</button>
+        <button class="tab" data-cat="data">Digital Data</button>
+      </div>
+
+      <div class="convert-grid">
+        <div class="input-group">
+          <input type="number" id="inputVal" value="1" step="any">
+          <select id="inputUnit"></select>
+        </div>
+        
+        <div class="icon-swap"><i class="fa-solid fa-right-left"></i></div>
+        
+        <div class="input-group">
+          <input type="number" id="outputVal" readonly>
+          <select id="outputUnit"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
+
+    const units = {
+      length: { meters: 1, kilometers: 0.001, centimeters: 100, millimeters: 1000, miles: 0.000621371, inches: 39.3701, feet: 3.28084 },
+      weight: { kilograms: 1, grams: 1000, milligrams: 1000000, pounds: 2.20462, ounces: 35.274 },
+      temp: { celsius: 'C', fahrenheit: 'F', kelvin: 'K' },
+      data: { bytes: 1048576, kilobytes: 1024, megabytes: 1, gigabytes: 0.0009765625, terabytes: 9.5367e-7 } // Base is MB
+    };
+
+    let currentCat = 'length';
+    const inputVal = document.getElementById('inputVal');
+    const outputVal = document.getElementById('outputVal');
+    const inputUnit = document.getElementById('inputUnit');
+    const outputUnit = document.getElementById('outputUnit');
+
+    function populateSelects() {
+      inputUnit.innerHTML = ''; outputUnit.innerHTML = '';
+      Object.keys(units[currentCat]).forEach((unit, index) => {
+        inputUnit.innerHTML += `<option value="${unit}">${unit.charAt(0).toUpperCase() + unit.slice(1)}</option>`;
+        outputUnit.innerHTML += `<option value="${unit}" ${index === 1 ? 'selected' : ''}>${unit.charAt(0).toUpperCase() + unit.slice(1)}</option>`;
+      });
+      calculate();
+    }
+
+    function convertTemp(val, from, to) {
+      if (from === to) return val;
+      let c = val;
+      if (from === 'fahrenheit') c = (val - 32) * 5/9;
+      else if (from === 'kelvin') c = val - 273.15;
+      
+      if (to === 'celsius') return c;
+      if (to === 'fahrenheit') return (c * 9/5) + 32;
+      if (to === 'kelvin') return c + 273.15;
+    }
+
+    function calculate() {
+      const val = parseFloat(inputVal.value);
+      if (isNaN(val)) { outputVal.value = ''; return; }
+
+      const from = inputUnit.value;
+      const to = outputUnit.value;
+
+      if (currentCat === 'temp') {
+        outputVal.value = convertTemp(val, from, to).toFixed(4).replace(/\.0000$/, '');
+      } else {
+        const baseVal = val / units[currentCat][from];
+        const finalVal = baseVal * units[currentCat][to];
+        outputVal.value = Number.isInteger(finalVal) ? finalVal : parseFloat(finalVal.toPrecision(7));
+      }
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        currentCat = e.target.getAttribute('data-cat');
+        populateSelects();
+      });
+    });
+
+    inputVal.addEventListener('input', calculate);
+    inputUnit.addEventListener('change', calculate);
+    outputUnit.addEventListener('change', calculate);
+
+    // Init
+    populateSelects();
+  </script>
+</body>
+</html>

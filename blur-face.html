@@ -1,260 +1,479 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blur Face — PixelPress</title>
-  <link rel="stylesheet" href="css/style.css">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
   <style>
-    .canvas-container { position: relative; max-width: 100%; margin: 0 auto; }
-    .canvas-container canvas { max-width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid #e5e7eb; }
-    .slider-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .slider-group input[type="range"] { flex: 1; min-width: 150px; }
-    .slider-value { font-weight: 600; min-width: 30px; }
-    .faces-count { font-size: 0.9rem; color: #6b7280; margin-top: 8px; }
-    .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 999; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+      --fhead: 'Syne', sans-serif; --fbody: system-ui, -apple-system, sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:var(--fbody); min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:var(--fhead); font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:1300px; margin:0 auto; width:100%; padding:2rem 20px; }
+    .hero { text-align:center; margin-bottom:2rem; }
+    .hero h1 { font-family:var(--fhead); font-size:clamp(2rem,5vw,2.5rem); font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .upload-area { border:2px dashed var(--border); border-radius:var(--r); padding:3rem; text-align:center; cursor:pointer; transition:0.2s; background:var(--card); margin:1.5rem 0; }
+    .upload-area:hover { border-color:var(--accent); background:var(--glow); }
+    .upload-area i { font-size:2.5rem; color:var(--accent); }
+    .upload-area input { display:none; }
+    .workspace { display:flex; gap:2rem; flex-wrap:wrap; }
+    .canvas-panel { flex:1; min-width:300px; display:flex; flex-direction:column; align-items:center; }
+    .canvas-container { position:relative; width:100%; max-height:70vh; overflow:auto; background: repeating-conic-gradient(#80808020 0% 25%, transparent 0% 50%) 50% / 20px 20px; border-radius:var(--r); }
+    canvas { display:block; max-width:100%; height:auto; margin:0 auto; }
+    .controls-panel { width:320px; display:flex; flex-direction:column; gap:1.5rem; }
+    @media (max-width:850px) { .workspace { flex-direction:column; } .controls-panel { width:100%; } }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,0.02); }
+    .section-title { font-family:var(--fhead); font-size:1rem; font-weight:800; margin-bottom:0.8rem; }
+    .btn { padding:10px 20px; border:none; border-radius:10px; font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; font-size:0.9rem; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 25px var(--glow); }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .btn-success { background:#10b981; color:white; }
+    .btn-danger { background:#ef4444; color:white; }
+    .btn:disabled { opacity:0.5; pointer-events:none; }
+    .slider-group { display:flex; align-items:center; gap:8px; }
+    .slider-group input[type="range"] { flex:1; accent-color:var(--accent); }
+    select { background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px; width:100%; font-size:0.9rem; }
+    .face-list { max-height:200px; overflow-y:auto; }
+    .face-item { display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--border); border-radius:8px; margin-bottom:6px; }
+    .face-thumb { width:48px; height:48px; object-fit:cover; border-radius:6px; }
+    .face-check { width:20px; height:20px; accent-color:var(--accent); }
+    .toggle-mode { display:flex; gap:8px; margin-bottom:1rem; }
+    .tab { padding:6px 14px; border-radius:999px; background:var(--bg); border:1px solid var(--border); cursor:pointer; font-size:0.8rem; }
+    .tab.active { background:var(--accent); color:white; border-color:var(--accent); }
+    .hidden { display:none !important; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
+    .status-msg { font-size:0.9rem; color:var(--muted); }
   </style>
 </head>
 <body>
-  <header class="main-header">
-    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
-    <button class="btn-outline" onclick="history.back()">← Back</button>
-  </header>
-
-  <main class="tool-page">
-    <h1>👤 Blur Face</h1>
-    <p style="color:#6b7280; margin-bottom:24px;">Automatically detect and blur faces for privacy. 100% client-side.</p>
-
-    <!-- Upload -->
-    <div class="workflow-step" id="upload-step">
-      <h2>1. Upload Image</h2>
-      <div class="upload-zone" id="upload-zone">
-        <div class="icon">📤</div>
-        <p>Click or drag & drop an image here</p>
-      </div>
-      <input type="file" id="file-input" accept="image/*" hidden>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+  <div class="main">
+    <div class="hero">
+      <h1>Blur Face</h1>
+      <p style="color:var(--muted); margin-top:0.5rem;">Auto‑detect & blur faces · Manual blur brush · 100% private</p>
     </div>
 
-    <!-- Detection & Blur -->
-    <div class="workflow-step hidden" id="detect-step">
-      <h2>2. Detect & Blur Faces</h2>
-      <div class="slider-group" style="margin-bottom:16px;">
-        <label for="blur-intensity" style="font-weight:500;">Blur Intensity:</label>
-        <input type="range" id="blur-intensity" min="5" max="40" value="15" step="1">
-        <span class="slider-value" id="intensity-value">15px</span>
-      </div>
-      <div class="canvas-container" id="canvas-container">
-        <canvas id="output-canvas"></canvas>
-      </div>
-      <p class="faces-count" id="faces-count"></p>
-      <div class="processing-bar" id="processing-bar">
-        <div class="spinner"></div>
-        <p>Detecting faces...</p>
-      </div>
-      <div class="action-row" style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap;">
-        <button class="btn-primary" id="detect-btn">🔍 Detect Faces</button>
-        <button class="btn-outline" id="new-blur-btn">🔄 New Image</button>
-      </div>
+    <div class="upload-area" id="uploadZone">
+      <i class="fa-solid fa-cloud-upload"></i>
+      <h2>Drop image or click to upload</h2>
+      <p>JPG, PNG, WebP</p>
+      <input type="file" id="fileInput" accept="image/*" />
     </div>
 
-    <!-- Result -->
-    <div class="workflow-step hidden" id="result-step">
-      <h2>3. Download Result</h2>
-      <div class="preview-box" style="text-align:center;">
-        <img id="result-preview" alt="Blurred result" style="max-width:100%; max-height:350px; border-radius:8px; border:1px solid #e5e7eb;">
-      </div>
-      <div class="download-section" style="margin-top:20px;">
-        <button class="btn-primary" id="download-btn">⬇ Download Image</button>
+    <div id="editorSection" class="hidden">
+      <div class="workspace">
+        <div class="canvas-panel">
+          <div class="canvas-container" id="canvasContainer">
+            <canvas id="mainCanvas"></canvas>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:1rem; flex-wrap:wrap; justify-content:center;">
+            <button class="btn btn-primary" id="detectBtn"><i class="fa-solid fa-magnifying-glass"></i> Detect Faces</button>
+            <button class="btn btn-outline" id="applyBlurBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Apply Blur</button>
+            <button class="btn btn-outline" id="resetBtn"><i class="fa-solid fa-rotate"></i> Reset</button>
+            <button class="btn btn-success" id="downloadBtn"><i class="fa-solid fa-download"></i> Download</button>
+          </div>
+        </div>
+
+        <div class="controls-panel">
+          <div class="card">
+            <div class="section-title"><i class="fa-solid fa-sliders"></i> Blur Settings</div>
+            <div class="slider-group" style="margin-bottom:1rem;">
+              <span>Intensity</span>
+              <input type="range" id="blurRadius" min="5" max="60" value="20" />
+              <span id="radiusValue">20</span>
+            </div>
+            <select id="blurType" style="margin-bottom:1rem;">
+              <option value="gaussian">Gaussian Blur</option>
+              <option value="pixelate">Pixelate</option>
+              <option value="mosaic">Mosaic</option>
+            </select>
+            <div class="toggle-mode">
+              <span class="tab active" data-mode="auto">Auto Faces</span>
+              <span class="tab" data-mode="manual">Manual Brush</span>
+            </div>
+            <div id="manualOptions" class="hidden">
+              <div class="slider-group" style="margin-bottom:0.8rem;">
+                <span>Brush Size</span>
+                <input type="range" id="brushSize" min="20" max="150" value="60" />
+                <span id="brushSizeValue">60</span>
+              </div>
+              <p class="status-msg">Click and drag on the image to paint blur</p>
+            </div>
+          </div>
+
+          <div class="card" id="faceListCard">
+            <div class="section-title">Detected Faces (<span id="faceCount">0</span>)</div>
+            <div class="face-list" id="faceList"></div>
+            <button class="btn btn-outline" id="selectAllFaces" style="width:100%; margin-top:0.5rem;">Toggle All</button>
+          </div>
+        </div>
       </div>
     </div>
-  </main>
+  </div>
+  <footer>© 2026 PixelPress – All processing happens locally in your browser</footer>
 
-  <div class="toast" id="toast"></div>
-
-  <!-- face-api.js with TinyFaceDetector (lightweight model) -->
-  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-  <script src="js/common.js"></script>
   <script>
     (function() {
-      // ---- State ----
-      let originalImage = null;
-      let resultDataUrl = null;
+      // ---- THEME ----
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
 
       // ---- DOM ----
-      const uploadStep = $('upload-step');
-      const detectStep = $('detect-step');
-      const resultStep = $('result-step');
-      const canvas = $('output-canvas');
-      const canvasContainer = $('canvas-container');
-      const detectBtn = $('detect-btn');
-      const newBlurBtn = $('new-blur-btn');
-      const downloadBtn = $('download-btn');
-      const blurIntensity = $('blur-intensity');
-      const intensityValue = $('intensity-value');
-      const facesCount = $('faces-count');
-      const processingBar = $('processing-bar');
-      const resultPreview = $('result-preview');
-      const toast = $('toast');
-      const ctx = canvas.getContext('2d');
+      const uploadZone = document.getElementById('uploadZone');
+      const fileInput = document.getElementById('fileInput');
+      const editorSection = document.getElementById('editorSection');
+      const mainCanvas = document.getElementById('mainCanvas');
+      const ctx = mainCanvas.getContext('2d');
+      const detectBtn = document.getElementById('detectBtn');
+      const applyBlurBtn = document.getElementById('applyBlurBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const blurRadius = document.getElementById('blurRadius');
+      const radiusValue = document.getElementById('radiusValue');
+      const blurType = document.getElementById('blurType');
+      const faceList = document.getElementById('faceList');
+      const faceCountEl = document.getElementById('faceCount');
+      const selectAllFaces = document.getElementById('selectAllFaces');
+      const manualOptions = document.getElementById('manualOptions');
+      const brushSize = document.getElementById('brushSize');
+      const brushSizeValue = document.getElementById('brushSizeValue');
 
-      // ---- Toast ----
-      function showToast(msg, isError = false) {
-        toast.textContent = msg;
-        toast.style.background = isError ? '#dc2626' : '#1e293b';
-        toast.style.display = 'block';
-        clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
-      }
+      let originalImage = null;
+      let detections = [];           // face detection objects with checkbox
+      let faceData = [];             // { box, checked }
+      let currentMode = 'auto';      // 'auto' or 'manual'
+      let isManualDrawing = false;
 
-      // ---- Load face-api models (TinyFaceDetector) ----
+      // ---- MODEL LOADING ----
       const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      let modelsLoaded = false;
 
       async function loadModels() {
+        if (modelsLoaded) return;
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL), // optional, improves detection
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
         ]);
-        console.log('Face detection models loaded');
+        modelsLoaded = true;
       }
-
-      // Load models on page load
       loadModels().catch(err => {
-        console.error('Model load error:', err);
-        showToast('⚠️ Face detection models could not load. Check your connection.', true);
+        console.error('Face detection models failed to load', err);
+        alert('Face detection models could not be loaded. Check your internet connection.');
       });
 
-      // ---- Upload ----
-      setupUpload('upload-zone', 'file-input', (img) => {
-        originalImage = img;
-        // Setup canvas
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        facesCount.textContent = '';
-        canvasContainer.style.maxWidth = Math.min(img.naturalWidth, 800) + 'px'; // constrain display width
-        uploadStep.classList.add('hidden');
-        detectStep.classList.remove('hidden');
-        resultStep.classList.add('hidden');
-        detectBtn.disabled = false;
-        processingBar.style.display = 'none';
+      // ---- UPLOAD ----
+      uploadZone.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) loadImage(e.target.files[0]);
+      });
+      uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor = 'var(--accent)'; });
+      uploadZone.addEventListener('dragleave', () => uploadZone.style.borderColor = 'var(--border)');
+      uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.style.borderColor = 'var(--border)';
+        if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
       });
 
-      // ---- Blur Intensity Display ----
-      blurIntensity.addEventListener('input', () => {
-        intensityValue.textContent = blurIntensity.value + 'px';
-      });
-
-      // ---- Apply Blur to Face Regions ----
-      function blurFaceRegions(detections) {
-        // Redraw original
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(originalImage, 0, 0);
-
-        const blurAmount = parseInt(blurIntensity.value);
-
-        detections.forEach(detection => {
-          const box = detection.box;
-          // Expand box slightly for better coverage
-          const margin = box.width * 0.1;
-          const x = Math.max(0, box.x - margin);
-          const y = Math.max(0, box.y - margin);
-          const w = Math.min(canvas.width - x, box.width + margin * 2);
-          const h = Math.min(canvas.height - y, box.height + margin * 2);
-
-          // Extract face region
-          const faceImageData = ctx.getImageData(x, y, w, h);
-
-          // Create off-screen canvas to blur
-          const offCanvas = document.createElement('canvas');
-          offCanvas.width = w;
-          offCanvas.height = h;
-          const offCtx = offCanvas.getContext('2d');
-          offCtx.putImageData(faceImageData, 0, 0);
-
-          // Apply blur filter
-          offCtx.filter = `blur(${blurAmount}px)`;
-          offCtx.drawImage(offCanvas, 0, 0);
-          offCtx.filter = 'none';
-
-          // Put blurred region back
-          ctx.drawImage(offCanvas, x, y);
-        });
+      function loadImage(file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            originalImage = img;
+            mainCanvas.width = img.naturalWidth;
+            mainCanvas.height = img.naturalHeight;
+            ctx.drawImage(img, 0, 0);
+            uploadZone.classList.add('hidden');
+            editorSection.classList.remove('hidden');
+            detections = [];
+            faceData = [];
+            renderFaceList();
+            updateCanvas();
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
       }
 
-      // ---- Detect & Blur ----
+      // ---- FACE DETECTION ----
       detectBtn.addEventListener('click', async () => {
-        if (!originalImage) {
-          showToast('Please upload an image first.', true);
-          return;
-        }
-
+        if (!originalImage) return;
         detectBtn.disabled = true;
-        processingBar.style.display = 'block';
-        facesCount.textContent = '';
-
         try {
-          // Use TinyFaceDetector for speed
-          const options = new faceapi.TinyFaceDetectorOptions({
-            inputSize: 416,       // smaller = faster, larger = more accurate
-            scoreThreshold: 0.5,  // confidence threshold
-          });
-
-          const detections = await faceapi.detectAllFaces(canvas, options);
-
-          if (detections.length === 0) {
-            facesCount.textContent = 'No faces detected. Try another image.';
-            showToast('ℹ️ No faces found in this image.', true);
-          } else {
-            facesCount.textContent = `✅ ${detections.length} face(s) detected and blurred.`;
-            blurFaceRegions(detections);
-            // Store result for download
-            resultDataUrl = canvas.toDataURL('image/png');
-            resultPreview.src = resultDataUrl;
-            detectStep.classList.add('hidden');
-            resultStep.classList.remove('hidden');
-            showToast(`✅ ${detections.length} face(s) blurred successfully!`);
+          await loadModels();
+          const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 });
+          const result = await faceapi.detectAllFaces(mainCanvas, options);
+          detections = result;
+          faceData = result.map(det => ({
+            box: det.box,
+            checked: true
+          }));
+          renderFaceList();
+          updateCanvas(); // draw bounding boxes
+          if (result.length === 0) {
+            alert('No faces detected. Try manual blur or a different image.');
           }
         } catch (err) {
-          console.error('Face detection error:', err);
-          showToast('❌ Detection failed. Try a clearer image or refresh.', true);
+          console.error(err);
+          alert('Detection failed. Please try again.');
         } finally {
-          processingBar.style.display = 'none';
           detectBtn.disabled = false;
         }
       });
 
-      // ---- New Image ----
-      newBlurBtn.addEventListener('click', () => {
-        originalImage = null;
-        resultDataUrl = null;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        uploadStep.classList.remove('hidden');
-        detectStep.classList.add('hidden');
-        resultStep.classList.add('hidden');
-        $('file-input').value = '';
+      // ---- FACE LIST ----
+      function renderFaceList() {
+        faceCountEl.textContent = faceData.length;
+        faceList.innerHTML = faceData.map((fd, idx) => `
+          <div class="face-item">
+            <input type="checkbox" class="face-check" data-idx="${idx}" ${fd.checked ? 'checked' : ''} />
+            <span>Face ${idx+1}</span>
+          </div>
+        `).join('');
+        document.querySelectorAll('.face-check').forEach(cb => {
+          cb.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            faceData[idx].checked = e.target.checked;
+            updateCanvas(); // redraw boxes (show/hide)
+          });
+        });
+      }
+
+      selectAllFaces.addEventListener('click', () => {
+        const allChecked = faceData.every(fd => fd.checked);
+        faceData.forEach(fd => fd.checked = !allChecked);
+        renderFaceList();
+        updateCanvas();
       });
 
-      // ---- Download ----
-      downloadBtn.addEventListener('click', () => {
-        if (!resultDataUrl) {
-          showToast('Nothing to download.', true);
-          return;
-        }
-        fetch(resultDataUrl)
-          .then(res => res.blob())
-          .then(blob => downloadBlob(blob, 'face-blurred.png'))
-          .catch(() => showToast('Download failed.', true));
+      // ---- MODE SWITCHING ----
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentMode = tab.dataset.mode;
+          manualOptions.classList.toggle('hidden', currentMode !== 'manual');
+          if (currentMode === 'manual') {
+            // Reset canvas to original when entering manual mode (so user can paint)
+            ctx.drawImage(originalImage, 0, 0);
+          } else {
+            // Re-apply blur if already applied?
+          }
+        });
       });
+
+      // ---- SLIDERS ----
+      blurRadius.addEventListener('input', () => radiusValue.textContent = blurRadius.value);
+      brushSize.addEventListener('input', () => brushSizeValue.textContent = brushSize.value);
+
+      // ---- APPLY BLUR (AUTO MODE) ----
+      applyBlurBtn.addEventListener('click', () => {
+        if (currentMode === 'auto') {
+          applyAutoBlur();
+        }
+      });
+
+      function applyAutoBlur() {
+        if (!originalImage) return;
+        // Start from original
+        ctx.drawImage(originalImage, 0, 0);
+        const radius = parseInt(blurRadius.value);
+        const type = blurType.value;
+        faceData.forEach((fd, idx) => {
+          if (!fd.checked) return;
+          const box = fd.box;
+          const margin = box.width * 0.1;
+          const x = Math.max(0, box.x - margin);
+          const y = Math.max(0, box.y - margin);
+          const w = Math.min(mainCanvas.width - x, box.width + margin * 2);
+          const h = Math.min(mainCanvas.height - y, box.height + margin * 2);
+          applyBlurToRegion(x, y, w, h, radius, type);
+        });
+      }
+
+      function applyBlurToRegion(x, y, w, h, radius, type) {
+        // extract region
+        const imageData = ctx.getImageData(x, y, w, h);
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = w;
+        offCanvas.height = h;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.putImageData(imageData, 0, 0);
+
+        if (type === 'gaussian') {
+          offCtx.filter = `blur(${radius}px)`;
+          offCtx.drawImage(offCanvas, 0, 0);
+          offCtx.filter = 'none';
+        } else if (type === 'pixelate') {
+          const pixelSize = Math.max(2, Math.floor(radius / 5));
+          pixelate(offCtx, w, h, pixelSize);
+        } else if (type === 'mosaic') {
+          const mosaicSize = Math.max(3, Math.floor(radius / 4));
+          mosaic(offCtx, w, h, mosaicSize);
+        }
+        ctx.drawImage(offCanvas, x, y);
+      }
+
+      function pixelate(context, width, height, size) {
+        const imageData = context.getImageData(0, 0, width, height);
+        const data = imageData.data;
+        for (let y = 0; y < height; y += size) {
+          for (let x = 0; x < width; x += size) {
+            let r = 0, g = 0, b = 0, count = 0;
+            for (let dy = 0; dy < size && y + dy < height; dy++) {
+              for (let dx = 0; dx < size && x + dx < width; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                r += data[idx];
+                g += data[idx + 1];
+                b += data[idx + 2];
+                count++;
+              }
+            }
+            r = Math.floor(r / count);
+            g = Math.floor(g / count);
+            b = Math.floor(b / count);
+            for (let dy = 0; dy < size && y + dy < height; dy++) {
+              for (let dx = 0; dx < size && x + dx < width; dx++) {
+                const idx = ((y + dy) * width + (x + dx)) * 4;
+                data[idx] = r;
+                data[idx + 1] = g;
+                data[idx + 2] = b;
+              }
+            }
+          }
+        }
+        context.putImageData(imageData, 0, 0);
+      }
+
+      function mosaic(context, width, height, size) {
+        pixelate(context, width, height, size); // similar effect
+      }
+
+      // ---- MANUAL BRUSH ----
+      let brushActive = false;
+      mainCanvas.addEventListener('mousedown', (e) => {
+        if (currentMode !== 'manual') return;
+        brushActive = true;
+        const pos = getCanvasCoords(e);
+        paintBlur(pos.x, pos.y);
+      });
+      mainCanvas.addEventListener('mousemove', (e) => {
+        if (!brushActive || currentMode !== 'manual') return;
+        const pos = getCanvasCoords(e);
+        paintBlur(pos.x, pos.y);
+      });
+      mainCanvas.addEventListener('mouseup', () => brushActive = false);
+      mainCanvas.addEventListener('mouseleave', () => brushActive = false);
+      mainCanvas.addEventListener('touchstart', (e) => {
+        if (currentMode !== 'manual') return;
+        e.preventDefault();
+        brushActive = true;
+        const pos = getCanvasCoords(e.touches[0]);
+        paintBlur(pos.x, pos.y);
+      });
+      mainCanvas.addEventListener('touchmove', (e) => {
+        if (!brushActive || currentMode !== 'manual') return;
+        e.preventDefault();
+        const pos = getCanvasCoords(e.touches[0]);
+        paintBlur(pos.x, pos.y);
+      });
+      mainCanvas.addEventListener('touchend', () => brushActive = false);
+
+      function getCanvasCoords(e) {
+        const rect = mainCanvas.getBoundingClientRect();
+        const scaleX = mainCanvas.width / rect.width;
+        const scaleY = mainCanvas.height / rect.height;
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY
+        };
+      }
+
+      function paintBlur(x, y) {
+        const radius = parseInt(blurRadius.value);
+        const brushRadius = parseInt(brushSize.value) / 2;
+        const type = blurType.value;
+        const x0 = Math.max(0, x - brushRadius);
+        const y0 = Math.max(0, y - brushRadius);
+        const w = Math.min(mainCanvas.width - x0, brushRadius * 2);
+        const h = Math.min(mainCanvas.height - y0, brushRadius * 2);
+        applyBlurToRegion(x0, y0, w, h, radius, type);
+      }
+
+      // ---- UPDATE CANVAS (draw boxes) ----
+      function updateCanvas() {
+        if (!originalImage) return;
+        ctx.drawImage(originalImage, 0, 0);
+        if (currentMode === 'auto') {
+          faceData.forEach(fd => {
+            if (!fd.checked) return;
+            const box = fd.box;
+            ctx.save();
+            ctx.strokeStyle = 'var(--accent)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+            ctx.restore();
+          });
+        }
+      }
+
+      // ---- RESET ----
+      resetBtn.addEventListener('click', () => {
+        if (!originalImage) return;
+        ctx.drawImage(originalImage, 0, 0);
+        faceData.forEach(fd => fd.checked = true);
+        renderFaceList();
+        updateCanvas();
+      });
+
+      // ---- DOWNLOAD ----
+      downloadBtn.addEventListener('click', () => {
+        const format = prompt('Format (png/jpeg):', 'png');
+        if (!format) return;
+        const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const link = document.createElement('a');
+        link.download = `blurred-face.${format}`;
+        link.href = mainCanvas.toDataURL(mime, 0.92);
+        link.click();
+      });
+
+      // initial state
+      syncTheme();
     })();
   </script>
 </body>

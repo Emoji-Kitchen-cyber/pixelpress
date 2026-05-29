@@ -8,20 +8,11 @@
   <meta name="description" content="Free online image tools: compress, resize, crop, convert, remove background, blur faces, and more. All processing happens in your browser – private and fast." />
   <link rel="canonical" href="https://pixelpress-smoky.vercel.app/" />
   
-  <!-- Font Awesome + Premium Google Fonts Matrix -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-3P7QPQKV3K');
-  </script>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
     :root {
       /* LIGHT MODE ARCHITECTURE (APPLE CRISP) */
       --bg: #f5f5f7;
@@ -202,75 +193,71 @@
     .footer-links a { color: var(--muted); font-weight: 500; }
     .footer-links a:hover { color: var(--accent); text-decoration: underline; }
   </style>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3P7QPQKV3K');
+  </script>
 </head>
 <body>
 
   <div class="sidebar-overlay" id="menuOverlay" onclick="toggleMenu(false)"></div>
   
-  <!-- Premium Unified Sidebar Menu Drawer -->
   <aside class="sidebar" id="sideMenu">
     <div class="sidebar-header">
       <div class="nav-logo">PIXEL<span>PRESS</span></div>
       <button class="sidebar-close" onclick="toggleMenu(false)">✕</button>
     </div>
     <div class="sidebar-links" id="sidebarLinks">
-      <!-- Generated Sequentially via Localization Matrix -->
-    </div>
+      </div>
   </aside>
 
-  <!-- Top Fluid Glass Sticky Navbar Navigation -->
   <nav>
     <div class="nav-left">
       <button class="menu-trigger" onclick="toggleMenu(true)"><i class="fa-solid fa-bars"></i></button>
       <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
     </div>
     <div class="nav-actions">
-      <!-- Language Pilled Interactive Trigger Matrix -->
       <div class="lang-pill-container">
         <span class="lang-p-label" id="langText">English</span>
         <button class="switch-p-btn active" id="langToggleBtn" onclick="toggleLanguage()"></button>
       </div>
-      <!-- Theme Switch Modular UI Toggle -->
       <button class="control-btn" id="themeToggle" title="Toggle System Theme">🌓</button>
     </div>
   </nav>
 
   <div class="main">
     <section class="hero">
-      <h1 id="heroTitle">Every tool you could want to<br>edit images in bulk</h1>
+      <h1 id="heroTitle">Every tool you could want to<br><span>edit images in bulk</span></h1>
       <p id="heroDesc">Your online photo editor is here and forever free!</p>
     </section>
 
-    <!-- Command Center Execution Search Terminal -->
     <div class="search-container">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-bar" id="toolSearch" placeholder="Search parameters or operational utilities..." autocomplete="off">
+      <input type="text" class="search-bar" id="toolSearch" placeholder="Search operational tools or utilities..." autocomplete="off">
       <span class="search-kbd">⌘ K</span>
     </div>
 
-    <!-- Category Control Selection System Filters -->
     <div class="filter-row" id="filterContainer">
-      <!-- Rendered dynamically depending on language configuration matrices -->
-    </div>
+      </div>
 
-    <!-- Active Grid Processing Pipeline Modules -->
     <section class="tools-grid" id="toolsList">
-       <!-- Loaded via client translation engine -->
-    </section>
+       </section>
 
     <div id="noResults">No operational utility suite detected matching query parameter.</div>
   </div>
 
-  <!-- Footnote Structure Wrapper -->
   <footer>
     <div class="footer-links" id="footerLinks">
-       <!-- Synced dynamic endpoints -->
-    </div>
+       </div>
     <p id="footerCopyright">© 2026 PixelPress — All Rights Reserved</p>
   </footer>
 
   <script>
-    // CORE SYSTEM MULTI-LANGUAGE DATABASE (COMPREHENSIVE MAP ACCORDING TO 1000200133.PNG)
+    // CORE SYSTEM MULTI-LANGUAGE DATABASE (COMPREHENSIVE MAP)
     const languageData = {
       en: {
         title: "PixelPress — Free Online Image & Document Toolkit",
@@ -327,10 +314,10 @@
           { href: "./watermark.html", cat: "security create", emoji: "💧", title: "Watermark IMAGE", desc: "Protect your visual assets. Stamp an image or text over your images with custom transparency and positions." },
           { href: "./pdf-to-jpg.html", cat: "convert", emoji: "📄", title: "PDF to JPG", desc: "Extract all pages from a <strong>PDF</strong> file or convert PDF pages into high-quality <strong>JPG</strong> images instantly." },
           { href: "./jpg-to-pdf.html", cat: "convert", emoji: "🖼️", title: "JPG to PDF", desc: "Convert your <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> images into a single compact <strong>PDF</strong> document easily." },
-          { href: "./remove-bg.html", cat: "edit create ai", emoji: "🫥", title: "Remove Background", desc: "AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser." },
+          { href: "./remove-bg.html", cat: "edit create", emoji: "🫥", title: "Remove Background", desc: "AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser." },
           { href: "./meme-generator.html", cat: "create", emoji: "😂", title: "Meme Generator", desc: "Create memes with templates, custom images, draggable text, stickers and more. Export as JPG, PNG, or WEBP." },
           { href: "./crop.html", cat: "edit", emoji: "✂️", title: "Advanced Crop", desc: "Precise cropping tool with fixed aspect ratios and social media presets." },
-          { href: "./blur-face.html", cat: "security edit ai", emoji: "👤", title: "Blur Face", desc: "Automatically detect and blur faces for privacy using high-speed local computer vision model engines." }
+          { href: "./blur-face.html", cat: "security edit", emoji: "👤", title: "Blur Face", desc: "Automatically detect and blur faces for privacy using AI." }
         ]
       },
       ar: {
@@ -388,10 +375,10 @@
           { href: "./watermark.html", cat: "security create", emoji: "💧", title: "إضافة علامة مائية", desc: "احمِ أصولك المرئية وحقوقك. اطبع صورة أو نصًا فوق صورك بشفافية ومواضع مخصصة بالكامل." },
           { href: "./pdf-to-jpg.html", cat: "convert", emoji: "📄", title: "تحويل من PDF إلى JPG", desc: "قم باستخراج جميع الصفحات من ملف <strong>PDF</strong> أو تحويل صفحات PDF إلى صور <strong>JPG</strong> عالية الجودة على الفور." },
           { href: "./jpg-to-pdf.html", cat: "convert", emoji: "🖼️", title: "تحويل من JPG إلى PDF", desc: "قم بتحويل صور <strong>JPG</strong> أو <strong>PNG</strong> أو <strong>WEBP</strong> إلى مستند <strong>PDF</strong> واحد مدمج ومنظم بكل سهولة." },
-          { href: "./remove-bg.html", cat: "edit create ai", emoji: "🫥", title: "إزالة خلفية الصور", desc: "مزيل الخلفية بالذكاء الاصطناعي لتوفير صور PNG شفافة، أو معالجة جماعية مخصصة بالكامل داخل متصفحك." },
+          { href: "./remove-bg.html", cat: "edit create", emoji: "🫥", title: "إزالة خلفية الصور", desc: "مزيل الخلفية بالذكاء الاصطناعي لتوفير صور PNG شفافة، أو معالجة جماعية مخصصة بالكامل داخل متصفحك." },
           { href: "./meme-generator.html", cat: "create", emoji: "😂", title: "صانع صور الميمز", desc: "أنشئ صور ميمز مضحكة باستخدام قوالب مخصصة، ونصوص قابلة للسحب، وملصقات تصدير سريعة." },
           { href: "./crop.html", cat: "edit", emoji: "✂️", title: "قص الصور احترافي", desc: "أداة قص دقيقة للغاية مع نسب أبعاد ثابتة وإعدادات مسبقة مخصصة لوسائل التواصل الاجتماعي." },
-          { href: "./blur-face.html", cat: "security edit ai", emoji: "👤", title: "تغبيش وطمس الوجوه", desc: "اكتشف الوجوه تلقائيًا وقم بتغبيشها لحماية الخصوصية والأمان باستخدام تقنيات الذكاء الاصطناعي المتطورة." }
+          { href: "./blur-face.html", cat: "security edit", emoji: "👤", title: "تغبيش وطمس الوجوه", desc: "اكتشف الوجوه تلقائيًا وقم بتغبيشها لحماية الخصوصية والأمان باستخدام تقنيات الذكاء الاصطناعي المتطورة." }
         ]
       }
     };
@@ -450,7 +437,7 @@
       // Render Dynamic Sidebar Matrix
       const sidebarBox = document.getElementById('sidebarLinks');
       sidebarBox.innerHTML = `
-        <a href="${data.menu[0].href}"><i class="fa-solid ${data.menu[0].icon}"></i> ${data.menu[0].text}</a>
+        <a href="${data.menu.href}"><i class="fa-solid ${data.menu.icon}"></i> ${data.menu.text}</a>
         <div class="menu-section-title">${data.sidebarTitles.image}</div>
       `;
       
@@ -469,7 +456,6 @@
         sidebarBox.innerHTML += `<a href="${data.menu[i].href}"><i class="fa-solid ${data.menu[i].icon}"></i> ${data.menu[i].text}</a>`;
       }
       
-      // Re-trigger live sync evaluations 
       evaluateLiveSearchFilters();
     }
 
@@ -565,5 +551,6 @@
   </script>
 </body>
 </html>
+
 
 

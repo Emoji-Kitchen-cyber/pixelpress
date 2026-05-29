@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favicon Generator — PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
+    激:root { --bg:#f5f5f7; --card:#ffffff; --border:rgba(0,0,0,0.06); --text:#1d1d1f; --muted:#6e6e73; --accent:#ec4899; }
+    [data-theme="dark"] { --bg:#09090e; --card:#15151e; --border:rgba(255,255,255,0.08); --text:#e8e8f0; --muted:#86868b; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; padding:0; margin:0; }
+    nav { display:flex; align-items:center; padding:0 2rem; height:64px; background:var(--card); border-bottom:1px solid var(--border); }
+    .nav-logo { font-family:'Syne'; font-weight:800; color:var(--text); text-transform:uppercase; text-decoration:none;}
+    .nav-logo span { color:var(--accent); }
+    .box { max-width:600px; margin:4rem auto; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px; text-align:center; }
+    .btn { background:var(--text); color:var(--bg); border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
+    .btn:hover { background:var(--accent); color:white; }
+    .preview-grid { display:flex; justify-content:center; gap:20px; margin:20px 0; align-items:center; }
+    .icon-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <nav><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></nav>
+  <div class="box">
+    <h2 style="font-family:'Syne'; margin-bottom:8px;">Favicon Generator</h2>
+    <p style="color:var(--muted); font-size:14px; margin-bottom:24px;">Convert raw assets into standardized multi-size ico targets.</p>
+    
+    <button class="btn" onclick="document.getElementById('favInput').click()"><i class="fa-solid fa-file-image"></i> Select Source Image</button>
+    <input type="file" id="favInput" style="display:none" accept="image/*">
+
+    <div class="preview-grid" id="previewGrid" style="display:none;">
+      <div class="icon-box"><canvas id="c32" width="32" height="32"></canvas>32x32 px</div>
+      <div class="icon-box"><canvas id="c16" width="16" height="16"></canvas>16x16 px</div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn" id="dl32" style="display:none; background:var(--accent); color:white;"><i class="fa-solid fa-download"></i> Download 32x32 PNG</button>
+    </div>
+  </div>
+  <script>
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
+    document.getElementById('favInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          ['c32', 'c16'].forEach(id => {
+            const canvas = document.getElementById(id);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          });
+          document.getElementById('previewGrid').style.display = 'flex';
+          const dl = document.getElementById('dl32');
+          dl.style.display = 'inline-flex';
+          dl.onclick = () => {
+            const a = document.createElement('a');
+            a.download = 'favicon-32x32.png';
+            a.href = document.getElementById('c32').toDataURL();
+            a.click();
+          };
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>

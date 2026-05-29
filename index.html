@@ -257,7 +257,7 @@
   </footer>
 
   <script>
-    // CORE SYSTEM MULTI-LANGUAGE DATABASE (COMPREHENSIVE MAP WITH EXPLICIT SECTIONS)
+    // CORE SYSTEM MULTI-LANGUAGE DATABASE (SCALABLE SCHEMA)
     const languageData = {
       en: {
         title: "PixelPress — Free Online Image & Document Toolkit",
@@ -273,29 +273,48 @@
           { id: 'create', text: 'Create' },
           { id: 'edit', text: 'Edit' },
           { id: 'convert', text: 'Convert' },
-          { id: 'security', text: 'Security' }
+          { id: 'security', text: 'Security' },
+          { id: 'doc', text: 'Documents' },
+          { id: 'utility', text: 'Utilities' }
         ],
-        sidebarTitles: { image: "Image Utilities", doc: "Document Utilities", info: "Info & Pages" },
-        menu: [
-          { href: "./index.html", icon: "fa-house", text: "Home", section: "home" },
-          { href: "./compress.html", icon: "fa-box", text: "Compress Image", section: "image" },
-          { href: "./resize.html", icon: "fa-arrows-maximize", text: "Resize Image", section: "image" },
-          { href: "./photo-editor.html", icon: "fa-wand-magic-sparkles", text: "Photo Editor", section: "image" },
-          { href: "./convert.html", icon: "fa-rotate", text: "Convert Format", section: "image" },
-          { href: "./watermark.html", icon: "fa-droplet", text: "Watermark Image", section: "image" },
-          { href: "./remove-bg.html", icon: "fa-user-ghost", text: "Remove Background", section: "image" },
-          { href: "./meme-generator.html", icon: "fa-face-laugh-squint", text: "Meme Generator", section: "image" },
-          { href: "./crop.html", icon: "fa-scissors", text: "Advanced Crop", section: "image" },
-          { href: "./blur-face.html", icon: "fa-user-shield", text: "Blur Face", section: "image" },
-          { href: "./pdf-to-jpg.html", icon: "fa-file-pdf", text: "PDF to JPG", section: "doc" },
-          { href: "./jpg-to-pdf.html", icon: "fa-file-image", text: "JPG to PDF", section: "doc" },
-          { href: "./about.html", icon: "fa-circle-info", text: "About Us", section: "info" },
-          { href: "./contact.html", icon: "fa-envelope", text: "Contact", section: "info" },
-          { href: "./faq.html", icon: "fa-circle-question", text: "FAQ", section: "info" },
-          { href: "./blog/", icon: "fa-pen-to-square", text: "Blog", section: "info" },
-          { href: "./privacy-policy.html", icon: "fa-shadow", text: "Privacy Policy", section: "info" },
-          { href: "./terms.html", icon: "fa-file-contract", text: "Terms of Service", section: "info" },
-          { href: "./disclaimer.html", icon: "fa-triangle-exclamation", text: "Disclaimer", section: "info" }
+        sidebarTitles: { image: "Image Utilities", doc: "Document Utilities", utility: "Developer & Core Utilities", info: "Info & Pages" },
+        // SINGLE SOURCE MATRIX: Used to render both Sidebar and Main Grid completely free of index-mismatch hazards.
+        toolsRegistry: [
+          // Navigation / Structural Links
+          { href: "./index.html", icon: "fa-house", text: "Home", section: "home", isUtilityCard: false },
+          
+          // Image Utilities Group
+          { href: "./compress.html", icon: "fa-box", text: "Compress Image", section: "image", cat: "optimize", emoji: "📦", title: "Compress IMAGE", desc: "Compress <strong>JPG</strong>, <strong>PNG</strong>, and <strong>WEBP</strong> while saving space and maintaining quality.", isUtilityCard: true },
+          { href: "./resize.html", icon: "fa-arrows-maximize", text: "Resize Image", section: "image", cat: "edit", emoji: "📐", title: "Resize IMAGE", desc: "Define your dimensions, by percent or pixel, and resize your <strong>JPG</strong>, <strong>PNG</strong>, and <strong>WEBP</strong> images.", isUtilityCard: true },
+          { href: "./photo-editor.html", icon: "fa-wand-magic-sparkles", text: "Photo Editor", section: "image", cat: "edit create", emoji: "✨", title: "Photo Editor", desc: "Edit photos directly in your browser with fine-tuned filters, brightness, contrast, rotations, and instant download.", isUtilityCard: true },
+          { href: "./convert.html", icon: "fa-rotate", text: "Convert Format", section: "image", cat: "convert", emoji: "🔄", title: "Convert IMAGE", desc: "Transform your images into formats like <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> seamlessly in batches.", isUtilityCard: true },
+          { href: "./watermark.html", icon: "fa-droplet", text: "Watermark Image", section: "image", cat: "security create", emoji: "💧", title: "Watermark IMAGE", desc: "Protect your visual assets. Stamp an image or text over your images with custom transparency and positions.", isUtilityCard: true },
+          { href: "./remove-bg.html", icon: "fa-user-ghost", text: "Remove Background", section: "image", cat: "edit create", emoji: "🫥", title: "Remove Background", desc: "AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser.", isUtilityCard: true },
+          { href: "./meme-generator.html", icon: "fa-face-laugh-squint", text: "Meme Generator", section: "image", cat: "create", emoji: "😂", title: "Meme Generator", desc: "Create memes with templates, custom images, draggable text, stickers and more. Export as JPG, PNG, or WEBP.", isUtilityCard: true },
+          { href: "./crop.html", icon: "fa-scissors", text: "Advanced Crop", section: "image", cat: "edit", emoji: "✂️", title: "Advanced Crop", desc: "Precise cropping tool with fixed aspect ratios and social media presets.", isUtilityCard: true },
+          { href: "./blur-face.html", icon: "fa-user-shield", text: "Blur Face", section: "image", cat: "security edit", emoji: "👤", title: "Blur Face", desc: "Automatically detect and blur faces for privacy using AI.", isUtilityCard: true },
+          
+          // Document Utilities Group (Upgraded Matrix)
+          { href: "./pdf-to-jpg.html", icon: "fa-file-pdf", text: "PDF to JPG", section: "doc", cat: "convert doc", emoji: "📄", title: "PDF to JPG", desc: "Extract all pages from a <strong>PDF</strong> file or convert PDF pages into high-quality <strong>JPG</strong> images instantly.", isUtilityCard: true },
+          { href: "./jpg-to-pdf.html", icon: "fa-file-image", text: "JPG to PDF", section: "doc", cat: "convert doc", emoji: "🖼️", title: "JPG to PDF", desc: "Convert your <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> images into a single compact <strong>PDF</strong> document easily.", isUtilityCard: true },
+          { href: "./split-pdf.html", icon: "fa-scissors", text: "Split PDF", section: "doc", cat: "doc", emoji: "✂️", title: "Split PDF", desc: "Extract specific page ranges or split every single page of your <strong>PDF</strong> document into separate separate files seamlessly.", isUtilityCard: true },
+          { href: "./merge-pdf.html", icon: "fa-object-group", text: "Merge PDF", section: "doc", cat: "doc", emoji: "🗂️", title: "Merge PDF", desc: "Combine multiple <strong>PDF</strong> documents into a single consolidated file in whatever order you want.", isUtilityCard: true },
+          { href: "./compress-pdf.html", icon: "fa-compress", text: "Compress PDF", section: "doc", cat: "optimize doc", emoji: "📉", title: "Compress PDF", desc: "Shrink the file size of your <strong>PDF</strong> document dynamically while maximizing internal asset rendering profiles.", isUtilityCard: true },
+
+          // New Developer/Core SaaS Utilities
+          { href: "./qr-generator.html", icon: "fa-qrcode", text: "QR Code Generator", section: "utility", cat: "create utility", emoji: "📱", title: "QR Code Generator", desc: "Generate custom trackable high-quality vector <strong>QR codes</strong> instantly for URLs, plain texts, or configurations.", isUtilityCard: true },
+          { href: "./password-generator.html", icon: "fa-key", text: "Password Generator", section: "utility", cat: "security utility", emoji: "🔑", title: "Password Generator", desc: "Create cryptographically secure random passwords instantly using client-side entropy controls.", isUtilityCard: true },
+          { href: "./json-formatter.html", icon: "fa-code", text: "JSON Formatter", section: "utility", cat: "utility", emoji: "💻", title: "JSON Formatter & Validator", desc: "Parse, format, prettify, and validate unminified structural <strong>JSON arrays</strong> with real-time lint logs.", isUtilityCard: true },
+          { href: "./url-shortener.html", icon: "fa-link", text: "URL Shortener", section: "utility", cat: "utility", emoji: "🔗", title: "URL Shortener", desc: "Minify extremely lengthy URLs into accessible localized structural redirect strings cleanly.", isUtilityCard: true },
+
+          // Info Pages Group
+          { href: "./about.html", icon: "fa-circle-info", text: "About Us", section: "info", isUtilityCard: false },
+          { href: "./contact.html", icon: "fa-envelope", text: "Contact", section: "info", isUtilityCard: false },
+          { href: "./faq.html", icon: "fa-circle-question", text: "FAQ", section: "info", isUtilityCard: false },
+          { href: "./blog/", icon: "fa-pen-to-square", text: "Blog", section: "info", isUtilityCard: false },
+          { href: "./privacy-policy.html", icon: "fa-shadow", text: "Privacy Policy", section: "info", isUtilityCard: false },
+          { href: "./terms.html", icon: "fa-file-contract", text: "Terms of Service", section: "info", isUtilityCard: false },
+          { href: "./disclaimer.html", icon: "fa-triangle-exclamation", text: "Disclaimer", section: "info", isUtilityCard: false }
         ],
         footer: [
           { href: "./about.html", text: "About" },
@@ -305,19 +324,6 @@
           { href: "./privacy-policy.html", text: "Privacy" },
           { href: "./terms.html", text: "Terms" },
           { href: "./disclaimer.html", text: "Disclaimer" }
-        ],
-        tools: [
-          { href: "./compress.html", cat: "optimize", emoji: "📦", title: "Compress IMAGE", desc: "Compress <strong>JPG</strong>, <strong>PNG</strong>, and <strong>WEBP</strong> while saving space and maintaining quality." },
-          { href: "./resize.html", cat: "edit", emoji: "📐", title: "Resize IMAGE", desc: "Define your dimensions, by percent or pixel, and resize your <strong>JPG</strong>, <strong>PNG</strong>, and <strong>WEBP</strong> images." },
-          { href: "./photo-editor.html", cat: "edit create", emoji: "✨", title: "Photo Editor", desc: "Edit photos directly in your browser with fine-tuned filters, brightness, contrast, rotations, and instant download." },
-          { href: "./convert.html", cat: "convert", emoji: "🔄", title: "Convert IMAGE", desc: "Transform your images into formats like <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> seamlessly in batches." },
-          { href: "./watermark.html", cat: "security create", emoji: "💧", title: "Watermark IMAGE", desc: "Protect your visual assets. Stamp an image or text over your images with custom transparency and positions." },
-          { href: "./pdf-to-jpg.html", cat: "convert", emoji: "📄", title: "PDF to JPG", desc: "Extract all pages from a <strong>PDF</strong> file or convert PDF pages into high-quality <strong>JPG</strong> images instantly." },
-          { href: "./jpg-to-pdf.html", cat: "convert", emoji: "🖼️", title: "JPG to PDF", desc: "Convert your <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> images into a single compact <strong>PDF</strong> document easily." },
-          { href: "./remove-bg.html", cat: "edit create", emoji: "🫥", title: "Remove Background", desc: "AI-powered background remover. Get transparent PNGs, replace backgrounds, or batch process – all in your browser." },
-          { href: "./meme-generator.html", cat: "create", emoji: "😂", title: "Meme Generator", desc: "Create memes with templates, custom images, draggable text, stickers and more. Export as JPG, PNG, or WEBP." },
-          { href: "./crop.html", cat: "edit", emoji: "✂️", title: "Advanced Crop", desc: "Precise cropping tool with fixed aspect ratios and social media presets." },
-          { href: "./blur-face.html", cat: "security edit", emoji: "👤", title: "Blur Face", desc: "Automatically detect and blur faces for privacy using AI." }
         ]
       },
       ar: {
@@ -334,29 +340,42 @@
           { id: 'create', text: 'إنشاء' },
           { id: 'edit', text: 'تعديل' },
           { id: 'convert', text: 'تحويل الصيغ' },
-          { id: 'security', text: 'الأمان والحماية' }
+          { id: 'security', text: 'الأمان والحماية' },
+          { id: 'doc', text: 'المستندات' },
+          { id: 'utility', text: 'أدوات ذكية' }
         ],
-        sidebarTitles: { image: "أدوات الصور", doc: "أدوات المستندات", info: "المعلومات والصفحات" },
-        menu: [
-          { href: "./index.html", icon: "fa-house", text: "الرئيسية", section: "home" },
-          { href: "./compress.html", icon: "fa-box", text: "ضغط الصور", section: "image" },
-          { href: "./resize.html", icon: "fa-arrows-maximize", text: "تغيير الحجم", section: "image" },
-          { href: "./photo-editor.html", icon: "fa-wand-magic-sparkles", text: "محرر الصور", section: "image" },
-          { href: "./convert.html", icon: "fa-rotate", text: "تحويل الصيغة", section: "image" },
-          { href: "./watermark.html", icon: "fa-droplet", text: "إضافة علامة مائية", section: "image" },
-          { href: "./remove-bg.html", icon: "fa-user-ghost", text: "إزالة الخلفية", section: "image" },
-          { href: "./meme-generator.html", icon: "fa-face-laugh-squint", text: "صانع الميمز", section: "image" },
-          { href: "./crop.html", icon: "fa-scissors", text: "قص الصور احترافي", section: "image" },
-          { href: "./blur-face.html", icon: "fa-user-shield", text: "تغبيش الوجوه", section: "image" },
-          { href: "./pdf-to-jpg.html", icon: "fa-file-pdf", text: "تحويل من PDF إلى JPG", section: "doc" },
-          { href: "./jpg-to-pdf.html", icon: "fa-file-image", text: "تحويل من JPG إلى PDF", section: "doc" },
-          { href: "./about.html", icon: "fa-circle-info", text: "من نحن", section: "info" },
-          { href: "./contact.html", icon: "fa-envelope", text: "اتصل بنا", section: "info" },
-          { href: "./faq.html", icon: "fa-circle-question", text: "الأسئلة الشائعة", section: "info" },
-          { href: "./blog/", icon: "fa-pen-to-square", text: "المدونة", section: "info" },
-          { href: "./privacy-policy.html", icon: "fa-shadow", text: "سياسة الخصوصية", section: "info" },
-          { href: "./terms.html", icon: "fa-file-contract", text: "شروط الخدمة", section: "info" },
-          { href: "./disclaimer.html", icon: "fa-triangle-exclamation", text: "إخلاء المسؤولية", section: "info" }
+        sidebarTitles: { image: "أدوات الصور", doc: "أدوات المستندات", utility: "أدوات المطورين والخدمات العامة", info: "المعلومات والصفحات" },
+        toolsRegistry: [
+          { href: "./index.html", icon: "fa-house", text: "الرئيسية", section: "home", isUtilityCard: false },
+          
+          { href: "./compress.html", icon: "fa-box", text: "ضغط الصور", section: "image", cat: "optimize", emoji: "📦", title: "ضغط الصور IMAGE", desc: "قم بضغط ملفات <strong>JPG</strong> و <strong>PNG</strong> و <strong>WEBP</strong> لتوفير المساحة مع الحفاظ على الجودة العالية.", isUtilityCard: true },
+          { href: "./resize.html", icon: "fa-arrows-maximize", text: "تغيير الحجم", section: "image", cat: "edit", emoji: "📐", title: "تغيير حجم الصورة", desc: "حدد أبعادك، بالنسبة المئوية أو البكسل، وقم بتغيير حجم صور <strong>JPG</strong> و <strong>PNG</strong> و <strong>WEBP</strong>.", isUtilityCard: true },
+          { href: "./photo-editor.html", icon: "fa-wand-magic-sparkles", text: "محرر الصور", section: "image", cat: "edit create", emoji: "✨", title: "محرر الصور المتكامل", desc: "قم بتعديل الصور مباشرة في متصفحك باستخدام مرشحات دقيقة والتحكم في السطوع والتباين والتدوير والتحميل الفوري.", isUtilityCard: true },
+          { href: "./convert.html", icon: "fa-rotate", text: "تحويل الصيغة", section: "image", cat: "convert", emoji: "🔄", title: "تحويل صيغ الصور", desc: "قم بتحويل صورك إلى صيغ متعددة مثل <strong>JPG</strong> أو <strong>PNG</strong> أو <strong>WEBP</strong> بسلاسة وبشكل جماعي دفعة واحدة.", isUtilityCard: true },
+          { href: "./watermark.html", icon: "fa-droplet", text: "إضافة علامة مائية", section: "image", cat: "security create", emoji: "💧", title: "إضافة علامة مائية", desc: "احمِ أصولك المرئية وحقوقك. اطبع صورة أو نصًا فوق صورك بشفافية ومواضع مخصصة بالكامل.", isUtilityCard: true },
+          { href: "./remove-bg.html", icon: "fa-user-ghost", text: "إزالة الخلفية", section: "image", cat: "edit create", emoji: "🫥", title: "إزالة خلفية الصور", desc: "مزيل الخلفية بالذكاء الاصطناعي لتوفير صور PNG شفافة، أو معالجة جماعية مخصصة بالكامل داخل متصفحك.", isUtilityCard: true },
+          { href: "./meme-generator.html", icon: "fa-face-laugh-squint", text: "صانع الميمز", section: "image", cat: "create", emoji: "😂", title: "صانع صور الميمز", desc: "أنشئ صور ميمز مضحكة باستخدام قوالب مخصصة، ونصوص قابلة للسحب، وملصقات تصدير سريعة.", isUtilityCard: true },
+          { href: "./crop.html", icon: "fa-scissors", text: "قص الصور احترافي", section: "image", cat: "edit", emoji: "✂️", title: "قص الصور احترافي", desc: "أداة قص دقيقة للغاية مع نسب أبعاد ثابتة وإعدادات مسبقة مخصصة لوسائل التواصل الاجتماعي.", isUtilityCard: true },
+          { href: "./blur-face.html", icon: "fa-user-shield", text: "تغبيش الوجوه", section: "image", cat: "security edit", emoji: "👤", title: "تغبيش وطمس الوجوه", desc: "اكتشف الوجوه تلقائيًا وقم بتغبيشها لحماية الخصوصية والأمان باستخدام تقنيات الذكاء الاصطناعي المتطورة.", isUtilityCard: true },
+          
+          { href: "./pdf-to-jpg.html", icon: "fa-file-pdf", text: "تحويل من PDF إلى JPG", section: "doc", cat: "convert doc", emoji: "📄", title: "تحويل من PDF إلى JPG", desc: "قم باستخراج جميع الصفحات من ملف <strong>PDF</strong> أو تحويل صفحات PDF إلى صور <strong>JPG</strong> عالية الجودة على الفور.", isUtilityCard: true },
+          { href: "./jpg-to-pdf.html", icon: "fa-file-image", text: "تحويل من JPG إلى PDF", section: "doc", cat: "convert doc", emoji: "🖼️", title: "تحويل من JPG إلى PDF", desc: "قم بتحويل صور <strong>JPG</strong> أو <strong>PNG</strong> أو <strong>WEBP</strong> إلى مستند <strong>PDF</strong> واحد مدمج ومنظم بكل سهولة.", isUtilityCard: true },
+          { href: "./split-pdf.html", icon: "fa-scissors", text: "تقسيم ملف PDF", section: "doc", cat: "doc", emoji: "✂️", title: "تقسيم ملفات PDF", desc: "استخراج نطاقات صفحات معينة أو تقسيم كل صفحة من صفحات مستند PDF الخاص بك بسلاسة.", isUtilityCard: true },
+          { href: "./merge-pdf.html", icon: "fa-object-group", text: "دمج ملفات PDF", section: "doc", cat: "doc", emoji: "🗂️", title: "دمج ملفات PDF", desc: "دمج مستندات PDF متعددة في ملف واحد موحد بالترتيب الذي تريده بكل سهولة.", isUtilityCard: true },
+          { href: "./compress-pdf.html", icon: "fa-compress", text: "ضغط ملف PDF", section: "doc", cat: "optimize doc", emoji: "📉", title: "تقليل حجم PDF", desc: "تقليل حجم ملف مستند PDF الخاص بك ديناميكيًا مع الحفاظ على جودة الأصول الداخلية.", isUtilityCard: true },
+
+          { href: "./qr-generator.html", icon: "fa-qrcode", text: "مولد الرموز QR", section: "utility", cat: "create utility", emoji: "📱", title: "إنشاء رموز QR مخصصة", desc: "قم بإنشاء رموز استجابة سريعة QR عالية الجودة ومخصصة فورًا للروابط أو النصوص.", isUtilityCard: true },
+          { href: "./password-generator.html", icon: "fa-key", text: "مولد كلمات المرور", section: "utility", cat: "security utility", emoji: "🔑", title: "إنشاء كلمات مرور آمنة", desc: "أنشئ كلمات مرور عشوائية قوية ومحمية تشفيرًا بشكل فوري وبشكل محلي بالكامل.", isUtilityCard: true },
+          { href: "./json-formatter.html", icon: "fa-code", text: "منسق ومعالج JSON", section: "utility", cat: "utility", emoji: "💻", title: "تنسيق والتحقق من JSON", desc: "قم بتحليل وتنسيق والتحقق من صحة مصفوفات وملفات JSON البرمجية مع رصد الأخطاء فورًا.", isUtilityCard: true },
+          { href: "./url-shortener.html", icon: "fa-link", text: "مختصر الروابط", section: "utility", cat: "utility", emoji: "🔗", title: "اختصار الروابط الطويلة", desc: "قم بتقصير الروابط الطويلة جدًا والمربكة إلى سلاسل توجيه محلية مبسطة ونظيفة.", isUtilityCard: true },
+
+          { href: "./about.html", icon: "fa-circle-info", text: "من نحن", section: "info", isUtilityCard: false },
+          { href: "./contact.html", icon: "fa-envelope", text: "اتصل بنا", section: "info", isUtilityCard: false },
+          { href: "./faq.html", icon: "fa-circle-question", text: "الأسئلة الشائعة", section: "info", isUtilityCard: false },
+          { href: "./blog/", icon: "fa-pen-to-square", text: "المدونة", section: "info", isUtilityCard: false },
+          { href: "./privacy-policy.html", icon: "fa-shadow", text: "سياسة الخصوصية", section: "info", isUtilityCard: false },
+          { href: "./terms.html", icon: "fa-file-contract", text: "شروط الخدمة", section: "info", isUtilityCard: false },
+          { href: "./disclaimer.html", icon: "fa-triangle-exclamation", text: "إخلاء المسؤولية", section: "info", isUtilityCard: false }
         ],
         footer: [
           { href: "./about.html", text: "من نحن" },
@@ -366,26 +385,13 @@
           { href: "./privacy-policy.html", text: "الخصوصية" },
           { href: "./terms.html", text: "الشروط" },
           { href: "./disclaimer.html", text: "إخلاء المسؤولية" }
-        ],
-        tools: [
-          { href: "./compress.html", cat: "optimize", emoji: "📦", title: "ضغط الصور IMAGE", desc: "قم بضغط ملفات <strong>JPG</strong> و <strong>PNG</strong> و <strong>WEBP</strong> لتوفير المساحة مع الحفاظ على الجودة العالية." },
-          { href: "./resize.html", cat: "edit", emoji: "📐", title: "تغيير حجم الصورة", desc: "حدد أبعادك، بالنسبة المئوية أو البكسل، وقم بتغيير حجم صور <strong>JPG</strong> و <strong>PNG</strong> و <strong>WEBP</strong>." },
-          { href: "./photo-editor.html", cat: "edit create", emoji: "✨", title: "محرر الصور المتكامل", desc: "قم بتعديل الصور مباشرة في متصفحك باستخدام مرشحات دقيقة والتحكم في السطوع والتباين والتدوير والتحميل الفوري." },
-          { href: "./convert.html", cat: "convert", emoji: "🔄", title: "تحويل صيغ الصور", desc: "قم بتحويل صورك إلى صيغ متعددة مثل <strong>JPG</strong> أو <strong>PNG</strong> أو <strong>WEBP</strong> بسلاسة وبشكل جماعي دفعة واحدة." },
-          { href: "./watermark.html", cat: "security create", emoji: "💧", title: "إضافة علامة مائية", desc: "احمِ أصولك المرئية وحقوقك. اطبع صورة أو نصًا فوق صورك بشفافية ومواضع مخصصة بالكامل." },
-          { href: "./pdf-to-jpg.html", cat: "convert", emoji: "📄", title: "تحويل من PDF إلى JPG", desc: "قم باستخراج جميع الصفحات من ملف <strong>PDF</strong> أو تحويل صفحات PDF إلى صور <strong>JPG</strong> عالية الجودة على الفور." },
-          { href: "./jpg-to-pdf.html", cat: "convert", emoji: "🖼️", title: "تحويل من JPG إلى PDF", desc: "قم بتحويل صور <strong>JPG</strong> أو <strong>PNG</strong> أو <strong>WEBP</strong> إلى مستند <strong>PDF</strong> واحد مدمج ومنظم بكل سهولة." },
-          { href: "./remove-bg.html", cat: "edit create", emoji: "🫥", title: "إزالة خلفية الصور", desc: "مزيل الخلفية بالذكاء الاصطناعي لتوفير صور PNG شفافة، أو معالجة جماعية مخصصة بالكامل داخل متصفحك." },
-          { href: "./meme-generator.html", cat: "create", emoji: "😂", title: "صانع صور الميمز", desc: "أنشئ صور ميمز مضحكة باستخدام قوالب مخصصة، ونصوص قابلة للسحب، وملصقات تصدير سريعة." },
-          { href: "./crop.html", cat: "edit", emoji: "✂️", title: "قص الصور احترافي", desc: "أداة قص دقيقة للغاية مع نسب أبعاد ثابتة وإعدادات مسبقة مخصصة لوسائل التواصل الاجتماعي." },
-          { href: "./blur-face.html", cat: "security edit", emoji: "👤", title: "تغبيش وطمس الوجوه", desc: "اكتشف الوجوه تلقائيًا وقم بتغبيشها لحماية الخصوصية والأمان باستخدام تقنيات الذكاء الاصطناعي المتطورة." }
         ]
       }
     };
 
     let currentLang = 'en';
 
-    // RENDER INTERFACE LOGIC COMPONENT (FULLY SECURE REGEX ATTRIBUTE LOOPING)
+    // HIGH PERFORMANCE RENDER LOGIC ENGINE
     function renderUI() {
       const data = languageData[currentLang];
       
@@ -399,7 +405,7 @@
       const searchBox = document.getElementById('toolSearch');
       searchBox.placeholder = data.searchPlaceholder;
 
-      // Render Filters System
+      // Dynamic Category Filter System
       const filterBox = document.getElementById('filterContainer');
       filterBox.innerHTML = '';
       data.filters.forEach((f, i) => {
@@ -411,10 +417,14 @@
         filterBox.appendChild(btn);
       });
 
-      // Render Tools Grid Matrix
+      // Unified Matrix Rendering Engine (Tools Grid Dashboard)
       const toolsGrid = document.getElementById('toolsList');
       toolsGrid.innerHTML = '';
-      data.tools.forEach(t => {
+      
+      // Filter list down to items that strictly contain metadata intended for Grid Rendering
+      const gridItems = data.toolsRegistry.filter(item => item.isUtilityCard);
+      
+      gridItems.forEach(t => {
         toolsGrid.innerHTML += `
           <a href="${t.href}" class="tool-link" data-category="${t.cat}">
             <div class="tool-card">
@@ -427,45 +437,53 @@
           </a>`;
       });
 
-      // Render Footnotes
+      // Dynamic Footnotes Layout Engine
       const fLinks = document.getElementById('footerLinks');
       fLinks.innerHTML = '';
       data.footer.forEach(item => {
         fLinks.innerHTML += `<a href="${item.href}">${item.text}</a>`;
       });
 
-      // ── FIXED HIGH-SECURITY SIDEBAR COMPILER (No indexing limitations / 0% Undefined Chance) ──
+      // ── SAFE MATRIX-BASED SIDEBAR COMPILER (Zero Index references, 100% bug-free) ──
       const sidebarBox = document.getElementById('sidebarLinks');
-      sidebarBox.innerHTML = ''; // Fresh buffer clear
+      sidebarBox.innerHTML = ''; // Absolute Buffer Flush
 
-      // 1. Inject Home First
-      const homeItem = data.menu.find(item => item.section === 'home');
-      if (homeItem) {
-        sidebarBox.innerHTML += `<a href="${homeItem.href}"><i class="fa-solid ${homeItem.icon}"></i> ${homeItem.text}</a>`;
+      // Section 1: Home Core Portal Link
+      const homeLink = data.toolsRegistry.find(item => item.section === 'home');
+      if (homeLink) {
+        sidebarBox.innerHTML += `<a href="${homeLink.href}"><i class="fa-solid ${homeLink.icon}"></i> ${homeLink.text}</a>`;
       }
 
-      // 2. Inject Image Utilities Section
+      // Section 2: Image Utility Modules
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.image}</div>`;
-      data.menu.forEach(item => {
+      data.toolsRegistry.forEach(item => {
         if (item.section === 'image') {
           sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
         }
       });
 
-      // 3. Inject Document Utilities Section
+      // Section 3: Document Utility Modules
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.doc}</div>`;
-      data.menu.forEach(item => {
+      data.toolsRegistry.forEach(item => {
         if (item.section === 'doc') {
           sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
         }
       });
 
-      // 4. Inject Informational / Privacy / Legal Pages
+      // Section 4: Developer & General Utility Modules
+      sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.utility}</div>`;
+      data.toolsRegistry.forEach(item => {
+        if (item.section === 'utility') {
+          sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
+        }
+      });
+
+      // Section 5: Informational Legal Subsystem
       sidebarBox.innerHTML += `
         <div style="height: 1px; background: var(--border); margin: 10px 0;"></div>
         <div class="menu-section-title">${data.sidebarTitles.info}</div>
       `;
-      data.menu.forEach(item => {
+      data.toolsRegistry.forEach(item => {
         if (item.section === 'info') {
           sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
         }
@@ -474,7 +492,7 @@
       evaluateLiveSearchFilters();
     }
 
-    // INTERACTIVE SYSTEM TRANSLATION CONTROLLERS
+    // MULTI-LANGUAGE TRANSLATION TRANSITION CONTROLLERS
     function toggleLanguage() {
       const toggleBtn = document.getElementById('langToggleBtn');
       if (currentLang === 'en') {
@@ -489,7 +507,7 @@
       renderUI();
     }
 
-    // REALTIME LIVE SEARCH & FILTER MATRIX EVALUATION ENGINE
+    // REALTIME LIVE SEARCH & METRIC ENGINE EVALUATOR
     const searchInput = document.getElementById('toolSearch');
     
     function evaluateLiveSearchFilters() {
@@ -527,7 +545,7 @@
 
     searchInput.addEventListener('input', evaluateLiveSearchFilters);
 
-    // SIDEBAR DRAWER INTERRUPT CONTROL INTERFACES
+    // SIDEBAR DRAWER OVERLAY CONTROLLERS
     function toggleMenu(show) {
       const menu = document.getElementById('sideMenu');
       const overlay = document.getElementById('menuOverlay');
@@ -540,7 +558,7 @@
       }
     }
 
-    // PREMIUM LOCALSTORAGE THEME ENGINE LAYER
+    // LOCALSTORAGE SYNC THEME CONTROLLER MODULE
     const themeToggle = document.getElementById('themeToggle');
     const getSystemThemeSetting = () => localStorage.getItem('pixelpress-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
@@ -553,7 +571,7 @@
       localStorage.setItem('pixelpress-theme', targetSetting);
     });
 
-    // COMMAND + K PORTAL INTERCEPT TRIGGER
+    // INSTANT TERMINAL SEARCH CAPTURE (⌘ + K / Ctrl + K)
     window.addEventListener('keydown', e => {
       if((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -561,7 +579,7 @@
       }
     });
 
-    // Initialize UI on startup
+    // Execute Startup System Pipeline
     renderUI();
   </script>
 </body>

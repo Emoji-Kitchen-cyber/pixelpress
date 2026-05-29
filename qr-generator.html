@@ -141,31 +141,30 @@
       outline: none;
     }
 
-    textarea { min-height: 120px; font-family: var(--fmono); }
+    textarea { min-height: 130px; font-family: var(--fmono); }
 
     .qr-container {
       display: flex;
       justify-content: center;
       margin: 2rem 0;
-      padding: 2.5rem;
+      padding: 30px;
       background: #ffffff;
       border-radius: 16px;
       border: 1px solid var(--border);
-      min-height: 320px;
+      min-height: 360px;
     }
 
     #qrcode { 
-      padding: 12px; 
+      padding: 15px; 
       background: white; 
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
 
-    .advanced-options {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0;
+    .warning {
+      font-size: 0.85rem;
+      color: #f59e0b;
+      margin-top: 6px;
     }
 
     .btn-group {
@@ -193,18 +192,6 @@
     }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px var(--glow); }
 
-    .btn-secondary {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    .warning {
-      font-size: 0.85rem;
-      color: #f59e0b;
-      margin-top: 8px;
-    }
-
     footer {
       text-align: center;
       padding: 2rem;
@@ -227,50 +214,26 @@
   <div class="main">
     <div class="tool-header">
       <h1>QR Code Generator</h1>
-      <p>Highly reliable • Works with all scanners</p>
+      <p>Optimized for maximum scan reliability</p>
     </div>
 
     <div class="card">
       <div class="tabs" id="tabs">
         <div class="tab active" data-mode="text">Text / URL</div>
         <div class="tab" data-mode="wifi">WiFi</div>
-        <div class="tab" data-mode="contact">Contact (vCard)</div>
-        <div class="tab" data-mode="image">Image</div>
+        <div class="tab" data-mode="contact">Contact</div>
+        <div class="tab" data-mode="image">Image (Advanced)</div>
       </div>
 
       <div id="inputArea"></div>
 
-      <div class="advanced-options">
-        <div class="input-group">
-          <label>Size (px)</label>
-          <select id="qrSize">
-            <option value="384">384</option>
-            <option value="512" selected>512 (Best)</option>
-            <option value="640">640</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>Error Correction</label>
-          <select id="errorLevel">
-            <option value="M">Medium</option>
-            <option value="Q">High</option>
-            <option value="H" selected>Maximum (Recommended)</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label>Foreground</label>
-          <input type="color" id="fgColor" value="#000000">
-        </div>
-        <div class="input-group">
-          <label>Background</label>
-          <input type="color" id="bgColor" value="#ffffff">
-        </div>
-      </div>
-
       <div class="input-group">
-        <label>Logo (Optional)</label>
-        <input type="file" id="logoUpload" accept="image/*">
-        <div class="warning">Logo overlay coming in future update</div>
+        <label>Size</label>
+        <select id="qrSize">
+          <option value="400">400 px</option>
+          <option value="512" selected>512 px (Recommended)</option>
+          <option value="640">640 px</option>
+        </select>
       </div>
 
       <div class="qr-container">
@@ -279,38 +242,38 @@
 
       <div class="btn-group">
         <button onclick="generateQR()" class="btn-primary">
-          <i class="fa-solid fa-qrcode"></i> Generate QR
+          <i class="fa-solid fa-qrcode"></i> Generate QR Code
         </button>
         <button onclick="downloadQR()" class="btn-primary">
-          <i class="fa-solid fa-download"></i> Download PNG (512px+)
-        </button>
-        <button onclick="copyContent()" class="btn-secondary">
-          <i class="fa-solid fa-copy"></i> Copy Content
+          <i class="fa-solid fa-download"></i> Download PNG
         </button>
       </div>
+
+      <p style="text-align:center; margin-top:15px; color:var(--muted); font-size:0.9rem;">
+        ✅ Test with your phone camera or any QR scanner app
+      </p>
     </div>
   </div>
 
-  <footer>© 2026 PixelPress — All processing in browser • Private & Fast</footer>
+  <footer>© 2026 PixelPress — Client-side • Private</footer>
 
   <script>
     let currentQR = null;
 
-    // Theme Sync
     function syncTheme() {
-      const savedTheme = localStorage.getItem('pixelpress-theme');
-      const theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const saved = localStorage.getItem('pixelpress-theme');
+      const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', theme);
     }
 
     document.getElementById('themeToggle').addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const newTheme = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('pixelpress-theme', newTheme);
+      const curr = document.documentElement.getAttribute('data-theme');
+      const next = curr === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('pixelpress-theme', next);
     });
 
-    // Tab System
+    // Tab handling
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -324,67 +287,55 @@
       let html = '';
 
       if (mode === 'text') {
-        html = `
-          <div class="input-group">
-            <label>Content (URL or Text)</label>
-            <textarea id="content" placeholder="Enter URL or text...">https://pixelpress-smoky.vercel.app</textarea>
-          </div>`;
+        html = `<div class="input-group">
+                  <label>Content</label>
+                  <textarea id="content" placeholder="Paste URL or text here...">https://pixelpress-smoky.vercel.app</textarea>
+                </div>`;
       } else if (mode === 'wifi') {
         html = `
-          <div class="input-group"><label>SSID (Network Name)</label><input type="text" id="ssid" value="MyWiFi"></div>
-          <div class="input-group"><label>Password</label><input type="text" id="wifiPass" value="12345678"></div>
-          <div class="input-group"><label>Encryption</label>
-            <select id="encryption"><option value="WPA" selected>WPA/WPA2</option><option value="WEP">WEP</option></select>
-          </div>`;
+          <div class="input-group"><label>Network Name (SSID)</label><input type="text" id="ssid" value="MyWiFi"></div>
+          <div class="input-group"><label>Password</label><input type="text" id="wifiPass" value="password123"></div>`;
       } else if (mode === 'contact') {
         html = `
-          <div class="input-group"><label>Full Name</label><input type="text" id="name" value="Ahmed Khan"></div>
-          <div class="input-group"><label>Phone</label><input type="tel" id="phone" value="+966501234567"></div>
-          <div class="input-group"><label>Email</label><input type="email" id="email" value="ahmed@example.com"></div>`;
+          <div class="input-group"><label>Name</label><input type="text" id="name" value="Ahmed Ali"></div>
+          <div class="input-group"><label>Phone</label><input type="tel" id="phone" value="+966501234567"></div>`;
       } else if (mode === 'image') {
         html = `
           <div class="input-group">
-            <label>Upload Image to Encode in QR</label>
+            <label>Upload Image</label>
             <input type="file" id="imageUpload" accept="image/*">
-            <div class="warning">⚠️ Large images may reduce scan reliability. Use small images (&lt;100KB).</div>
+            <div class="warning">⚠️ Image mode creates very dense QR codes. Use small images only.</div>
           </div>`;
       }
 
       area.innerHTML = html;
 
-      // Auto generate on input change
-      const inputs = area.querySelectorAll('input, textarea, select');
-      inputs.forEach(input => {
-        input.addEventListener('input', () => generateQR());
-      });
+      // Live update
+      const inputs = area.querySelectorAll('input, textarea');
+      inputs.forEach(el => el.addEventListener('input', generateQR));
     }
 
     async function getContent(mode) {
-      if (mode === 'text') return document.getElementById('content').value.trim();
+      if (mode === 'text') return document.getElementById('content').value.trim() || "https://pixelpress-smoky.vercel.app";
       
       if (mode === 'wifi') {
         const ssid = document.getElementById('ssid').value.trim();
         const pass = document.getElementById('wifiPass').value.trim();
-        const enc = document.getElementById('encryption').value;
-        return `WIFI:S:\( {ssid};T: \){enc};P:${pass};;`;
+        return `WIFI:S:\( {ssid};T:WPA;P: \){pass};;`;
       }
       
       if (mode === 'contact') {
         const name = document.getElementById('name').value.trim();
         const phone = document.getElementById('phone').value.trim();
-        const email = document.getElementById('email').value.trim();
-        return `BEGIN:VCARD\nVERSION:3.0\nN:\( {name};;;\nFN: \){name}\nTEL:\( {phone}\nEMAIL: \){email}\nEND:VCARD`;
+        return `BEGIN:VCARD\nVERSION:3.0\nFN:\( {name}\nTEL: \){phone}\nEND:VCARD`;
       }
       
       if (mode === 'image') {
         const file = document.getElementById('imageUpload').files[0];
-        if (!file) throw new Error("Please upload an image first");
-        if (file.size > 150000) alert("⚠️ Large image selected. Scan success may be lower.");
-        
-        return new Promise((resolve, reject) => {
+        if (!file) throw new Error("Please select an image");
+        return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
           reader.readAsDataURL(file);
         });
       }
@@ -393,9 +344,6 @@
     async function generateQR() {
       const mode = document.querySelector('.tab.active').dataset.mode;
       const size = parseInt(document.getElementById('qrSize').value);
-      const errorLevel = document.getElementById('errorLevel').value;
-      const fg = document.getElementById('fgColor').value;
-      const bg = document.getElementById('bgColor').value;
 
       try {
         const content = await getContent(mode);
@@ -408,48 +356,32 @@
           text: content,
           width: size,
           height: size,
-          colorDark: fg,
-          colorLight: bg,
-          correctLevel: QRCode.CorrectLevel[errorLevel]
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H   // Maximum error correction
         });
 
-      } catch (err) {
-        console.error(err);
-        alert("Error generating QR: " + err.message);
+      } catch (e) {
+        console.error(e);
       }
     }
 
     function downloadQR() {
-      if (!currentQR) return alert("Please generate QR code first");
-      
+      if (!currentQR) return alert("Generate QR first");
       const canvas = document.querySelector('#qrcode canvas');
       if (!canvas) return;
-
+      
       const link = document.createElement('a');
-      link.download = `qr-code-${Date.now()}.png`;
+      link.download = `qr-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
-    }
-
-    function copyContent() {
-      const mode = document.querySelector('.tab.active').dataset.mode;
-      let text = "";
-      
-      if (mode === 'text') text = document.getElementById('content').value;
-      else if (mode === 'wifi') text = document.getElementById('ssid').value + " / " + document.getElementById('wifiPass').value;
-      else if (mode === 'contact') text = document.getElementById('email').value || document.getElementById('phone').value;
-
-      if (text) {
-        navigator.clipboard.writeText(text);
-        alert("✅ Content copied!");
-      }
     }
 
     // Initialize
     window.onload = () => {
       syncTheme();
       renderInputFields('text');
-      setTimeout(() => generateQR(), 300);
+      setTimeout(generateQR, 200);
     };
   </script>
 </body>

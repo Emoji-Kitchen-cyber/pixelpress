@@ -1,38 +1,283 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAD Converter — PixelPress</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAD Converter – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/dxf-parser@1.1.2/dist/dxf-parser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
-    :root { --bg:#f5f5f7; --card:#ffffff; --border:rgba(0,0,0,0.06); --text:#1d1d1f; --accent:#ec4899; }
-    [data-theme="dark"] { --bg:#09090e; --card:#15151e; --border:rgba(255,255,255,0.08); --text:#e8e8f0; }
-    body { background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; margin:0; }
-    nav { display:flex; align-items:center; padding:0 2rem; height:64px; background:var(--card); border-bottom:1px solid var(--border); }
-    .container { max-width:600px; margin:4rem auto; background:var(--card); border:1px solid var(--border); padding:32px; border-radius:16px; text-align:center; }
-    .terminal { background:#000; color:#0f0; font-family:monospace; padding:15px; text-align:left; border-radius:8px; max-height:200px; overflow-y:auto; margin-top:20px; font-size:13px; }
-    .btn { background:var(--text); color:var(--bg); border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:1200px; margin:0 auto; width:100%; padding:1.5rem 20px; }
+    .upload-area { border:2px dashed var(--border); border-radius:var(--r); padding:2rem; text-align:center; cursor:pointer; background:var(--card); margin-bottom:1.5rem; transition:0.2s; }
+    .upload-area:hover { border-color:var(--accent); background:var(--glow); }
+    .upload-area i { font-size:2.5rem; color:var(--accent); }
+    .upload-area input { display:none; }
+    .workspace { display:flex; gap:1.5rem; flex-wrap:wrap; }
+    .canvas-panel { flex:2; min-width:300px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1rem; display:flex; flex-direction:column; align-items:center; gap:1rem; }
+    canvas { border:1px solid var(--border); border-radius:8px; background:white; max-width:100%; }
+    .info-panel { flex:1; min-width:250px; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.5rem; display:flex; flex-direction:column; gap:1rem; }
+    .btn { padding:10px 18px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:0.2s; }
+    .btn:hover { border-color:var(--accent); }
+    .btn-primary { background:var(--accent); color:white; border:none; }
+    .btn-primary:hover { background:#db2777; }
+    .stat { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:0.9rem; }
+    .layer-list { max-height:200px; overflow-y:auto; }
+    .layer-item { display:flex; align-items:center; gap:6px; padding:4px 0; font-size:0.85rem; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
 <body>
-  <nav><a href="./index.html" style="font-family:'Syne'; font-weight:800; text-decoration:none; color:var(--text);">PIXEL<span>PRESS</span></a></nav>
-  <div class="container">
-    <h2 style="font-family:'Syne'; margin-bottom:10px;">DXF ↔ DWG CAD Utility</h2>
-    <p style="color:var(--text); font-size:14px; margin-bottom:20px;">Analyze structural CAD metadata structures inside the client environment safely.</p>
-    <button class="btn" onclick="document.getElementById('cadInp').click()">Select DXF Data Block</button>
-    <input type="file" id="cadInp" style="display:none;" accept=".dxf,.dwg">
-    <div class="terminal" id="cadLog">> System operational. Ready for local binary chunk processing...</div>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+
+  <div class="main">
+    <div class="upload-area" id="uploadZone">
+      <i class="fa-solid fa-file-arrow-up"></i>
+      <h2>Upload DXF / DWG</h2>
+      <p style="color:var(--muted);">DXF fully supported • DWG metadata only</p>
+      <input type="file" id="cadInput" accept=".dxf,.dwg" />
+    </div>
+
+    <div class="workspace" id="workspace" style="display:none;">
+      <div class="canvas-panel">
+        <canvas id="cadCanvas" width="600" height="400"></canvas>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="zoomInBtn"><i class="fa-solid fa-plus"></i></button>
+          <button class="btn" id="zoomOutBtn"><i class="fa-solid fa-minus"></i></button>
+          <button class="btn" id="fitBtn"><i class="fa-solid fa-expand"></i> Fit</button>
+          <button class="btn btn-primary" id="exportSvgBtn"><i class="fa-solid fa-file-code"></i> SVG</button>
+          <button class="btn btn-primary" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+          <button class="btn btn-primary" id="exportJsonBtn"><i class="fa-solid fa-file-export"></i> JSON</button>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <div>
+          <h3 style="font-family:'Syne';">File Info</h3>
+          <div class="stat"><span>Name:</span><span id="fileName">-</span></div>
+          <div class="stat"><span>Type:</span><span id="fileType">-</span></div>
+          <div class="stat"><span>Entities:</span><span id="entityCount">-</span></div>
+          <div class="stat"><span>Layers:</span><span id="layerCount">-</span></div>
+          <div class="stat"><span>Bounds:</span><span id="bounds">-</span></div>
+        </div>
+        <div>
+          <h3 style="font-family:'Syne';">Layers</h3>
+          <div class="layer-list" id="layerList"></div>
+        </div>
+        <button class="btn" id="resetBtn"><i class="fa-solid fa-rotate"></i> New File</button>
+      </div>
+    </div>
   </div>
+
+  <footer>© 2026 PixelPress – CAD Converter</footer>
+
   <script>
-    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
-    document.getElementById('cadInp').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if(!file) return;
-      const log = document.getElementById('cadLog');
-      log.innerHTML += `<br>> Reading binary header: ${file.name}`;
-      log.innerHTML += `<br>> [SUCCESS] Stream parsed. Target size: ${file.size} bytes.`;
-    });
+    (function() {
+      // Theme
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+
+      const uploadZone = document.getElementById('uploadZone');
+      const cadInput = document.getElementById('cadInput');
+      const workspace = document.getElementById('workspace');
+      const canvas = document.getElementById('cadCanvas');
+      const ctx = canvas.getContext('2d');
+      let parsedData = null;
+      let scale = 1, offsetX = 0, offsetY = 0;
+      const parser = new DxfParser();
+
+      uploadZone.addEventListener('click', () => cadInput.click());
+      cadInput.addEventListener('change', handleFile);
+      uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor='var(--accent)'; });
+      uploadZone.addEventListener('dragleave', () => uploadZone.style.borderColor='var(--border)');
+      uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.style.borderColor='var(--border)';
+        if (e.dataTransfer.files[0]) handleFile({ target: { files: [e.dataTransfer.files[0]] } });
+      });
+
+      function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'dwg') {
+          alert('DWG files cannot be fully processed in the browser. Only metadata is shown.');
+          document.getElementById('fileName').textContent = file.name;
+          document.getElementById('fileType').textContent = 'DWG (limited support)';
+          document.getElementById('entityCount').textContent = 'N/A';
+          document.getElementById('layerCount').textContent = 'N/A';
+          document.getElementById('bounds').textContent = 'N/A';
+          workspace.style.display = 'flex';
+          uploadZone.style.display = 'none';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            parsedData = parser.parseSync(ev.target.result);
+            renderCAD();
+          } catch (err) {
+            alert('Failed to parse DXF: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function renderCAD() {
+        if (!parsedData) return;
+        document.getElementById('fileName').textContent = cadInput.files[0].name;
+        document.getElementById('fileType').textContent = 'DXF';
+        document.getElementById('entityCount').textContent = parsedData.entities.length;
+        document.getElementById('layerCount').textContent = Object.keys(parsedData.tables.layer.layers).length;
+        // Bounds
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        parsedData.entities.forEach(e => {
+          if (e.type === 'LINE') {
+            minX=Math.min(minX, e.startPoint.x, e.endPoint.x);
+            minY=Math.min(minY, e.startPoint.y, e.endPoint.y);
+            maxX=Math.max(maxX, e.startPoint.x, e.endPoint.x);
+            maxY=Math.max(maxY, e.startPoint.y, e.endPoint.y);
+          } else if (e.type === 'CIRCLE') {
+            minX=Math.min(minX, e.center.x-e.radius);
+            minY=Math.min(minY, e.center.y-e.radius);
+            maxX=Math.max(maxX, e.center.x+e.radius);
+            maxY=Math.max(maxY, e.center.y+e.radius);
+          } else if (e.type === 'ARC') {
+            minX=Math.min(minX, e.center.x-e.radius);
+            minY=Math.min(minY, e.center.y-e.radius);
+            maxX=Math.max(maxX, e.center.x+e.radius);
+            maxY=Math.max(maxY, e.center.y+e.radius);
+          }
+        });
+        if (minX===Infinity) minX=minY=maxX=maxY=0;
+        document.getElementById('bounds').textContent = `X: ${minX.toFixed(1)}-${maxX.toFixed(1)} Y: ${minY.toFixed(1)}-${maxY.toFixed(1)}`;
+        // Layers
+        const layerDiv = document.getElementById('layerList');
+        layerDiv.innerHTML = Object.entries(parsedData.tables.layer.layers).map(([name, attrs]) => `
+          <div class="layer-item">
+            <span style="display:inline-block;width:12px;height:12px;background:${attrs.color?getColor(attrs.color):'#000'};border-radius:50%;"></span>
+            ${name} (${attrs.color||'default'})
+          </div>
+        `).join('');
+
+        // Draw canvas
+        drawEntities(minX, minY, maxX, maxY);
+        workspace.style.display = 'flex';
+        uploadZone.style.display = 'none';
+      }
+
+      function getColor(index) {
+        const colors = ['#FF0000','#FFFF00','#00FF00','#00FFFF','#0000FF','#FF00FF','#FFFFFF','#808080','#C0C0C0','#800000','#808000','#008000','#008080','#000080','#800080','#808000'];
+        return colors[index] || '#000000';
+      }
+
+      function drawEntities(minX, minY, maxX, maxY) {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        const pad = 40;
+        const graphW = canvas.width - pad*2, graphH = canvas.height - pad*2;
+        const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+        const scale = Math.min(graphW/rangeX, graphH/rangeY);
+        offsetX = pad - minX*scale;
+        offsetY = pad + maxY*scale; // flip Y
+
+        function tx(x) { return offsetX + x*scale; }
+        function ty(y) { return offsetY - y*scale; }
+
+        ctx.lineWidth = 1;
+        parsedData.entities.forEach(e => {
+          ctx.beginPath();
+          ctx.strokeStyle = '#000';
+          if (e.type === 'LINE') {
+            ctx.moveTo(tx(e.startPoint.x), ty(e.startPoint.y));
+            ctx.lineTo(tx(e.endPoint.x), ty(e.endPoint.y));
+          } else if (e.type === 'CIRCLE') {
+            ctx.arc(tx(e.center.x), ty(e.center.y), e.radius*scale, 0, Math.PI*2);
+          } else if (e.type === 'ARC') {
+            ctx.arc(tx(e.center.x), ty(e.center.y), e.radius*scale, e.startAngle, e.endAngle);
+          }
+          ctx.stroke();
+        });
+      }
+
+      // Export
+      document.getElementById('exportSvgBtn').addEventListener('click', () => {
+        if (!parsedData) return;
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-10} ${-10} ${canvas.width+20} ${canvas.height+20}">`;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        drawEntities(0,0,canvas.width,canvas.height); // temporary
+        const dataUrl = canvas.toDataURL('image/svg+xml');
+        const a = document.createElement('a');
+        a.download = 'cad.svg';
+        a.href = dataUrl;
+        a.click();
+      });
+
+      document.getElementById('exportPdfBtn').addEventListener('click', () => {
+        if (!parsedData) return;
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        pdf.addImage(canvas.toDataURL(), 'PNG', 10,10,280,190);
+        pdf.save('cad.pdf');
+      });
+
+      document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        if (!parsedData) return;
+        const json = JSON.stringify(parsedData, null, 2);
+        const blob = new Blob([json], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'cad.json';
+        a.click();
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        parsedData = null;
+        workspace.style.display = 'none';
+        uploadZone.style.display = 'block';
+        cadInput.value = '';
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+      });
+
+      // Zoom & pan (simplified)
+      document.getElementById('zoomInBtn').addEventListener('click', () => { scale *=1.1; if(parsedData) drawEntities(0,0,canvas.width,canvas.height); });
+      document.getElementById('zoomOutBtn').addEventListener('click', () => { scale /=1.1; if(parsedData) drawEntities(0,0,canvas.width,canvas.height); });
+      document.getElementById('fitBtn').addEventListener('click', () => { if(parsedData) drawEntities(0,0,canvas.width,canvas.height); });
+    })();
   </script>
 </body>
 </html>

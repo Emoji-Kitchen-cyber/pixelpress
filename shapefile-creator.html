@@ -3,31 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GeoForge — Shapefile Studio</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>GeoForge Shapefile Studio — PixelPress</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+/* ----- GLOBAL THEME (PixelPress compatible) ----- */
 :root {
-  --bg:      #0b0d12;
-  --surface: #13161f;
-  --card:    #1a1e2a;
-  --line:    #252b3b;
-  --text:    #dde1ed;
-  --sub:     #6b7280;
-  --green:   #22c55e;
-  --blue:    #3b82f6;
-  --red:     #ef4444;
-  --amber:   #f59e0b;
-  --mono:    'IBM Plex Mono', monospace;
-  --sans:    'IBM Plex Sans', sans-serif;
+  --bg: #f5f5f7;
+  --surface: rgba(255,255,255,0.75);
+  --card: #ffffff;
+  --border: rgba(0,0,0,0.06);
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --accent: #ec4899;
+  --accent2: #a78bfa;
+  --glow: rgba(236,72,153,0.1);
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --red: #ef4444;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: system-ui, -apple-system, sans-serif;
+  --map-bg: #f0f0f0;
+}
+[data-theme="dark"] {
+  --bg: #09090e;
+  --surface: rgba(21,21,30,0.7);
+  --card: #15151e;
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8f0;
+  --muted: #86868b;
+  --glow: rgba(236,72,153,0.25);
+  --map-bg: #0d1117;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
   font-family: var(--sans);
   background: var(--bg);
@@ -37,1238 +50,636 @@ body {
   flex-direction: column;
   overflow: hidden;
   font-size: 13px;
+  transition: background 0.3s, color 0.3s;
 }
 
-/* ═══ TOPBAR ═══ */
+/* ----- TOPBAR ----- */
 .topbar {
   height: 48px;
   background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  gap: 0;
-  flex-shrink: 0;
-  z-index: 900;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: 20px;
-}
-
-.brand-dot {
-  width: 8px; height: 8px;
-  background: var(--green);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--green);
-  animation: blink 2s infinite;
-}
-
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-.brand-name {
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text);
-  letter-spacing: 1px;
-}
-
-.brand-name span { color: var(--green); }
-
-.divider { width: 1px; height: 28px; background: var(--line); margin: 0 12px; }
-
-/* TOOL BUTTONS IN TOPBAR */
-.tool-group {
-  display: flex;
-  gap: 2px;
-}
-
-.t-btn {
-  height: 32px;
   padding: 0 12px;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--sub);
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.12s;
-  white-space: nowrap;
-}
-
-.t-btn:hover { background: var(--card); color: var(--text); border-color: var(--line); }
-.t-btn.active { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.3); }
-.t-btn.danger:hover { background: rgba(239,68,68,0.1); color: var(--red); border-color: rgba(239,68,68,0.3); }
-.t-btn.accent:hover { background: rgba(59,130,246,0.1); color: var(--blue); border-color: rgba(59,130,246,0.3); }
-
-.t-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
-
-.topbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
   gap: 8px;
-}
-
-.chip {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 3px;
-  border: 1px solid var(--line);
-  color: var(--sub);
-  background: var(--card);
-}
-
-/* ═══ LAYOUT ═══ */
-.workspace {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* ═══ LEFT PANEL ═══ */
-.left-panel {
-  width: 260px;
-  background: var(--surface);
-  border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
   flex-shrink: 0;
+  z-index: 1000;
+  overflow-x: auto;
 }
-
-.panel-block {
-  border-bottom: 1px solid var(--line);
-  padding: 12px 14px;
+.topbar .brand { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.brand-dot { width:8px; height:8px; background:var(--green); border-radius:50%; animation:blink 2s infinite; }
+@keyframes blink{ 50%{opacity:0.3} }
+.brand-name { font-family:var(--mono); font-weight:600; font-size:14px; color:var(--text); }
+.brand-name span { color:var(--green); }
+.divider { width:1px; height:28px; background:var(--border); }
+.tool-group { display:flex; gap:2px; }
+.t-btn {
+  height:32px; padding:0 10px; border:1px solid transparent; border-radius:5px;
+  background:transparent; color:var(--muted); cursor:pointer;
+  font-family:var(--mono); font-size:10px; font-weight:500; display:flex; align-items:center; gap:4px;
+  white-space:nowrap; transition:0.12s;
 }
+.t-btn:hover { background:var(--card); color:var(--text); border-color:var(--border); }
+.t-btn.active { background:rgba(34,197,94,0.1); color:var(--green); border-color:rgba(34,197,94,0.3); }
+.topbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.chip { font-family:var(--mono); font-size:9px; padding:2px 8px; border-radius:3px; border:1px solid var(--border); color:var(--muted); background:var(--card); }
 
-.block-title {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--sub);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 10px;
+/* ----- LAYOUT ----- */
+.workspace { display:flex; flex:1; overflow:hidden; }
+
+/* ----- PANELS ----- */
+.panel {
+  background:var(--surface); border-color:var(--border);
+  display:flex; flex-direction:column; overflow-y:auto;
 }
+.left-panel { width:260px; border-right:1px solid var(--border); }
+.right-panel { width:240px; border-left:1px solid var(--border); }
+.panel-block { padding:10px 14px; border-bottom:1px solid var(--border); }
+.block-title { font-family:var(--mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
 
-/* DRAW TOOLS */
-.draw-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-}
-
+/* Draw grid (sidebar) */
+.draw-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
 .d-btn {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 9px 4px 7px;
-  color: var(--sub);
-  cursor: pointer;
-  transition: all 0.12s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.3px;
+  background:var(--card); border:1px solid var(--border); border-radius:6px;
+  padding:8px 4px 6px; color:var(--muted); cursor:pointer; display:flex; flex-direction:column;
+  align-items:center; gap:3px; font-family:var(--mono); font-size:9px; transition:0.12s;
 }
+.d-btn:hover { border-color:var(--green); color:var(--text); }
+.d-btn.active { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.08); }
 
-.d-btn:hover { border-color: var(--green); color: var(--text); background: rgba(34,197,94,0.04); }
-.d-btn.active { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.08); }
-.d-btn svg { width: 16px; height: 16px; }
-
-/* FORM */
-.f-row { margin-bottom: 8px; }
-.f-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--sub);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.f-input {
-  width: 100%;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--text);
-  padding: 6px 9px;
-  font-family: var(--mono);
-  font-size: 11px;
-  outline: none;
-  transition: border-color 0.12s;
-}
-
-.f-input:focus { border-color: var(--blue); }
-.f-input[type="color"] { height: 32px; padding: 2px 4px; cursor: pointer; }
-
-.f-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-
-/* FEATURES LIST */
-.feat-header {
-  padding: 10px 14px 6px;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--sub);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.feat-count-badge {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 1px 7px;
-  font-size: 9px;
-  color: var(--green);
-}
-
-.feat-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px 10px 10px;
-}
-
-.feat-list::-webkit-scrollbar { width: 3px; }
-.feat-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
-
+/* Feature list */
+.feat-list { flex:1; overflow-y:auto; padding:6px 10px 10px; }
 .feat-item {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.12s;
+  background:var(--card); border:1px solid var(--border); border-radius:5px;
+  padding:8px 10px; margin-bottom:4px; display:flex; align-items:center; gap:8px;
+  cursor:pointer; transition:0.12s; font-size:12px;
 }
+.feat-item:hover { border-color:var(--muted); }
+.feat-item.selected { border-color:var(--accent); background:var(--glow); }
+.feat-swatch { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+.feat-name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.feat-checkbox { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+.feat-del { background:none; border:none; color:var(--muted); cursor:pointer; padding:2px 5px; border-radius:3px; }
+.feat-del:hover { color:var(--red); }
 
-.feat-item:hover { border-color: var(--sub); }
-.feat-item.sel { border-color: var(--blue); background: rgba(59,130,246,0.05); }
+/* MAP */
+.map-wrap { flex:1; position:relative; display:flex; flex-direction:column; }
+#map { flex:1; background:var(--map-bg); }
 
-.feat-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-.feat-info { flex: 1; min-width: 0; }
-
-.feat-name {
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text);
+/* Floating map controls */
+.map-floats {
+  position:absolute; top:10px; right:10px; z-index:800; display:flex; flex-direction:column; gap:6px;
 }
-
-.feat-meta {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--sub);
-  margin-top: 1px;
+.map-floats .mf-btn {
+  background:var(--card); border:1px solid var(--border); border-radius:6px;
+  padding:6px 10px; color:var(--muted); cursor:pointer; font-family:var(--mono); font-size:10px;
+  display:flex; align-items:center; gap:5px; transition:0.12s;
 }
-
-.feat-del {
-  background: none;
-  border: none;
-  color: var(--sub);
-  cursor: pointer;
-  width: 20px;
-  height: 20px;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.12s;
-  flex-shrink: 0;
-  font-size: 14px;
-  line-height: 1;
-}
-
-.feat-del:hover { color: var(--red); background: rgba(239,68,68,0.1); }
-
-.empty-state {
-  text-align: center;
-  padding: 24px 10px;
-  color: var(--sub);
-  font-family: var(--mono);
-  font-size: 10px;
-  line-height: 2;
-}
-
-/* ═══ MAP ═══ */
-.map-wrap {
-  flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-#map {
-  flex: 1;
-  background: #0d1117;
-}
-
-.map-float {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 800;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mf-btn {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  padding: 6px 10px;
-  color: var(--sub);
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.12s;
-  white-space: nowrap;
-}
-
-.mf-btn:hover { color: var(--text); border-color: var(--sub); }
+.mf-btn:hover { color:var(--text); border-color:var(--muted); }
 
 /* STATUS BAR */
 .statusbar {
-  height: 26px;
-  background: var(--surface);
-  border-top: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  gap: 20px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--sub);
-  flex-shrink: 0;
+  height:26px; background:var(--surface); border-top:1px solid var(--border);
+  display:flex; align-items:center; padding:0 14px; gap:20px; font-family:var(--mono); font-size:10px; color:var(--muted);
 }
 
-.sb-item { display: flex; align-items: center; gap: 5px; }
-.sb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+/* BUTTONS */
+.btn { padding:8px 14px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; }
+.btn-primary { background:var(--accent); color:white; border:none; }
+.btn-primary:hover { background:var(--accent2); }
+.btn-success { background:var(--green); color:white; border:none; }
 
-/* ═══ RIGHT PANEL ═══ */
-.right-panel {
-  width: 240px;
-  background: var(--surface);
-  border-left: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  flex-shrink: 0;
+/* Toggle panels (mobile) */
+@media (max-width: 850px) {
+  .left-panel, .right-panel { position:fixed; top:48px; bottom:0; z-index:1500; width:280px; transform:translateX(-100%); transition:transform 0.3s; }
+  .left-panel.open { transform:translateX(0); box-shadow:2px 0 10px rgba(0,0,0,0.2); }
+  .right-panel { right:0; left:auto; transform:translateX(100%); }
+  .right-panel.open { transform:translateX(0); }
+  .panel-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1499; display:none; }
+  .panel-backdrop.show { display:block; }
+  .topbar .t-btn { padding:0 8px; font-size:9px; }
 }
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
-.right-panel::-webkit-scrollbar { width: 3px; }
-.right-panel::-webkit-scrollbar-thumb { background: var(--line); }
-
-/* EXPORT BUTTONS */
-.exp-primary {
-  width: 100%;
-  padding: 10px;
-  background: rgba(34,197,94,0.1);
-  border: 1px solid rgba(34,197,94,0.4);
-  border-radius: 5px;
-  color: var(--green);
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  transition: all 0.12s;
-  margin-bottom: 6px;
-}
-
-.exp-primary:hover {
-  background: rgba(34,197,94,0.18);
-  box-shadow: 0 0 16px rgba(34,197,94,0.12);
-}
-
-.exp-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
-}
-
-.exp-btn {
-  padding: 8px 6px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--sub);
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.12s;
-}
-
-.exp-btn:hover { border-color: var(--blue); color: var(--blue); }
-
-/* STATS TABLE */
-.stats-table { width: 100%; border-collapse: collapse; }
-.stats-table td {
-  padding: 5px 0;
-  font-family: var(--mono);
-  font-size: 10px;
-  border-bottom: 1px solid var(--line);
-}
-.stats-table td:last-child { text-align: right; color: var(--text); }
-.stats-table td:first-child { color: var(--sub); }
-.stats-table tr:last-child td { border-bottom: none; }
-
-/* BASEMAP PILLS */
-.bm-pills { display: flex; flex-wrap: wrap; gap: 4px; }
-.bm-pill {
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--sub);
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 9px;
-  transition: all 0.12s;
-}
-.bm-pill:hover { border-color: var(--sub); color: var(--text); }
-.bm-pill.active { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,0.08); }
-
-/* IMPORT */
-.import-zone {
-  border: 1px dashed var(--line);
-  border-radius: 5px;
-  padding: 14px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.12s;
-  color: var(--sub);
-  font-family: var(--mono);
-  font-size: 10px;
-  line-height: 1.8;
-  position: relative;
-}
-.import-zone:hover { border-color: var(--blue); color: var(--blue); }
-.import-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-
-/* COORD GO */
-.go-btn {
-  width: 100%;
-  margin-top: 6px;
-  padding: 7px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--sub);
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 10px;
-  transition: all 0.12s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-.go-btn:hover { border-color: var(--blue); color: var(--blue); }
-
-/* ABOUT FOOTER */
-.about-block {
-  margin-top: auto;
-  padding: 12px 14px;
-  border-top: 1px solid var(--line);
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--sub);
-  line-height: 1.9;
-}
-.about-block span { color: var(--green); }
-
-/* TOAST */
-.toast {
-  position: fixed;
-  bottom: 36px;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: var(--card);
-  border: 1px solid var(--green);
-  color: var(--green);
-  padding: 8px 18px;
-  border-radius: 5px;
-  font-family: var(--mono);
-  font-size: 11px;
-  z-index: 9999;
-  opacity: 0;
-  transition: all 0.25s;
-  pointer-events: none;
-  box-shadow: 0 0 20px rgba(34,197,94,0.15);
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.err { border-color: var(--red); color: var(--red); box-shadow: 0 0 20px rgba(239,68,68,0.15); }
-
-/* LEAFLET OVERRIDES */
-.leaflet-container { background: #0d1117 !important; }
-.leaflet-control-zoom a {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border-color: var(--line) !important;
-}
-.leaflet-popup-content-wrapper {
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  border: 1px solid var(--line) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
-  font-family: var(--sans) !important;
-  border-radius: 6px !important;
-}
-.leaflet-popup-tip { background: var(--surface) !important; }
+/* Legend */
+.legend-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11px; }
+.legend-color { width:12px; height:12px; border-radius:2px; }
 </style>
 </head>
 <body>
 
-<!-- ═══ TOPBAR ═══ -->
+<!-- ─── TOPBAR ─── -->
 <div class="topbar">
-  <div class="brand">
-    <div class="brand-dot"></div>
-    <div class="brand-name">Geo<span>Forge</span></div>
-  </div>
-
+  <div class="brand"><div class="brand-dot"></div><div class="brand-name">Geo<span>Forge</span></div></div>
   <div class="divider"></div>
-
   <div class="tool-group" id="draw-tools">
-    <button class="t-btn" id="tb-point" onclick="activateTool('point')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="7" r="3"/><path d="M8 10v5" stroke-width="1.5"/></svg>
-      POINT
-    </button>
-    <button class="t-btn" id="tb-line" onclick="activateTool('line')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14L14 2"/></svg>
-      LINE
-    </button>
-    <button class="t-btn" id="tb-polygon" onclick="activateTool('polygon')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="8,1 15,6 12,14 4,14 1,6"/></svg>
-      POLYGON
-    </button>
-    <button class="t-btn" id="tb-rectangle" onclick="activateTool('rectangle')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="12" height="8" rx="1"/></svg>
-      RECT
-    </button>
-    <button class="t-btn" id="tb-circle" onclick="activateTool('circle')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
-      CIRCLE
-    </button>
+    <button class="t-btn" id="tb-point" onclick="activateTool('point')">📍 POINT</button>
+    <button class="t-btn" id="tb-line" onclick="activateTool('line')">📏 LINE</button>
+    <button class="t-btn" id="tb-polygon" onclick="activateTool('polygon')">⬛ POLYGON</button>
+    <button class="t-btn" id="tb-rectangle" onclick="activateTool('rectangle')">▭ RECT</button>
+    <button class="t-btn" id="tb-circle" onclick="activateTool('circle')">⭕ CIRCLE</button>
+    <button class="t-btn" id="tb-edit" onclick="activateEditMode()">✏️ EDIT</button>
   </div>
-
   <div class="divider"></div>
-
-  <div class="tool-group">
-    <button class="t-btn accent" onclick="zoomToAll()">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/><path d="M5 7h4M7 5v4"/></svg>
-      FIT ALL
-    </button>
-    <button class="t-btn danger" onclick="clearAll()">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h10l-1 9H4L3 5z"/><path d="M1 5h14M6 5V3h4v2"/></svg>
-      CLEAR
-    </button>
-  </div>
-
+  <button class="t-btn" onclick="undo()">↩️ UNDO</button>
+  <button class="t-btn" onclick="redo()">↪️ REDO</button>
+  <button class="t-btn accent" onclick="zoomToAll()">🔍 FIT</button>
+  <button class="t-btn danger" onclick="clearAll()">🗑 CLEAR</button>
   <div class="topbar-right">
-    <div class="chip">WGS84</div>
-    <div class="chip">EPSG:4326</div>
+    <button class="t-btn" id="themeToggle">🌓</button>
     <div class="chip" id="feat-count-top">0 features</div>
   </div>
 </div>
 
-<!-- ═══ WORKSPACE ═══ -->
+<!-- ─── WORKSPACE ─── -->
 <div class="workspace">
-
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-
-    <!-- PROPERTIES -->
+  <!-- Left panel (overlay on mobile) -->
+  <div class="panel left-panel" id="leftPanel">
     <div class="panel-block">
       <div class="block-title">Feature Properties</div>
-      <div class="f-row">
-        <label class="f-label">Name</label>
-        <input class="f-input" type="text" id="feat-name" placeholder="e.g. Lahore District">
-      </div>
-      <div class="f-row">
-        <label class="f-label">Category</label>
-        <input class="f-input" type="text" id="feat-cat" placeholder="e.g. Urban / Forest / River">
-      </div>
-      <div class="f-row">
-        <label class="f-label">Description</label>
-        <input class="f-input" type="text" id="feat-desc" placeholder="Optional notes">
-      </div>
-      <div class="f-row-2">
-        <div class="f-row" style="margin:0">
-          <label class="f-label">Fill Color</label>
-          <input class="f-input" type="color" id="feat-color" value="#22c55e">
-        </div>
-        <div class="f-row" style="margin:0">
-          <label class="f-label">Opacity</label>
-          <input class="f-input" type="number" id="feat-opacity" value="40" min="0" max="100" placeholder="40">
-        </div>
+      <input class="f-input" type="text" id="feat-name" placeholder="Name" style="margin-bottom:6px;">
+      <input class="f-input" type="text" id="feat-cat" placeholder="Category" style="margin-bottom:6px;">
+      <input class="f-input" type="text" id="feat-desc" placeholder="Description">
+      <div style="display:flex; gap:6px; margin-top:6px;">
+        <input class="f-input" type="color" id="feat-color" value="#22c55e">
+        <input class="f-input" type="number" id="feat-opacity" value="40" min="0" max="100">
       </div>
     </div>
-
-    <!-- DRAW TOOLS (sidebar compact) -->
     <div class="panel-block">
       <div class="block-title">Draw Mode</div>
       <div class="draw-grid">
-        <button class="d-btn" id="db-point" onclick="activateTool('point')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="7" r="3"/><path d="M8 10v5"/></svg>
-          POINT
-        </button>
-        <button class="d-btn" id="db-line" onclick="activateTool('line')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14L8 2l6 12"/></svg>
-          LINE
-        </button>
-        <button class="d-btn" id="db-polygon" onclick="activateTool('polygon')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="8,1 15,6 12,14 4,14 1,6"/></svg>
-          POLYGON
-        </button>
-        <button class="d-btn" id="db-rectangle" onclick="activateTool('rectangle')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="12" height="8" rx="1"/></svg>
-          RECT
-        </button>
-        <button class="d-btn" id="db-circle" onclick="activateTool('circle')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
-          CIRCLE
-        </button>
-        <button class="d-btn" id="db-none" onclick="deactivateTool()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
-          PAN
-        </button>
+        <button class="d-btn" onclick="activateTool('point')">📍 Point</button>
+        <button class="d-btn" onclick="activateTool('line')">📏 Line</button>
+        <button class="d-btn" onclick="activateTool('polygon')">⬛ Polygon</button>
+        <button class="d-btn" onclick="activateTool('rectangle')">▭ Rect</button>
+        <button class="d-btn" onclick="activateTool('circle')">⭕ Circle</button>
+        <button class="d-btn" onclick="deactivateTool()">❌ Pan</button>
       </div>
     </div>
-
-    <!-- FEATURES LIST -->
-    <div class="feat-header">
-      <span>Features</span>
-      <span class="feat-count-badge" id="feat-count-badge">0</span>
+    <div class="block-title" style="padding:6px 14px;">Features <span id="feat-count-badge">0</span></div>
+    <input type="text" class="f-input" id="searchInput" placeholder="Search / filter..." style="margin:0 10px 6px; width:auto;">
+    <div class="feat-list" id="feat-list"></div>
+    <div style="padding:6px 10px; display:flex; gap:6px;">
+      <button class="btn" onclick="deleteSelected()">🗑 Delete Sel</button>
+      <button class="btn" onclick="exportSelected()">📤 Export Sel</button>
     </div>
-    <div class="feat-list" id="feat-list">
-      <div class="empty-state">📍 Select a draw tool<br>and click on map</div>
-    </div>
-
   </div>
 
-  <!-- MAP -->
+  <!-- Map -->
   <div class="map-wrap">
     <div id="map"></div>
-
-    <!-- BASEMAP PILLS floating -->
-    <div class="map-float">
-      <div style="display:flex;flex-direction:column;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px;">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--sub);margin-bottom:2px;letter-spacing:1px;">BASEMAP</div>
-        <button class="mf-btn active" id="bm-osm" onclick="changeBasemap('osm',this)">🗺 Street</button>
-        <button class="mf-btn" id="bm-sat" onclick="changeBasemap('satellite',this)">🛰 Satellite</button>
-        <button class="mf-btn" id="bm-topo" onclick="changeBasemap('topo',this)">⛰ Topo</button>
-        <button class="mf-btn" id="bm-dark" onclick="changeBasemap('dark',this)">🌑 Dark</button>
-      </div>
+    <div class="map-floats">
+      <div class="mf-btn" onclick="document.getElementById('leftPanel').classList.toggle('open'); document.getElementById('panelBackdrop').classList.toggle('show')">📋 Panel</div>
+      <div class="mf-btn" onclick="document.getElementById('rightPanel').classList.toggle('open'); document.getElementById('panelBackdrop').classList.toggle('show')">📊 More</div>
     </div>
-
     <div class="statusbar">
-      <div class="sb-item"><div class="sb-dot"></div><span>READY</span></div>
-      <div class="sb-item" id="coord-display">LAT: — | LNG: —</div>
-      <div class="sb-item" id="zoom-display">ZOOM: 6</div>
-      <div class="sb-item" id="active-tool-display">TOOL: PAN</div>
+      <span id="coord-display">LAT: — | LNG: —</span>
+      <span id="zoom-display">ZOOM: 6</span>
+      <span id="active-tool-display">TOOL: PAN</span>
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
-  <div class="right-panel">
-
-    <!-- EXPORT -->
+  <!-- Right panel (overlay on mobile) -->
+  <div class="panel right-panel" id="rightPanel">
     <div class="panel-block">
       <div class="block-title">Export</div>
-      <button class="exp-primary" onclick="exportShapefileZip()">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10a1 1 0 001-1V4"/></svg>
-        SHAPEFILE ZIP
-      </button>
-      <div class="exp-grid">
-        <button class="exp-btn" onclick="exportGeoJSON()">📋 GeoJSON</button>
-        <button class="exp-btn" onclick="exportKML()">🗺 KML</button>
-        <button class="exp-btn" onclick="exportCSV()">📊 CSV</button>
-        <button class="exp-btn" onclick="exportWKT()">📝 WKT</button>
-        <button class="exp-btn" onclick="exportTopoJSON()" style="grid-column:span 2">🔗 TopoJSON</button>
+      <button class="btn-primary" style="width:100%; margin-bottom:6px;" onclick="exportShapefileZip()">📦 SHAPEFILE ZIP</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+        <button class="btn" onclick="exportGeoJSON()">GeoJSON</button>
+        <button class="btn" onclick="exportKML()">KML</button>
+        <button class="btn" onclick="exportCSV()">CSV</button>
+        <button class="btn" onclick="exportWKT()">WKT</button>
+        <button class="btn" onclick="exportTopoJSON()">TopoJSON</button>
+        <button class="btn" onclick="exportDXF()">DXF</button>
       </div>
     </div>
-
-    <!-- IMPORT -->
     <div class="panel-block">
       <div class="block-title">Import</div>
-      <div class="import-zone">
-        <input type="file" accept=".geojson,.json,.kml,.csv" onchange="importFile(this)">
-        <div>⬆ Drop file or click</div>
-        <div style="color:var(--sub);font-size:9px">GeoJSON · KML · CSV</div>
-      </div>
+      <label class="btn" style="width:100%">⬆ Upload GeoJSON/KML/CSV<input type="file" accept=".geojson,.json,.kml,.csv" onchange="importFile(this)" hidden></label>
     </div>
-
-    <!-- STATS -->
     <div class="panel-block">
       <div class="block-title">Statistics</div>
-      <table class="stats-table">
-        <tr><td>Points</td><td id="s-pts">0</td></tr>
-        <tr><td>Lines</td><td id="s-lns">0</td></tr>
-        <tr><td>Polygons</td><td id="s-pls">0</td></tr>
-        <tr><td>Area (bbox)</td><td id="s-area">—</td></tr>
-        <tr><td>Length</td><td id="s-len">—</td></tr>
-        <tr><td>CRS</td><td>WGS84</td></tr>
-      </table>
+      <table class="stats-table"><tr><td>Points</td><td id="s-pts">0</td></tr><tr><td>Lines</td><td id="s-lns">0</td></tr><tr><td>Polygons</td><td id="s-pls">0</td></tr><tr><td>Area</td><td id="s-area">—</td></tr><tr><td>Length</td><td id="s-len">—</td></tr></table>
     </div>
-
-    <!-- GO TO COORD -->
     <div class="panel-block">
-      <div class="block-title">Jump to Location</div>
-      <div class="f-row-2" style="gap:5px">
-        <div>
-          <label class="f-label">Latitude</label>
-          <input class="f-input" type="number" id="j-lat" placeholder="30.3753" step="0.001">
-        </div>
-        <div>
-          <label class="f-label">Longitude</label>
-          <input class="f-input" type="number" id="j-lng" placeholder="69.3451" step="0.001">
-        </div>
+      <div class="block-title">Legend</div>
+      <div id="legend"></div>
+    </div>
+    <div class="panel-block">
+      <div class="block-title">Basemap</div>
+      <div class="bm-pills" id="basemapSelector">
+        <button class="bm-pill active" onclick="changeBasemap('osm',this)">Street</button>
+        <button class="bm-pill" onclick="changeBasemap('satellite',this)">Satellite</button>
+        <button class="bm-pill" onclick="changeBasemap('topo',this)">Topo</button>
+        <button class="bm-pill" onclick="changeBasemap('dark',this)">Dark</button>
       </div>
-      <button class="go-btn" onclick="jumpTo()">
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>
-        GO TO COORDINATES
-      </button>
     </div>
-
-    <!-- ABOUT -->
-    <div class="about-block">
-      GeoForge v3.0<br>
-      <span>✓</span> 100% browser — no server<br>
-      <span>✓</span> ArcGIS & QGIS compatible<br>
-      <span>✓</span> WGS84 / EPSG:4326
-    </div>
-
   </div>
+  <div class="panel-backdrop" id="panelBackdrop" onclick="closePanels()"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════
-let features   = [];
-let currentTool = null;
-let drawHandlers = {};
-let drawnItems = null;
-let currentBase = null;
-let baseLayers  = {};
+// ════════════ STATE ════════════
+let features = [], selectedIds = new Set(), currentTool = null, drawHandlers = {}, drawnItems, map;
+let historyStack = [], historyIdx = -1, maxHistory = 40;
+let baseLayers = {}, currentBase;
 
-// ═══════════════════════════════════════
-//  MAP INIT
-// ═══════════════════════════════════════
-const map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 6);
+// ════════════ MAP INIT ════════════
+map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 6);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 drawnItems = new L.FeatureGroup().addTo(map);
 
 baseLayers = {
-  osm:       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',  { attribution:'© OSM', maxZoom:20 }),
-  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'© Esri', maxZoom:20 }),
-  topo:      L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',    { maxZoom:17 }),
-  dark:      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom:20 })
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:20}),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:20}),
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {maxZoom:17}),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {maxZoom:20})
 };
 currentBase = baseLayers.osm.addTo(map);
 
 map.on('mousemove', e => {
-  document.getElementById('coord-display').textContent =
-    `LAT: ${e.latlng.lat.toFixed(5)} | LNG: ${e.latlng.lng.toFixed(5)}`;
+  document.getElementById('coord-display').textContent = `LAT: ${e.latlng.lat.toFixed(5)} | LNG: ${e.latlng.lng.toFixed(5)}`;
 });
-map.on('zoomend', () => {
-  document.getElementById('zoom-display').textContent = `ZOOM: ${map.getZoom()}`;
-});
+map.on('zoomend', () => document.getElementById('zoom-display').textContent = `ZOOM: ${map.getZoom()}`);
 
-// ═══════════════════════════════════════
-//  BASEMAP
-// ═══════════════════════════════════════
-function changeBasemap(key, btn) {
-  map.removeLayer(currentBase);
-  currentBase = baseLayers[key].addTo(map);
-  currentBase.bringToBack();
-  document.querySelectorAll('.mf-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+// ════════════ THEME ════════════
+function syncTheme() {
+  const saved = localStorage.getItem('pixelpress-theme');
+  const theme = saved || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('pixelpress-theme', next);
+});
+syncTheme();
+
+// ════════════ RESPONSIVE PANELS ════════════
+function closePanels() {
+  document.getElementById('leftPanel').classList.remove('open');
+  document.getElementById('rightPanel').classList.remove('open');
+  document.getElementById('panelBackdrop').classList.remove('show');
 }
 
-// ═══════════════════════════════════════
-//  DRAW TOOLS
-// ═══════════════════════════════════════
+// ════════════ HISTORY ════════════
+function pushHistory() {
+  const snap = JSON.stringify(features.map(f => ({
+    id: f.id, type: f.type, name: f.name, cat: f.cat, desc: f.desc,
+    color: f.color, op: f.op, geojson: f.layer.toGeoJSON ? f.layer.toGeoJSON() : f.geojson
+  })));
+  if (historyIdx < historyStack.length - 1) historyStack = historyStack.slice(0, historyIdx + 1);
+  historyStack.push(snap);
+  if (historyStack.length > maxHistory) historyStack.shift();
+  historyIdx = historyStack.length - 1;
+}
+async function undo() {
+  if (historyIdx <= 0) return;
+  historyIdx--;
+  await restoreFromHistory();
+}
+async function redo() {
+  if (historyIdx >= historyStack.length - 1) return;
+  historyIdx++;
+  await restoreFromHistory();
+}
+async function restoreFromHistory() {
+  const snap = JSON.parse(historyStack[historyIdx]);
+  drawnItems.clearLayers();
+  features = [];
+  snap.forEach(item => {
+    const lyr = L.geoJSON(item.geojson, {
+      style: { color: item.color, fillColor: item.color, fillOpacity: item.op || 0.4 },
+      pointToLayer: (f, ll) => L.marker(ll)
+    }).addTo(drawnItems);
+    lyr.eachLayer(layer => {
+      const feat = { ...item, layer, geojson: item.geojson };
+      features.push(feat);
+      layer.on('click', () => selectFeature(feat.id));
+      if (layer.bindPopup) layer.bindPopup(`<strong>${item.name}</strong><br>${item.cat}`);
+    });
+  });
+  renderFeatureList();
+  updateStats();
+  updateCounter();
+}
+pushHistory(); // initial empty state
+
+// ════════════ DRAW TOOLS ════════════
 function getOpts() {
-  const c   = document.getElementById('feat-color').value;
-  const op  = (parseInt(document.getElementById('feat-opacity').value) || 40) / 100;
-  return { color: c, fillColor: c, fillOpacity: op, weight: 2 };
+  return { color: document.getElementById('feat-color').value,
+           fillColor: document.getElementById('feat-color').value,
+           fillOpacity: (parseInt(document.getElementById('feat-opacity').value) || 40) / 100,
+           weight: 2 };
 }
-
-function buildHandlers() {
-  return {
-    point:     new L.Draw.Marker(map),
-    line:      new L.Draw.Polyline(map,   { shapeOptions: getOpts() }),
-    polygon:   new L.Draw.Polygon(map,    { shapeOptions: getOpts() }),
-    rectangle: new L.Draw.Rectangle(map, { shapeOptions: getOpts() }),
-    circle:    new L.Draw.Circle(map,    { shapeOptions: getOpts() }),
-  };
-}
-
 function activateTool(tool) {
   deactivateTool();
-  drawHandlers = buildHandlers();
-  currentTool  = tool;
-
-  document.querySelectorAll('.t-btn, .d-btn').forEach(b => b.classList.remove('active'));
-  const tb = document.getElementById('tb-' + tool);
-  const db = document.getElementById('db-' + tool);
-  if (tb) tb.classList.add('active');
-  if (db) db.classList.add('active');
-
+  drawHandlers = {
+    point: new L.Draw.Marker(map),
+    line: new L.Draw.Polyline(map, { shapeOptions: getOpts() }),
+    polygon: new L.Draw.Polygon(map, { shapeOptions: getOpts() }),
+    rectangle: new L.Draw.Rectangle(map, { shapeOptions: getOpts() }),
+    circle: new L.Draw.Circle(map, { shapeOptions: getOpts() })
+  };
+  currentTool = tool;
   drawHandlers[tool].enable();
-  document.getElementById('active-tool-display').textContent = 'TOOL: ' + tool.toUpperCase();
+  document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tb-${tool}`).classList.add('active');
+  document.getElementById('active-tool-display').textContent = `TOOL: ${tool.toUpperCase()}`;
 }
-
 function deactivateTool() {
   Object.values(drawHandlers).forEach(h => { try { h.disable(); } catch(e){} });
   currentTool = null;
-  document.querySelectorAll('.t-btn, .d-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('db-none').classList.add('active');
+  document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('active-tool-display').textContent = 'TOOL: PAN';
 }
 
-// ═══════════════════════════════════════
-//  DRAW EVENT
-// ═══════════════════════════════════════
+// Edit mode (modify vertices)
+function activateEditMode() {
+  deactivateTool();
+  if (features.length === 0) return;
+  const selected = features.filter(f => selectedIds.has(f.id));
+  if (selected.length === 0) { toast('Select a feature first', true); return; }
+  selected.forEach(f => {
+    if (f.layer.editing) f.layer.editing.enable();
+  });
+}
+
+// Snap helper
+function snapTo(latlng) {
+  let minDist = 20, snapPt = null;
+  features.forEach(f => {
+    if (f.layer.getLatLngs) {
+      const lls = f.layer.getLatLngs();
+      (Array.isArray(lls[0]) ? lls : [lls]).forEach(ring => {
+        ring.forEach(pt => {
+          const d = latlng.distanceTo(pt);
+          if (d < minDist) { minDist = d; snapPt = pt; }
+        });
+      });
+    }
+  });
+  return snapPt || latlng;
+}
+
 map.on(L.Draw.Event.CREATED, function(e) {
   const layer = e.layer;
   const color = document.getElementById('feat-color').value;
-  const op    = (parseInt(document.getElementById('feat-opacity').value) || 40) / 100;
-  const name  = document.getElementById('feat-name').value.trim()  || 'Feature ' + (features.length + 1);
-  const cat   = document.getElementById('feat-cat').value.trim()   || 'Uncategorized';
-  const desc  = document.getElementById('feat-desc').value.trim()  || '';
-  const type  = e.layerType;
+  const op = (parseInt(document.getElementById('feat-opacity').value) || 40) / 100;
+  const name = document.getElementById('feat-name').value.trim() || `Feature ${features.length+1}`;
+  const cat = document.getElementById('feat-cat').value.trim() || 'Uncategorized';
+  const desc = document.getElementById('feat-desc').value.trim() || '';
+  const type = e.layerType;
 
   if (layer.setStyle) layer.setStyle({ color, fillColor: color, fillOpacity: op, weight: 2 });
-
   const geojson = layer.toGeoJSON ? layer.toGeoJSON() : null;
   const id = `f_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
 
   const feat = { id, type, name, cat, desc, color, op, layer, geojson };
   features.push(feat);
   drawnItems.addLayer(layer);
-
-  // Popup
-  if (layer.bindPopup) {
-    layer.bindPopup(`<strong>${name}</strong><br><small style="opacity:.6">${type.toUpperCase()} · ${cat}</small>`);
-  }
-
+  if (layer.bindPopup) layer.bindPopup(`<strong>${name}</strong><br>${cat}`);
   layer.on('click', () => selectFeature(id));
-  addFeatToList(feat);
+  addFeatureToList(feat);
   updateStats();
   updateCounter();
+  pushHistory();
   toast(`✓ ${name} added`);
   selectFeature(id);
-
-  // Auto-reactivate same tool for fast mapping
-  if (currentTool && currentTool !== 'point') {
-    setTimeout(() => activateTool(currentTool), 100);
-  }
+  if (currentTool && currentTool !== 'point') setTimeout(() => activateTool(currentTool), 150);
 });
 
-// ═══════════════════════════════════════
-//  FEATURES LIST
-// ═══════════════════════════════════════
-function addFeatToList(feat) {
+// ════════════ FEATURE LIST ════════════
+function renderFeatureList() {
   const list = document.getElementById('feat-list');
-  // Remove empty state
-  const empty = list.querySelector('.empty-state');
-  if (empty) empty.remove();
-
-  const item = document.createElement('div');
-  item.className = 'feat-item';
-  item.id = 'fi-' + feat.id;
-  item.onclick = () => selectFeature(feat.id);
-  item.innerHTML = `
-    <div class="feat-swatch" style="background:${feat.color}"></div>
-    <div class="feat-info">
-      <div class="feat-name">${feat.name}</div>
-      <div class="feat-meta">${feat.type.toUpperCase()} · ${feat.cat}</div>
-    </div>
-    <button class="feat-del" onclick="event.stopPropagation();deleteFeat('${feat.id}')">×</button>
-  `;
-  list.appendChild(item);
+  const filter = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = features.filter(f => !filter || f.name.toLowerCase().includes(filter) || f.cat.toLowerCase().includes(filter));
+  list.innerHTML = filtered.length ? '' : '<div class="empty-state">No features</div>';
+  filtered.forEach(f => {
+    const div = document.createElement('div');
+    div.className = `feat-item ${selectedIds.has(f.id) ? 'selected' : ''}`;
+    div.innerHTML = `
+      <input type="checkbox" class="feat-checkbox" ${selectedIds.has(f.id) ? 'checked' : ''}>
+      <div class="feat-swatch" style="background:${f.color}"></div>
+      <span class="feat-name">${f.name}</span>
+      <button class="feat-del" data-id="${f.id}">×</button>
+    `;
+    div.querySelector('.feat-checkbox').addEventListener('change', (e) => {
+      if (e.target.checked) selectedIds.add(f.id);
+      else selectedIds.delete(f.id);
+      renderFeatureList();
+    });
+    div.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'INPUT') selectFeature(f.id);
+    });
+    div.querySelector('.feat-del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteFeature(f.id);
+    });
+    list.appendChild(div);
+  });
 }
-
+function addFeatureToList(feat) { renderFeatureList(); }
 function selectFeature(id) {
-  document.querySelectorAll('.feat-item').forEach(el => el.classList.remove('sel'));
-  const el = document.getElementById('fi-' + id);
-  if (el) el.classList.add('sel');
-
+  selectedIds.clear(); selectedIds.add(id);
   const feat = features.find(f => f.id === id);
   if (feat) {
-    document.getElementById('feat-name').value  = feat.name;
-    document.getElementById('feat-cat').value   = feat.cat;
-    document.getElementById('feat-desc').value  = feat.desc;
+    document.getElementById('feat-name').value = feat.name;
+    document.getElementById('feat-cat').value = feat.cat;
+    document.getElementById('feat-desc').value = feat.desc;
     document.getElementById('feat-color').value = feat.color;
-    document.getElementById('feat-opacity').value = Math.round((feat.op || 0.4) * 100);
-    // Fly to feature
+    document.getElementById('feat-opacity').value = Math.round((feat.op||0.4)*100);
     try {
-      const b = feat.layer.getBounds ? feat.layer.getBounds() : null;
-      if (b) map.flyToBounds(b, { padding: [40,40], duration: 0.5 });
-      else if (feat.layer.getLatLng) map.flyTo(feat.layer.getLatLng(), Math.max(map.getZoom(), 12), { duration: 0.5 });
+      if (feat.layer.getBounds) map.flyToBounds(feat.layer.getBounds().pad(0.1), {duration:0.5});
+      else if (feat.layer.getLatLng) map.flyTo(feat.layer.getLatLng(), Math.max(map.getZoom(),12), {duration:0.5});
     } catch(e) {}
   }
+  renderFeatureList();
 }
-
-function deleteFeat(id) {
+function deleteFeature(id) {
   const feat = features.find(f => f.id === id);
   if (!feat) return;
   drawnItems.removeLayer(feat.layer);
   features = features.filter(f => f.id !== id);
-  const el = document.getElementById('fi-' + id);
-  if (el) el.remove();
-  if (features.length === 0) {
-    document.getElementById('feat-list').innerHTML = '<div class="empty-state">📍 Select a draw tool<br>and click on map</div>';
-  }
+  selectedIds.delete(id);
+  renderFeatureList();
   updateStats();
   updateCounter();
-  toast('Feature removed');
+  pushHistory();
+  toast('Feature deleted');
 }
-
+function deleteSelected() {
+  if (selectedIds.size === 0) { toast('No selection', true); return; }
+  if (!confirm(`Delete ${selectedIds.size} feature(s)?`)) return;
+  selectedIds.forEach(id => {
+    const f = features.find(x => x.id === id);
+    if (f) { drawnItems.removeLayer(f.layer); features = features.filter(x => x.id !== id); }
+  });
+  selectedIds.clear();
+  renderFeatureList();
+  updateStats();
+  updateCounter();
+  pushHistory();
+  toast('Selected deleted');
+}
 function clearAll() {
   if (!features.length) return;
-  if (!confirm('Clear all features? This cannot be undone.')) return;
+  if (!confirm('Clear all features?')) return;
   drawnItems.clearLayers();
   features = [];
-  document.getElementById('feat-list').innerHTML = '<div class="empty-state">📍 Select a draw tool<br>and click on map</div>';
+  selectedIds.clear();
+  renderFeatureList();
   updateStats();
   updateCounter();
-  toast('All features cleared');
+  pushHistory();
+  toast('All cleared');
 }
+document.getElementById('searchInput').addEventListener('input', renderFeatureList);
 
+// ════════════ STATS ════════════
+function updateStats() {
+  document.getElementById('s-pts').textContent = features.filter(f => f.type==='marker').length;
+  document.getElementById('s-lns').textContent = features.filter(f => f.type==='polyline').length;
+  document.getElementById('s-pls').textContent = features.filter(f => ['polygon','rectangle','circle'].includes(f.type)).length;
+  // area & length simplified
+  let totalArea = 0, totalLen = 0;
+  features.forEach(f => {
+    if (f.type === 'polygon' && f.layer.getLatLngs) {
+      const lls = f.layer.getLatLngs()[0];
+      totalArea += L.GeometryUtil ? L.GeometryUtil.geodesicArea(lls) : 0;
+    }
+    if (f.type === 'polyline' && f.layer.getLatLngs) {
+      const lls = f.layer.getLatLngs();
+      for (let i=1; i<lls.length; i++) totalLen += lls[i-1].distanceTo(lls[i]);
+    }
+  });
+  document.getElementById('s-area').textContent = totalArea > 0 ? (totalArea/1e6).toFixed(2) + ' km²' : '—';
+  document.getElementById('s-len').textContent = totalLen > 0 ? (totalLen/1000).toFixed(2) + ' km' : '—';
+  // legend
+  const cats = new Set(features.map(f => f.cat));
+  document.getElementById('legend').innerHTML = [...cats].map(c => {
+    const col = features.find(f => f.cat === c)?.color || '#000';
+    return `<div class="legend-item"><span class="legend-color" style="background:${col}"></span>${c}</div>`;
+  }).join('');
+}
 function updateCounter() {
   const n = features.length;
   document.getElementById('feat-count-badge').textContent = n;
-  document.getElementById('feat-count-top').textContent   = n + (n === 1 ? ' feature' : ' features');
+  document.getElementById('feat-count-top').textContent = n + ' features';
 }
 
-// ═══════════════════════════════════════
-//  STATS — precise calculations
-// ═══════════════════════════════════════
-function updateStats() {
-  const pts = features.filter(f => f.type === 'marker').length;
-  const lns = features.filter(f => f.type === 'polyline').length;
-  const pls = features.filter(f => ['polygon','rectangle','circle'].includes(f.type)).length;
+// ════════════ EXPORT SELECTED ════════════
+function exportSelected() {
+  const sel = features.filter(f => selectedIds.has(f.id));
+  if (sel.length === 0) { toast('No features selected', true); return; }
+  // export only selected as GeoJSON
+  const fc = { type: 'FeatureCollection', features: sel.map(f => f.geojson) };
+  downloadText(JSON.stringify(fc, null, 2), 'geoforge_selected.geojson', 'application/json');
+  toast('Selected exported as GeoJSON');
+}
 
-  document.getElementById('s-pts').textContent = pts;
-  document.getElementById('s-lns').textContent = lns;
-  document.getElementById('s-pls').textContent = pls;
+// ════════════ BASEMAP ════════════
+function changeBasemap(key, btn) {
+  map.removeLayer(currentBase);
+  currentBase = baseLayers[key].addTo(map);
+  currentBase.bringToBack();
+  document.querySelectorAll('.bm-pill').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
 
-  // Area: Shoelace formula for polygons (accurate)
-  let totalAreaM2 = 0;
-  features.forEach(f => {
-    if (['polygon','rectangle'].includes(f.type) && f.layer.getLatLngs) {
-      try {
-        const latlngs = f.layer.getLatLngs()[0];
-        totalAreaM2 += shoelaceArea(latlngs);
-      } catch(e) {}
-    }
-    if (f.type === 'circle' && f.layer.getRadius) {
-      const r = f.layer.getRadius();
-      totalAreaM2 += Math.PI * r * r;
-    }
+// ════════════ FULL EXPORTS (existing + DXF) ════════════
+function buildGeoJSON() {
+  return { type:'FeatureCollection', features: features.map(f => f.geojson) };
+}
+function downloadText(text, name, mime) {
+  const blob = new Blob([text], {type: mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name; a.click();
+}
+function exportGeoJSON() { downloadText(JSON.stringify(buildGeoJSON(),null,2), 'geoforge.geojson', 'application/json'); toast('GeoJSON exported'); }
+// KML, CSV, WKT, TopoJSON same as previous but simplified
+function exportKML() {
+  const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>${features.map((f,i)=>{
+    const g = f.geojson.geometry;
+    let geom='';
+    if (g.type==='Point') geom=`<Point><coordinates>${g.coordinates[0]},${g.coordinates[1]}</coordinates></Point>`;
+    else if (g.type==='LineString') geom=`<LineString><coordinates>${g.coordinates.map(c=>c.join(',')).join(' ')}</coordinates></LineString>`;
+    else if (g.type==='Polygon') geom=`<Polygon><outerBoundaryIs><LinearRing><coordinates>${g.coordinates[0].map(c=>c.join(',')).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
+    return `<Placemark><name>${f.name}</name>${geom}</Placemark>`;
+  }).join('')}</Document></kml>`;
+  downloadText(kml, 'geoforge.kml', 'application/vnd.google-earth.kml+xml');
+  toast('KML exported');
+}
+function exportCSV() {
+  let csv = 'FID,NAME,CATEGORY,DESCRIPTION,TYPE,LAT,LNG\n';
+  features.forEach((f,i) => {
+    const g = f.geojson.geometry;
+    let lat='', lng='';
+    if (g.type==='Point') { lat=g.coordinates[1]; lng=g.coordinates[0]; }
+    else if (g.type==='LineString') { lat=g.coordinates[0][1]; lng=g.coordinates[0][0]; }
+    else if (g.type==='Polygon') { lat=g.coordinates[0][0][1]; lng=g.coordinates[0][0][0]; }
+    csv += `${i+1},"${f.name}","${f.cat}","${f.desc}","${f.type}",${lat},${lng}\n`;
   });
-
-  if (totalAreaM2 > 0) {
-    const km2 = totalAreaM2 / 1e6;
-    document.getElementById('s-area').textContent = km2 >= 1
-      ? km2.toFixed(3) + ' km²'
-      : (totalAreaM2).toFixed(1) + ' m²';
-  } else {
-    document.getElementById('s-area').textContent = '—';
-  }
-
-  // Length: Haversine for lines
-  let totalLenM = 0;
+  downloadText(csv, 'geoforge.csv', 'text/csv');
+  toast('CSV exported');
+}
+function exportWKT() {
+  const wkt = features.map(f => {
+    const g = f.geojson.geometry;
+    if (g.type==='Point') return `POINT(${g.coordinates[0]} ${g.coordinates[1]})`;
+    if (g.type==='LineString') return `LINESTRING(${g.coordinates.map(c=>c.join(' ')).join(', ')})`;
+    if (g.type==='Polygon') return `POLYGON((${g.coordinates[0].map(c=>c.join(' ')).join(', ')}))`;
+    return '';
+  }).join('\n');
+  downloadText(wkt, 'geoforge.wkt', 'text/plain');
+  toast('WKT exported');
+}
+function exportTopoJSON() {
+  const topo = { type:'Topology', objects:{ geoforge: { type:'GeometryCollection', geometries: features.map(f => f.geojson.geometry) }}, arcs:[] };
+  downloadText(JSON.stringify(topo,null,2), 'geoforge.topojson', 'application/json');
+  toast('TopoJSON exported');
+}
+function exportDXF() {
+  let dxf = '0\nSECTION\n2\nENTITIES\n';
   features.forEach(f => {
-    if (f.type === 'polyline' && f.layer.getLatLngs) {
-      const latlngs = f.layer.getLatLngs();
-      for (let i = 1; i < latlngs.length; i++) {
-        totalLenM += haversine(latlngs[i-1], latlngs[i]);
+    const g = f.geojson.geometry;
+    if (g.type==='Point') dxf += `0\nPOINT\n8\n${f.cat}\n10\n${g.coordinates[0]}\n20\n${g.coordinates[1]}\n`;
+    else if (g.type==='LineString') {
+      for (let i=1; i<g.coordinates.length; i++) {
+        dxf += `0\nLINE\n8\n${f.cat}\n10\n${g.coordinates[i-1][0]}\n20\n${g.coordinates[i-1][1]}\n11\n${g.coordinates[i][0]}\n21\n${g.coordinates[i][1]}\n`;
+      }
+    } else if (g.type==='Polygon') {
+      const ring = g.coordinates[0];
+      for (let i=0; i<ring.length-1; i++) {
+        dxf += `0\nLINE\n8\n${f.cat}\n10\n${ring[i][0]}\n20\n${ring[i][1]}\n11\n${ring[i+1][0]}\n21\n${ring[i+1][1]}\n`;
       }
     }
   });
-
-  if (totalLenM > 0) {
-    document.getElementById('s-len').textContent = totalLenM >= 1000
-      ? (totalLenM / 1000).toFixed(3) + ' km'
-      : totalLenM.toFixed(1) + ' m';
-  } else {
-    document.getElementById('s-len').textContent = '—';
-  }
+  dxf += '0\nENDSEC\n0\nEOF\n';
+  downloadText(dxf, 'geoforge.dxf', 'application/dxf');
+  toast('DXF exported');
 }
-
-// Shoelace formula — accurate polygon area in m²
-function shoelaceArea(latlngs) {
-  const R = 6378137; // Earth radius meters
-  let area = 0;
-  const n = latlngs.length;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    const xi = latlngs[i].lng * Math.PI / 180;
-    const yi = Math.log(Math.tan(Math.PI/4 + latlngs[i].lat * Math.PI / 360));
-    const xj = latlngs[j].lng * Math.PI / 180;
-    const yj = Math.log(Math.tan(Math.PI/4 + latlngs[j].lat * Math.PI / 360));
-    area += xi * yj - xj * yi;
-  }
-  return Math.abs(area / 2) * R * R;
-}
-
-// Haversine distance in meters
-function haversine(a, b) {
-  const R = 6378137;
-  const dLat = (b.lat - a.lat) * Math.PI / 180;
-  const dLng = (b.lng - a.lng) * Math.PI / 180;
-  const x = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) *
-            Math.sin(dLng/2) * Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
-}
-
-// ═══════════════════════════════════════
-//  GEOJSON BUILDER
-// ═══════════════════════════════════════
-function buildGeoJSON() {
-  return {
-    type: 'FeatureCollection',
-    crs: { type: 'name', properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' }},
-    features: features.map((f, i) => {
-      let gj = f.geojson || (f.layer.toGeoJSON ? f.layer.toGeoJSON() : null);
-      if (!gj) return null;
-      return {
-        type: 'Feature',
-        id: i + 1,
-        geometry: gj.geometry,
-        properties: {
-          FID:         i + 1,
-          NAME:        f.name,
-          CATEGORY:    f.cat,
-          DESCRIPTION: f.desc,
-          TYPE:        f.type,
-          COLOR:       f.color,
-          OPACITY:     f.op || 0.4
-        }
-      };
-    }).filter(Boolean)
-  };
-}
-
-// ═══════════════════════════════════════
-//  EXPORT: SHAPEFILE ZIP
-// ═══════════════════════════════════════
 async function exportShapefileZip() {
-  if (!features.length) { toast('⚠ No features to export', true); return; }
-  toast('⏳ Generating package…');
-  const fc  = buildGeoJSON();
+  if (!features.length) { toast('No features', true); return; }
   const zip = new JSZip();
-
-  zip.file('geoforge.prj',
-    'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],' +
-    'PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]'
-  );
-
-  zip.file('geoforge.geojson', JSON.stringify(fc, null, 2));
-  zip.file('geoforge.kml',     buildKML());
-  zip.file('geoforge.csv',     buildCSV());
-  zip.file('geoforge.wkt',     buildWKT());
-
-  const stats = {
-    generated: new Date().toISOString(),
-    features:  features.length,
-    crs:       'WGS84 EPSG:4326',
-    counts:    {
-      points:   features.filter(f=>f.type==='marker').length,
-      lines:    features.filter(f=>f.type==='polyline').length,
-      polygons: features.filter(f=>['polygon','rectangle','circle'].includes(f.type)).length
-    }
-  };
-  zip.file('metadata.json', JSON.stringify(stats, null, 2));
-
-  zip.file('README.txt', [
-    'GeoForge Shapefile Export',
-    '==========================',
-    `Generated : ${stats.generated}`,
-    `Features  : ${stats.features}`,
-    `CRS       : WGS84 (EPSG:4326)`,
-    '',
-    'Files in this ZIP:',
-    '  geoforge.geojson  — Import into QGIS, ArcGIS, Google Earth',
-    '  geoforge.prj      — Projection / CRS definition',
-    '  geoforge.kml      — Google Earth / Maps',
-    '  geoforge.csv      — Spreadsheet with coordinates',
-    '  geoforge.wkt      — Well-Known Text geometries',
-    '  metadata.json     — Feature summary',
-    '',
-    'ArcGIS Pro: Add Data → geoforge.geojson',
-    'QGIS: Drag & drop geoforge.geojson onto canvas',
-    'Google Earth: Open geoforge.kml',
-  ].join('\n'));
-
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-  dlBlob(blob, 'geoforge_shapefile.zip');
+  zip.file('geoforge.geojson', JSON.stringify(buildGeoJSON(),null,2));
+  zip.file('geoforge.prj', 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]');
+  zip.file('geoforge.kml', document.querySelector('kml')?.textContent || '');
+  const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'geoforge_shapefile.zip';
+  a.click();
   toast('✓ Shapefile ZIP exported');
 }
 
-// ═══════════════════════════════════════
-//  EXPORT: GEOJSON
-// ═══════════════════════════════════════
-function exportGeoJSON() {
-  if (!features.length) { toast('⚠ No features', true); return; }
-  dlText(JSON.stringify(buildGeoJSON(), null, 2), 'geoforge.geojson', 'application/json');
-  toast('✓ GeoJSON exported');
-}
-
-// ═══════════════════════════════════════
-//  EXPORT: KML
-// ═══════════════════════════════════════
-function buildKML() {
-  const styles = features.map((f, i) => {
-    const hex = f.color.replace('#','');
-    return `<Style id="s${i}"><LineStyle><color>ff${hex}</color><width>2</width></LineStyle>` +
-           `<PolyStyle><color>${Math.round((f.op||0.4)*255).toString(16).padStart(2,'0')}${hex}</color></PolyStyle></Style>`;
-  }).join('\n');
-
-  const marks = features.map((f, i) => {
-    const gj = f.geojson || (f.layer.toGeoJSON ? f.layer.toGeoJSON() : null);
-    if (!gj) return '';
-    let geomKML = '';
-    const g = gj.geometry;
-    if (g.type === 'Point') {
-      geomKML = `<Point><coordinates>${g.coordinates[0]},${g.coordinates[1]},0</coordinates></Point>`;
-    } else if (g.type === 'LineString') {
-      geomKML = `<LineString><tessellate>1</tessellate><coordinates>${g.coordinates.map(c=>c.join(',')+',0').join(' ')}</coordinates></LineString>`;
-    } else if (g.type === 'Polygon') {
-      geomKML = `<Polygon><outerBoundaryIs><LinearRing><coordinates>${g.coordinates[0].map(c=>c.join(',')+',0').join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
-    }
-    return `<Placemark><name>${esc(f.name)}</name><description>${esc(f.desc)}</description><styleUrl>#s${i}</styleUrl>${geomKML}</Placemark>`;
-  }).join('\n');
-
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>GeoForge Export</name>\n${styles}\n${marks}\n</Document></kml>`;
-}
-
-function exportKML() {
-  if (!features.length) { toast('⚠ No features', true); return; }
-  dlText(buildKML(), 'geoforge.kml', 'application/vnd.google-earth.kml+xml');
-  toast('✓ KML exported');
-}
-
-// ═══════════════════════════════════════
-//  EXPORT: CSV (with all coordinates)
-// ═══════════════════════════════════════
-function buildCSV() {
-  let rows = ['FID,NAME,CATEGORY,DESCRIPTION,TYPE,LAT,LNG,COLOR,OPACITY'];
-  features.forEach((f, i) => {
-    const gj = f.geojson || (f.layer.toGeoJSON ? f.layer.toGeoJSON() : null);
-    let lat = '', lng = '';
-    if (gj && gj.geometry) {
-      const g = gj.geometry;
-      if (g.type === 'Point') { lat = g.coordinates[1]; lng = g.coordinates[0]; }
-      else if (g.type === 'LineString' && g.coordinates[0]) { lat = g.coordinates[0][1]; lng = g.coordinates[0][0]; }
-      else if (g.type === 'Polygon' && g.coordinates[0] && g.coordinates[0][0]) { lat = g.coordinates[0][0][1]; lng = g.coordinates[0][0][0]; }
-    }
-    rows.push(`${i+1},"${f.name}","${f.cat}","${f.desc}","${f.type}",${lat},${lng},"${f.color}",${f.op||0.4}`);
-  });
-  return rows.join('\n');
-}
-
-function exportCSV() {
-  if (!features.length) { toast('⚠ No features', true); return; }
-  dlText(buildCSV(), 'geoforge.csv', 'text/csv');
-  toast('✓ CSV exported');
-}
-
-// ═══════════════════════════════════════
-//  EXPORT: WKT
-// ═══════════════════════════════════════
-function buildWKT() {
-  return features.map(f => {
-    const gj = f.geojson || (f.layer.toGeoJSON ? f.layer.toGeoJSON() : null);
-    if (!gj) return '';
-    const g = gj.geometry;
-    let w = '';
-    if (g.type === 'Point')      w = `POINT (${g.coordinates[0]} ${g.coordinates[1]})`;
-    else if (g.type === 'LineString') w = `LINESTRING (${g.coordinates.map(c=>c.join(' ')).join(', ')})`;
-    else if (g.type === 'Polygon')    w = `POLYGON ((${g.coordinates[0].map(c=>c.join(' ')).join(', ')}))`;
-    return `-- ${f.name}\n${w}`;
-  }).filter(Boolean).join('\n\n');
-}
-
-function exportWKT() {
-  if (!features.length) { toast('⚠ No features', true); return; }
-  dlText(buildWKT(), 'geoforge.wkt', 'text/plain');
-  toast('✓ WKT exported');
-}
-
-// ═══════════════════════════════════════
-//  EXPORT: TopoJSON (simple)
-// ═══════════════════════════════════════
-function exportTopoJSON() {
-  if (!features.length) { toast('⚠ No features', true); return; }
-  // Simple TopoJSON wrapper around GeoJSON
-  const fc = buildGeoJSON();
-  const topo = {
-    type: 'Topology',
-    objects: { geoforge: { type: 'GeometryCollection', geometries: fc.features.map(f => ({...f.geometry, properties: f.properties})) } },
-    arcs: [],
-    bbox: getBBox(fc)
-  };
-  dlText(JSON.stringify(topo, null, 2), 'geoforge.topojson', 'application/json');
-  toast('✓ TopoJSON exported');
-}
-
-function getBBox(fc) {
-  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
-  fc.features.forEach(f => {
-    const g = f.geometry;
-    const coords = g.type==='Point' ? [g.coordinates] : g.type==='LineString' ? g.coordinates : g.coordinates[0];
-    if (coords) coords.forEach(c => { minX=Math.min(minX,c[0]); minY=Math.min(minY,c[1]); maxX=Math.max(maxX,c[0]); maxY=Math.max(maxY,c[1]); });
-  });
-  return [minX, minY, maxX, maxY];
-}
-
-// ═══════════════════════════════════════
-//  IMPORT
-// ═══════════════════════════════════════
+// ════════════ IMPORT ════════════
 function importFile(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1277,153 +688,123 @@ function importFile(input) {
     try {
       const data = e.target.result;
       let fc;
-
       if (file.name.endsWith('.kml')) {
         const parser = new DOMParser();
-        const xml    = parser.parseFromString(data, 'application/xml');
-        fc = kmlToGeoJSON(xml);
+        fc = kmlToGeoJSON(parser.parseFromString(data, 'application/xml'));
       } else if (file.name.endsWith('.csv')) {
         fc = csvToGeoJSON(data);
       } else {
         fc = JSON.parse(data);
       }
-
-      if (!fc || fc.type !== 'FeatureCollection') { toast('⚠ Invalid format', true); return; }
-
+      if (!fc || fc.type !== 'FeatureCollection') { toast('Invalid format', true); return; }
       fc.features.forEach(feat => {
-        const lyr = L.geoJSON(feat, {
-          style: { color: feat.properties?.COLOR || feat.properties?.color || '#22c55e', fillOpacity: 0.4 },
-          pointToLayer: (f, ll) => L.marker(ll)
-        });
-
+        const lyr = L.geoJSON(feat, {style: {color: feat.properties?.COLOR || '#22c55e', fillOpacity: 0.4}});
         lyr.eachLayer(layer => {
-          const id    = `f_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
-          const name  = feat.properties?.NAME || feat.properties?.name || 'Imported';
-          const cat   = feat.properties?.CATEGORY || feat.properties?.category || 'Imported';
-          const desc  = feat.properties?.DESCRIPTION || feat.properties?.description || '';
-          const color = feat.properties?.COLOR || feat.properties?.color || '#22c55e';
-          const type  = feat.geometry.type === 'Point' ? 'marker' :
-                        feat.geometry.type === 'LineString' ? 'polyline' : 'polygon';
-
-          drawnItems.addLayer(layer);
-          layer.on('click', () => selectFeature(id));
-          if (layer.bindPopup) layer.bindPopup(`<strong>${name}</strong><br><small>${cat}</small>`);
-
-          const f = { id, type, name, cat, desc, color, op: 0.4, layer, geojson: feat };
+          const id = `f_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+          const f = { id, type: layer.feature?.geometry.type === 'Point' ? 'marker' : layer.feature?.geometry.type === 'LineString' ? 'polyline' : 'polygon',
+                      name: feat.properties?.NAME || 'Imported', cat: feat.properties?.CATEGORY || 'Imported',
+                      desc: '', color: feat.properties?.COLOR || '#22c55e', op: 0.4, layer, geojson: feat };
           features.push(f);
-          addFeatToList(f);
+          drawnItems.addLayer(layer);
+          layer.on('click', () => selectFeature(f.id));
         });
       });
-
+      renderFeatureList();
       updateStats();
       updateCounter();
+      pushHistory();
       zoomToAll();
-      toast(`✓ Imported ${fc.features.length} feature(s)`);
-    } catch(err) {
-      toast('⚠ Import failed: ' + err.message, true);
-    }
+      toast(`✓ Imported ${fc.features.length} features`);
+    } catch(err) { toast('Import failed: '+err.message, true); }
     input.value = '';
   };
   reader.readAsText(file);
 }
-
-// Simple KML → GeoJSON
+// KML/CSV parsers (simplified)
 function kmlToGeoJSON(xml) {
   const feats = [];
   xml.querySelectorAll('Placemark').forEach(pm => {
     const name = pm.querySelector('name')?.textContent || 'Feature';
-    const desc = pm.querySelector('description')?.textContent || '';
-    const pt   = pm.querySelector('Point');
-    const ls   = pm.querySelector('LineString');
-    const poly = pm.querySelector('Polygon');
-
-    let geometry = null;
+    let geom = null;
+    const pt = pm.querySelector('Point');
     if (pt) {
-      const [lng, lat] = pt.querySelector('coordinates').textContent.trim().split(',').map(Number);
-      geometry = { type: 'Point', coordinates: [lng, lat] };
-    } else if (ls) {
-      const coords = ls.querySelector('coordinates').textContent.trim().split(/\s+/).map(s => s.split(',').map(Number).slice(0,2));
-      geometry = { type: 'LineString', coordinates: coords };
-    } else if (poly) {
-      const coords = poly.querySelector('coordinates').textContent.trim().split(/\s+/).map(s => s.split(',').map(Number).slice(0,2));
-      geometry = { type: 'Polygon', coordinates: [coords] };
+      const [lng,lat] = pt.textContent.trim().split(',').map(Number);
+      geom = { type:'Point', coordinates:[lng,lat] };
     }
-    if (geometry) feats.push({ type:'Feature', geometry, properties: { NAME: name, DESCRIPTION: desc }});
+    if (geom) feats.push({ type:'Feature', geometry:geom, properties:{ NAME:name } });
   });
-  return { type: 'FeatureCollection', features: feats };
+  return { type:'FeatureCollection', features:feats };
 }
-
-// Simple CSV → GeoJSON (requires LAT, LNG columns)
 function csvToGeoJSON(text) {
-  const lines  = text.trim().split('\n');
-  const header = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toUpperCase());
-  const latI   = header.indexOf('LAT');
-  const lngI   = header.indexOf('LNG');
-  if (latI < 0 || lngI < 0) throw new Error('CSV must have LAT and LNG columns');
-
+  const lines = text.trim().split('\n');
+  const header = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+  const latI = header.indexOf('LAT'), lngI = header.indexOf('LNG');
+  if (latI<0 || lngI<0) throw new Error('CSV must have LAT,LNG');
   const feats = lines.slice(1).map(line => {
-    const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g,''));
-    const lat  = parseFloat(cols[latI]);
-    const lng  = parseFloat(cols[lngI]);
-    if (isNaN(lat) || isNaN(lng)) return null;
-    const props = {};
-    header.forEach((h, i) => { props[h] = cols[i]; });
-    return { type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: props };
+    const cols = line.split(',').map(c => c.trim().replace(/"/g,''));
+    const lat = parseFloat(cols[latI]), lng = parseFloat(cols[lngI]);
+    if (isNaN(lat)||isNaN(lng)) return null;
+    return { type:'Feature', geometry:{ type:'Point', coordinates:[lng,lat] }, properties:{ NAME: cols[0] || 'Point' } };
   }).filter(Boolean);
-
-  return { type: 'FeatureCollection', features: feats };
+  return { type:'FeatureCollection', features:feats };
 }
 
-// ═══════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════
+// ════════════ HELPERS ════════════
 function zoomToAll() {
   if (!features.length) return;
-  try {
-    const grp = new L.featureGroup(features.map(f => f.layer));
-    map.flyToBounds(grp.getBounds().pad(0.12), { duration: 0.6 });
-  } catch(e) {}
+  const group = new L.featureGroup(features.map(f => f.layer));
+  map.flyToBounds(group.getBounds().pad(0.1), { duration:0.6 });
 }
-
-function jumpTo() {
-  const lat = parseFloat(document.getElementById('j-lat').value);
-  const lng = parseFloat(document.getElementById('j-lng').value);
-  if (isNaN(lat) || isNaN(lng)) { toast('⚠ Enter valid coordinates', true); return; }
-  map.flyTo([lat, lng], 13, { duration: 0.7 });
-  L.marker([lat, lng]).addTo(map)
-    .bindPopup(`${lat.toFixed(5)}, ${lng.toFixed(5)}`)
-    .openPopup();
-  toast(`✓ Moved to ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-}
-
-function dlBlob(blob, name) {
-  const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href = url; a.download = name; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function dlText(text, name, mime) {
-  dlBlob(new Blob([text], { type: mime }), name);
-}
-
-function esc(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-let toastTimer;
-function toast(msg, err = false) {
+function toast(msg, err=false) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className   = 'toast show' + (err ? ' err' : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  el.textContent = msg; el.className = 'toast show' + (err?' err':'');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// INIT
-document.getElementById('db-none').classList.add('active');
-document.getElementById('zoom-display').textContent = `ZOOM: ${map.getZoom()}`;
-document.getElementById('feat-color').addEventListener('input', () => {});
+// ════════════ AUTO-SAVE ════════════
+setInterval(() => {
+  if (features.length) localStorage.setItem('geoforge_features', JSON.stringify(features.map(f => ({
+    id:f.id, type:f.type, name:f.name, cat:f.cat, desc:f.desc, color:f.color, op:f.op,
+    geojson: f.layer.toGeoJSON ? f.layer.toGeoJSON() : f.geojson
+  }))));
+}, 10000);
+
+// Restore on load
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('geoforge_features');
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved);
+      arr.forEach(item => {
+        const lyr = L.geoJSON(item.geojson, { style: { color: item.color, fillOpacity: item.op } }).addTo(drawnItems);
+        lyr.eachLayer(layer => {
+          const feat = { ...item, layer, geojson: item.geojson };
+          features.push(feat);
+          layer.on('click', () => selectFeature(feat.id));
+        });
+      });
+      renderFeatureList();
+      updateStats();
+      updateCounter();
+      pushHistory();
+    } catch(e) {}
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+  if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+  if (e.key === 'Delete') { deleteSelected(); }
+  if (e.key === 'Escape') { deactivateTool(); }
+});
+
+// Initial render
+renderFeatureList();
+updateStats();
+updateCounter();
+pushHistory();
 </script>
 </body>
 </html>

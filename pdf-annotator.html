@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Annotator – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100vh; display:flex; flex-direction:column; }
+    nav { height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:15px; }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .toolbar { height:48px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 10px; gap:10px; flex-wrap:wrap; }
+    .btn { padding:6px 12px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:13px; display:flex; align-items:center; gap:4px; }
+    .btn.active { background:var(--accent); color:white; border-color:var(--accent); }
+    .workspace { flex:1; display:flex; }
+    .sidebar { width:220px; background:var(--card); border-right:1px solid var(--border); overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:6px; }
+    .page-list { display:flex; flex-direction:column; gap:4px; }
+    .page-item { display:flex; align-items:center; gap:6px; padding:6px; border:1px solid var(--border); border-radius:4px; cursor:pointer; }
+    .page-item.active { border-color:var(--accent); }
+    .canvas-area { flex:1; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:20px; position:relative; }
+    canvas { box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+    .annotation-layer { position:absolute; top:20px; /* align with canvas */ }
+    footer { text-align:center; padding:8px; color:var(--muted); border-top:1px solid var(--border); }
+    .color-picker { width:30px; height:30px; border:1px solid var(--border); border-radius:4px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+  <div class="toolbar">
+    <button class="btn" id="uploadBtn"><i class="fa-solid fa-upload"></i> Open PDF</button>
+    <input type="file" id="pdfInput" accept="application/pdf" hidden />
+    <button class="btn" data-tool="text" id="textTool">Text</button>
+    <button class="btn" data-tool="pen" id="penTool">Pen</button>
+    <button class="btn" data-tool="highlight" id="highlightTool">Highlight</button>
+    <button class="btn" data-tool="rect" id="rectTool">Rect</button>
+    <button class="btn" data-tool="eraser" id="eraserTool">Eraser</button>
+    <input type="color" id="colorPicker" value="#000000" class="color-picker" />
+    <input type="range" id="sizeSlider" min="1" max="20" value="3" style="width:80px;" />
+    <button class="btn" id="undoBtn"><i class="fa-solid fa-undo"></i></button>
+    <button class="btn" id="downloadBtn"><i class="fa-solid fa-download"></i> Download PDF</button>
+  </div>
+  <div class="workspace">
+    <div class="sidebar">
+      <strong>Pages</strong>
+      <div class="page-list" id="pageList"></div>
+    </div>
+    <div class="canvas-area" id="canvasArea">
+      <canvas id="pdfCanvas"></canvas>
+      <canvas id="annotCanvas" class="annotation-layer"></canvas>
+    </div>
+  </div>
+  <footer>© 2026 PixelPress – PDF Annotator</footer>
+
+  <script>
+    (function() {
+      // Theme sync
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+
+      const uploadBtn = document.getElementById('uploadBtn');
+      const pdfInput = document.getElementById('pdfInput');
+      const pdfCanvas = document.getElementById('pdfCanvas');
+      const annotCanvas = document.getElementById('annotCanvas');
+      const ctxPdf = pdfCanvas.getContext('2d');
+      const ctxAnnot = annotCanvas.getContext('2d');
+      const pageList = document.getElementById('pageList');
+
+      let pdfDoc = null;
+      let currentPage = 1;
+      let pageRendering = false;
+      let annotations = {}; // key: pageNum -> array of annotation objects
+      let currentTool = 'pen';
+      let drawing = false;
+      let startX, startY;
+      let color = '#000000';
+      let size = 3;
+
+      const toolButtons = document.querySelectorAll('.toolbar .btn[data-tool]');
+      toolButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          toolButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTool = btn.dataset.tool;
+        });
+      });
+      document.getElementById('colorPicker').addEventListener('input', (e) => color = e.target.value);
+      document.getElementById('sizeSlider').addEventListener('input', (e) => size = parseInt(e.target.value));
+
+      // Upload PDF
+      uploadBtn.addEventListener('click', () => pdfInput.click());
+      pdfInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const typedArray = new Uint8Array(ev.target.result);
+          pdfjsLib.getDocument(typedArray).promise.then((pdf) => {
+            pdfDoc = pdf;
+            currentPage = 1;
+            annotations = {};
+            for (let i=1; i<=pdf.numPages; i++) annotations[i] = [];
+            renderPage();
+            renderPageList();
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      });
+
+      function renderPage() {
+        if (!pdfDoc) return;
+        pdfDoc.getPage(currentPage).then((page) => {
+          const viewport = page.getViewport({ scale: 1.5 });
+          pdfCanvas.width = viewport.width;
+          pdfCanvas.height = viewport.height;
+          annotCanvas.width = viewport.width;
+          annotCanvas.height = viewport.height;
+          ctxAnnot.clearRect(0,0,annotCanvas.width,annotCanvas.height);
+          // Redraw existing annotations for this page
+          const pageAnnots = annotations[currentPage] || [];
+          pageAnnots.forEach(ann => {
+            // Replay drawing (simplified: just draw on annot canvas)
+            if (ann.type === 'pen') {
+              ctxAnnot.beginPath();
+              ctxAnnot.strokeStyle = ann.color;
+              ctxAnnot.lineWidth = ann.size;
+              ctxAnnot.lineCap = 'round';
+              if (ann.points) {
+                ctxAnnot.moveTo(ann.points[0].x, ann.points[0].y);
+                for (let i=1; i<ann.points.length; i++) {
+                  ctxAnnot.lineTo(ann.points[i].x, ann.points[i].y);
+                }
+                ctxAnnot.stroke();
+              }
+            } else if (ann.type === 'text') {
+              ctxAnnot.font = '20px sans-serif';
+              ctxAnnot.fillStyle = ann.color;
+              ctxAnnot.fillText(ann.text, ann.x, ann.y);
+            } // etc.
+          });
+          const renderContext = { canvasContext: ctxPdf, viewport };
+          page.render(renderContext);
+        });
+      }
+
+      function renderPageList() {
+        pageList.innerHTML = '';
+        for (let i=1; i<=pdfDoc.numPages; i++) {
+          const div = document.createElement('div');
+          div.className = `page-item ${i===currentPage ? 'active' : ''}`;
+          div.textContent = `Page ${i}`;
+          div.addEventListener('click', () => {
+            currentPage = i;
+            renderPage();
+            renderPageList();
+          });
+          pageList.appendChild(div);
+        }
+      }
+
+      // Annotation drawing events
+      annotCanvas.addEventListener('mousedown', (e) => {
+        const rect = annotCanvas.getBoundingClientRect();
+        const scaleX = annotCanvas.width / rect.width;
+        const scaleY = annotCanvas.height / rect.height;
+        startX = (e.clientX - rect.left) * scaleX;
+        startY = (e.clientY - rect.top) * scaleY;
+        drawing = true;
+        if (currentTool === 'text') {
+          const text = prompt('Enter text:');
+          if (text) {
+            const ann = { type:'text', x: startX, y: startY, text, color };
+            annotations[currentPage].push(ann);
+            ctxAnnot.font = '20px sans-serif';
+            ctxAnnot.fillStyle = color;
+            ctxAnnot.fillText(text, startX, startY);
+            drawing = false; // text is one-click
+          }
+        } else if (currentTool === 'pen') {
+          ctxAnnot.beginPath();
+          ctxAnnot.strokeStyle = color;
+          ctxAnnot.lineWidth = size;
+          ctxAnnot.lineCap = 'round';
+          ctxAnnot.moveTo(startX, startY);
+          const ann = { type:'pen', color, size, points: [{x:startX,y:startY}] };
+          annotations[currentPage].push(ann);
+        }
+      });
+      annotCanvas.addEventListener('mousemove', (e) => {
+        if (!drawing || currentTool !== 'pen') return;
+        const rect = annotCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (annotCanvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (annotCanvas.height / rect.height);
+        ctxAnnot.lineTo(x, y);
+        ctxAnnot.stroke();
+        const ann = annotations[currentPage][annotations[currentPage].length-1];
+        if (ann && ann.type === 'pen') ann.points.push({x,y});
+      });
+      annotCanvas.addEventListener('mouseup', () => { drawing = false; });
+      annotCanvas.addEventListener('mouseleave', () => { drawing = false; });
+
+      // Undo (remove last annotation of current page)
+      document.getElementById('undoBtn').addEventListener('click', () => {
+        if (!pdfDoc) return;
+        annotations[currentPage].pop();
+        renderPage();
+      });
+
+      // Download: merge annotations as images and add to PDF using pdf-lib
+      document.getElementById('downloadBtn').addEventListener('click', async () => {
+        if (!pdfDoc) return;
+        const { PDFDocument, StandardFonts, rgb } = PDFLib;
+        const pdfLibDoc = await PDFDocument.load(await fetch(pdfDoc.originalUrl || URL.createObjectURL(new Blob([pdfDoc._pdfInfo.data]))).then(r=>r.arrayBuffer()));
+        const pages = pdfLibDoc.getPages();
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          const annots = annotations[pageNum];
+          if (!annots || annots.length === 0) continue;
+          // Render annotations onto a canvas and embed as image
+          const page = pages[pageNum-1];
+          const { width, height } = page.getSize();
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = width;
+          tempCanvas.height = height;
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.scale(1,1);
+          annots.forEach(ann => {
+            if (ann.type === 'pen') {
+              tempCtx.beginPath();
+              tempCtx.strokeStyle = ann.color;
+              tempCtx.lineWidth = ann.size;
+              tempCtx.lineCap = 'round';
+              if (ann.points && ann.points.length) {
+                tempCtx.moveTo(ann.points[0].x, ann.points[0].y);
+                for (let i=1;i<ann.points.length;i++) tempCtx.lineTo(ann.points[i].x, ann.points[i].y);
+                tempCtx.stroke();
+              }
+            } else if (ann.type === 'text') {
+              tempCtx.font = '20px sans-serif';
+              tempCtx.fillStyle = ann.color;
+              tempCtx.fillText(ann.text, ann.x, ann.y);
+            }
+          });
+          const pngImage = await pdfLibDoc.embedPng(tempCanvas.toDataURL());
+          page.drawImage(pngImage, { x:0, y:0, width, height, opacity:0.8 });
+        }
+        const pdfBytes = await pdfLibDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'annotated.pdf';
+        a.click();
+      });
+
+      // Enable pen tool by default
+      document.getElementById('penTool').click();
+    })();
+  </script>
+</body>
+</html>

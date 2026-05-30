@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PDF Annotator – PixelPress</title>
+  <title>PDF Annotator & Editor – PixelPress</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/index.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
     :root {
@@ -19,25 +21,36 @@
       --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100vh; display:flex; flex-direction:column; }
-    nav { height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:15px; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:12px; flex-shrink:0; }
     .nav-left { display:flex; align-items:center; gap:1rem; }
     .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
     .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
     .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .toolbar { height:48px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 10px; gap:10px; flex-wrap:wrap; }
-    .btn { padding:6px 12px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:13px; display:flex; align-items:center; gap:4px; }
+    .toolbar { min-height:48px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:6px 10px; gap:6px; flex-wrap:wrap; flex-shrink:0; }
+    .btn { padding:7px 12px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:4px; transition:0.2s; white-space:nowrap; }
+    .btn:hover { border-color:var(--accent); }
     .btn.active { background:var(--accent); color:white; border-color:var(--accent); }
-    .workspace { flex:1; display:flex; }
-    .sidebar { width:220px; background:var(--card); border-right:1px solid var(--border); overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:6px; }
+    .btn-primary { background:var(--accent); color:white; border:none; }
+    .btn-primary:hover { background:var(--accent2); }
+    .btn-success { background:#10b981; color:white; border:none; }
+    .workspace { flex:1; display:flex; overflow:hidden; }
+    .sidebar { width:200px; background:var(--card); border-right:1px solid var(--border); overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+    @media (max-width:768px) { .sidebar { display:none; } .workspace { flex-direction:column; } }
     .page-list { display:flex; flex-direction:column; gap:4px; }
-    .page-item { display:flex; align-items:center; gap:6px; padding:6px; border:1px solid var(--border); border-radius:4px; cursor:pointer; }
-    .page-item.active { border-color:var(--accent); }
-    .canvas-area { flex:1; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:20px; position:relative; }
-    canvas { box-shadow:0 2px 10px rgba(0,0,0,0.1); }
-    .annotation-layer { position:absolute; top:20px; /* align with canvas */ }
-    footer { text-align:center; padding:8px; color:var(--muted); border-top:1px solid var(--border); }
-    .color-picker { width:30px; height:30px; border:1px solid var(--border); border-radius:4px; }
+    .page-item { display:flex; align-items:center; gap:6px; padding:6px; border:1px solid var(--border); border-radius:4px; cursor:pointer; font-size:13px; }
+    .page-item.active { border-color:var(--accent); background:var(--glow); }
+    .page-canvas { width:60px; height:80px; object-fit:contain; background:white; border:1px solid var(--border); border-radius:2px; }
+    .canvas-area { flex:1; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:20px; position:relative; background:var(--bg); }
+    .canvas-stack { position:relative; box-shadow:0 2px 15px rgba(0,0,0,0.1); }
+    canvas { display:block; }
+    #annotCanvas { position:absolute; top:0; left:0; }
+    footer { text-align:center; padding:8px; color:var(--muted); border-top:1px solid var(--border); font-size:12px; flex-shrink:0; }
+    .color-row { display:flex; align-items:center; gap:4px; }
+    .color-picker { width:28px; height:28px; border:1px solid var(--border); border-radius:4px; padding:2px; cursor:pointer; }
+    .range-row { display:flex; align-items:center; gap:4px; }
+    .range-row input[type="range"] { width:60px; accent-color:var(--accent); }
+    @media (max-width:600px) { .toolbar { gap:4px; padding:4px; } .btn { padding:5px 8px; font-size:11px; } }
   </style>
 </head>
 <body>
@@ -49,33 +62,49 @@
     <button id="themeToggle" class="back-btn">🌓</button>
   </nav>
   <div class="toolbar">
-    <button class="btn" id="uploadBtn"><i class="fa-solid fa-upload"></i> Open PDF</button>
+    <button class="btn" id="openBtn"><i class="fa-solid fa-folder-open"></i> Open PDF</button>
     <input type="file" id="pdfInput" accept="application/pdf" hidden />
-    <button class="btn" data-tool="text" id="textTool">Text</button>
-    <button class="btn" data-tool="pen" id="penTool">Pen</button>
-    <button class="btn" data-tool="highlight" id="highlightTool">Highlight</button>
-    <button class="btn" data-tool="rect" id="rectTool">Rect</button>
-    <button class="btn" data-tool="eraser" id="eraserTool">Eraser</button>
-    <input type="color" id="colorPicker" value="#000000" class="color-picker" />
-    <input type="range" id="sizeSlider" min="1" max="20" value="3" style="width:80px;" />
+    <span style="color:var(--muted); font-size:11px;">|</span>
+    <button class="btn active" data-tool="cursor" id="cursorTool"><i class="fa-solid fa-hand-pointer"></i> Select</button>
+    <button class="btn" data-tool="pen" id="penTool"><i class="fa-solid fa-pen"></i> Pen</button>
+    <button class="btn" data-tool="highlighter" id="highlighterTool"><i class="fa-solid fa-highlighter"></i> Highlight</button>
+    <button class="btn" data-tool="text" id="textTool"><i class="fa-solid fa-font"></i> Text</button>
+    <button class="btn" data-tool="rect" id="rectTool"><i class="fa-solid fa-square"></i> Rect</button>
+    <button class="btn" data-tool="eraser" id="eraserTool"><i class="fa-solid fa-eraser"></i> Eraser</button>
+    <span style="color:var(--muted); font-size:11px;">|</span>
+    <div class="color-row">
+      <input type="color" id="colorPicker" value="#ff0000" class="color-picker" title="Color" />
+      <input type="color" id="fillPicker" value="#ffff00" class="color-picker" title="Fill" />
+    </div>
+    <div class="range-row">
+      <input type="range" id="sizeSlider" min="1" max="20" value="3" title="Size" />
+      <span id="sizeValue" style="font-size:11px;">3</span>
+    </div>
+    <span style="color:var(--muted); font-size:11px;">|</span>
     <button class="btn" id="undoBtn"><i class="fa-solid fa-undo"></i></button>
-    <button class="btn" id="downloadBtn"><i class="fa-solid fa-download"></i> Download PDF</button>
+    <button class="btn" id="clearPageBtn"><i class="fa-solid fa-broom"></i> Clear Page</button>
+    <button class="btn btn-primary" id="downloadPdfBtn"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+    <button class="btn btn-success" id="downloadDocxBtn"><i class="fa-solid fa-file-word"></i> Word</button>
+    <button class="btn" id="downloadPngBtn"><i class="fa-solid fa-image"></i> PNG</button>
+    <button class="btn" id="printBtn"><i class="fa-solid fa-print"></i></button>
   </div>
   <div class="workspace">
-    <div class="sidebar">
-      <strong>Pages</strong>
+    <div class="sidebar" id="sidebar">
+      <strong style="font-size:13px;">Pages</strong>
       <div class="page-list" id="pageList"></div>
     </div>
     <div class="canvas-area" id="canvasArea">
-      <canvas id="pdfCanvas"></canvas>
-      <canvas id="annotCanvas" class="annotation-layer"></canvas>
+      <div class="canvas-stack" id="canvasStack">
+        <canvas id="pdfCanvas"></canvas>
+        <canvas id="annotCanvas"></canvas>
+      </div>
     </div>
   </div>
-  <footer>© 2026 PixelPress – PDF Annotator</footer>
+  <footer>© 2026 PixelPress – All edits happen in your browser</footer>
 
   <script>
     (function() {
-      // Theme sync
+      // ====== THEME ======
       function syncTheme() {
         const saved = localStorage.getItem('pixelpress-theme') || 'light';
         document.documentElement.setAttribute('data-theme', saved);
@@ -88,97 +117,143 @@
       });
       syncTheme();
 
-      const uploadBtn = document.getElementById('uploadBtn');
-      const pdfInput = document.getElementById('pdfInput');
+      // ====== DOM ======
       const pdfCanvas = document.getElementById('pdfCanvas');
       const annotCanvas = document.getElementById('annotCanvas');
       const ctxPdf = pdfCanvas.getContext('2d');
       const ctxAnnot = annotCanvas.getContext('2d');
       const pageList = document.getElementById('pageList');
+      const canvasArea = document.getElementById('canvasArea');
+      const canvasStack = document.getElementById('canvasStack');
 
       let pdfDoc = null;
       let currentPage = 1;
-      let pageRendering = false;
-      let annotations = {}; // key: pageNum -> array of annotation objects
-      let currentTool = 'pen';
-      let drawing = false;
+      let annotations = {};
+      let currentTool = 'cursor';
+      let color = '#ff0000';
+      let fillColor = '#ffff00';
+      let brushSize = 3;
+      let isDrawing = false;
       let startX, startY;
-      let color = '#000000';
-      let size = 3;
+      let currentAnnotation = null;
+      let pdfBytes = null;
 
-      const toolButtons = document.querySelectorAll('.toolbar .btn[data-tool]');
+      // ====== TOOL MANAGEMENT ======
+      const toolButtons = document.querySelectorAll('[data-tool]');
+      function setTool(tool) {
+        currentTool = tool;
+        toolButtons.forEach(b => b.classList.remove('active'));
+        const activeBtn = document.getElementById(tool + 'Tool');
+        if (activeBtn) activeBtn.classList.add('active');
+        annotCanvas.style.cursor = tool === 'cursor' ? 'default' : 'crosshair';
+      }
+
       toolButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          toolButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentTool = btn.dataset.tool;
-        });
+        btn.addEventListener('click', () => setTool(btn.dataset.tool));
       });
-      document.getElementById('colorPicker').addEventListener('input', (e) => color = e.target.value);
-      document.getElementById('sizeSlider').addEventListener('input', (e) => size = parseInt(e.target.value));
 
-      // Upload PDF
-      uploadBtn.addEventListener('click', () => pdfInput.click());
-      pdfInput.addEventListener('change', (e) => {
+      document.getElementById('colorPicker').addEventListener('input', (e) => color = e.target.value);
+      document.getElementById('fillPicker').addEventListener('input', (e) => fillColor = e.target.value);
+      document.getElementById('sizeSlider').addEventListener('input', (e) => {
+        brushSize = parseInt(e.target.value);
+        document.getElementById('sizeValue').textContent = brushSize;
+      });
+
+      // ====== PDF LOADING ======
+      document.getElementById('openBtn').addEventListener('click', () => document.getElementById('pdfInput').click());
+      document.getElementById('pdfInput').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          const typedArray = new Uint8Array(ev.target.result);
-          pdfjsLib.getDocument(typedArray).promise.then((pdf) => {
-            pdfDoc = pdf;
-            currentPage = 1;
-            annotations = {};
-            for (let i=1; i<=pdf.numPages; i++) annotations[i] = [];
-            renderPage();
-            renderPageList();
-          });
+        reader.onload = async (ev) => {
+          pdfBytes = new Uint8Array(ev.target.result);
+          const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+          pdfDoc = pdf;
+          currentPage = 1;
+          annotations = {};
+          for (let i = 1; i <= pdf.numPages; i++) annotations[i] = [];
+          await renderPage();
+          renderPageList();
         };
         reader.readAsArrayBuffer(file);
       });
 
-      function renderPage() {
+      // ====== PAGE RENDERING ======
+      async function renderPage() {
         if (!pdfDoc) return;
-        pdfDoc.getPage(currentPage).then((page) => {
-          const viewport = page.getViewport({ scale: 1.5 });
-          pdfCanvas.width = viewport.width;
-          pdfCanvas.height = viewport.height;
-          annotCanvas.width = viewport.width;
-          annotCanvas.height = viewport.height;
-          ctxAnnot.clearRect(0,0,annotCanvas.width,annotCanvas.height);
-          // Redraw existing annotations for this page
-          const pageAnnots = annotations[currentPage] || [];
-          pageAnnots.forEach(ann => {
-            // Replay drawing (simplified: just draw on annot canvas)
-            if (ann.type === 'pen') {
-              ctxAnnot.beginPath();
-              ctxAnnot.strokeStyle = ann.color;
-              ctxAnnot.lineWidth = ann.size;
-              ctxAnnot.lineCap = 'round';
-              if (ann.points) {
-                ctxAnnot.moveTo(ann.points[0].x, ann.points[0].y);
-                for (let i=1; i<ann.points.length; i++) {
-                  ctxAnnot.lineTo(ann.points[i].x, ann.points[i].y);
-                }
-                ctxAnnot.stroke();
+        const page = await pdfDoc.getPage(currentPage);
+        const viewport = page.getViewport({ scale: 1.5 });
+        pdfCanvas.width = viewport.width;
+        pdfCanvas.height = viewport.height;
+        annotCanvas.width = viewport.width;
+        annotCanvas.height = viewport.height;
+        canvasStack.style.width = viewport.width + 'px';
+        canvasStack.style.height = viewport.height + 'px';
+
+        // Draw PDF
+        await page.render({ canvasContext: ctxPdf, viewport }).promise;
+
+        // Redraw annotations
+        ctxAnnot.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
+        const pageAnnots = annotations[currentPage] || [];
+        pageAnnots.forEach(ann => drawAnnotation(ann));
+      }
+
+      function drawAnnotation(ann) {
+        switch (ann.type) {
+          case 'pen':
+            ctxAnnot.beginPath();
+            ctxAnnot.strokeStyle = ann.color;
+            ctxAnnot.lineWidth = ann.size;
+            ctxAnnot.lineCap = 'round';
+            ctxAnnot.lineJoin = 'round';
+            if (ann.points && ann.points.length > 0) {
+              ctxAnnot.moveTo(ann.points[0].x, ann.points[0].y);
+              for (let i = 1; i < ann.points.length; i++) {
+                ctxAnnot.lineTo(ann.points[i].x, ann.points[i].y);
               }
-            } else if (ann.type === 'text') {
-              ctxAnnot.font = '20px sans-serif';
-              ctxAnnot.fillStyle = ann.color;
-              ctxAnnot.fillText(ann.text, ann.x, ann.y);
-            } // etc.
-          });
-          const renderContext = { canvasContext: ctxPdf, viewport };
-          page.render(renderContext);
-        });
+              ctxAnnot.stroke();
+            }
+            break;
+          case 'highlighter':
+            ctxAnnot.beginPath();
+            ctxAnnot.strokeStyle = ann.color + '60';
+            ctxAnnot.lineWidth = ann.size;
+            ctxAnnot.lineCap = 'round';
+            ctxAnnot.lineJoin = 'round';
+            if (ann.points && ann.points.length > 0) {
+              ctxAnnot.moveTo(ann.points[0].x, ann.points[0].y);
+              for (let i = 1; i < ann.points.length; i++) {
+                ctxAnnot.lineTo(ann.points[i].x, ann.points[i].y);
+              }
+              ctxAnnot.stroke();
+            }
+            break;
+          case 'text':
+            ctxAnnot.font = `bold ${ann.size * 5}px sans-serif`;
+            ctxAnnot.fillStyle = ann.color;
+            ctxAnnot.fillText(ann.text, ann.x, ann.y);
+            break;
+          case 'rect':
+            ctxAnnot.strokeStyle = ann.color;
+            ctxAnnot.fillStyle = ann.fillColor + '40';
+            ctxAnnot.lineWidth = ann.size;
+            ctxAnnot.fillRect(ann.x, ann.y, ann.w, ann.h);
+            ctxAnnot.strokeRect(ann.x, ann.y, ann.w, ann.h);
+            break;
+          case 'eraser':
+            ctxAnnot.clearRect(ann.x - ann.w/2, ann.y - ann.h/2, ann.w, ann.h);
+            break;
+        }
       }
 
       function renderPageList() {
+        if (!pdfDoc) return;
         pageList.innerHTML = '';
-        for (let i=1; i<=pdfDoc.numPages; i++) {
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
           const div = document.createElement('div');
-          div.className = `page-item ${i===currentPage ? 'active' : ''}`;
-          div.textContent = `Page ${i}`;
+          div.className = `page-item ${i === currentPage ? 'active' : ''}`;
+          div.innerHTML = `<span>Page ${i}</span>`;
           div.addEventListener('click', () => {
             currentPage = i;
             renderPage();
@@ -188,101 +263,276 @@
         }
       }
 
-      // Annotation drawing events
+      // ====== ANNOTATION EVENTS ======
       annotCanvas.addEventListener('mousedown', (e) => {
+        if (currentTool === 'cursor') return;
+        const pos = getCanvasPos(e);
+        startX = pos.x; startY = pos.y;
+        isDrawing = true;
+
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+          currentAnnotation = { type: currentTool, color, size: brushSize, points: [{x: pos.x, y: pos.y}] };
+          annotations[currentPage].push(currentAnnotation);
+        } else if (currentTool === 'text') {
+          const text = prompt('Enter text:');
+          if (text) {
+            const ann = { type: 'text', text, x: pos.x, y: pos.y, color, size: brushSize };
+            annotations[currentPage].push(ann);
+            drawAnnotation(ann);
+          }
+          isDrawing = false;
+        } else if (currentTool === 'rect') {
+          currentAnnotation = { type: 'rect', x: pos.x, y: pos.y, w: 0, h: 0, color, fillColor, size: brushSize };
+          annotations[currentPage].push(currentAnnotation);
+        } else if (currentTool === 'eraser') {
+          const ann = { type: 'eraser', x: pos.x, y: pos.y, w: brushSize * 5, h: brushSize * 5 };
+          annotations[currentPage].push(ann);
+          drawAnnotation(ann);
+          isDrawing = false;
+        }
+      });
+
+      annotCanvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing || currentTool === 'cursor' || currentTool === 'text' || currentTool === 'eraser') return;
+        const pos = getCanvasPos(e);
+
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+          if (currentAnnotation && currentAnnotation.points) {
+            currentAnnotation.points.push({x: pos.x, y: pos.y});
+            drawAnnotation(currentAnnotation);
+          }
+        } else if (currentTool === 'rect' && currentAnnotation) {
+          currentAnnotation.w = pos.x - currentAnnotation.x;
+          currentAnnotation.h = pos.y - currentAnnotation.y;
+          ctxAnnot.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
+          annotations[currentPage].forEach(ann => drawAnnotation(ann));
+        }
+      });
+
+      annotCanvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+        currentAnnotation = null;
+      });
+
+      annotCanvas.addEventListener('mouseleave', () => {
+        isDrawing = false;
+        currentAnnotation = null;
+      });
+
+      // Touch support
+      annotCanvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (currentTool === 'cursor') return;
+        const touch = e.touches[0];
+        const pos = getCanvasPos(touch);
+        startX = pos.x; startY = pos.y;
+        isDrawing = true;
+
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+          currentAnnotation = { type: currentTool, color, size: brushSize, points: [{x: pos.x, y: pos.y}] };
+          annotations[currentPage].push(currentAnnotation);
+        } else if (currentTool === 'text') {
+          const text = prompt('Enter text:');
+          if (text) {
+            const ann = { type: 'text', text, x: pos.x, y: pos.y, color, size: brushSize };
+            annotations[currentPage].push(ann);
+            drawAnnotation(ann);
+          }
+          isDrawing = false;
+        } else if (currentTool === 'rect') {
+          currentAnnotation = { type: 'rect', x: pos.x, y: pos.y, w: 0, h: 0, color, fillColor, size: brushSize };
+          annotations[currentPage].push(currentAnnotation);
+        }
+      }, { passive: false });
+
+      annotCanvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const pos = getCanvasPos(e.touches[0]);
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+          if (currentAnnotation && currentAnnotation.points) {
+            currentAnnotation.points.push({x: pos.x, y: pos.y});
+            drawAnnotation(currentAnnotation);
+          }
+        } else if (currentTool === 'rect' && currentAnnotation) {
+          currentAnnotation.w = pos.x - currentAnnotation.x;
+          currentAnnotation.h = pos.y - currentAnnotation.y;
+          ctxAnnot.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
+          annotations[currentPage].forEach(ann => drawAnnotation(ann));
+        }
+      }, { passive: false });
+
+      annotCanvas.addEventListener('touchend', () => {
+        isDrawing = false;
+        currentAnnotation = null;
+      });
+
+      function getCanvasPos(e) {
         const rect = annotCanvas.getBoundingClientRect();
         const scaleX = annotCanvas.width / rect.width;
         const scaleY = annotCanvas.height / rect.height;
-        startX = (e.clientX - rect.left) * scaleX;
-        startY = (e.clientY - rect.top) * scaleY;
-        drawing = true;
-        if (currentTool === 'text') {
-          const text = prompt('Enter text:');
-          if (text) {
-            const ann = { type:'text', x: startX, y: startY, text, color };
-            annotations[currentPage].push(ann);
-            ctxAnnot.font = '20px sans-serif';
-            ctxAnnot.fillStyle = color;
-            ctxAnnot.fillText(text, startX, startY);
-            drawing = false; // text is one-click
-          }
-        } else if (currentTool === 'pen') {
-          ctxAnnot.beginPath();
-          ctxAnnot.strokeStyle = color;
-          ctxAnnot.lineWidth = size;
-          ctxAnnot.lineCap = 'round';
-          ctxAnnot.moveTo(startX, startY);
-          const ann = { type:'pen', color, size, points: [{x:startX,y:startY}] };
-          annotations[currentPage].push(ann);
-        }
-      });
-      annotCanvas.addEventListener('mousemove', (e) => {
-        if (!drawing || currentTool !== 'pen') return;
-        const rect = annotCanvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (annotCanvas.width / rect.width);
-        const y = (e.clientY - rect.top) * (annotCanvas.height / rect.height);
-        ctxAnnot.lineTo(x, y);
-        ctxAnnot.stroke();
-        const ann = annotations[currentPage][annotations[currentPage].length-1];
-        if (ann && ann.type === 'pen') ann.points.push({x,y});
-      });
-      annotCanvas.addEventListener('mouseup', () => { drawing = false; });
-      annotCanvas.addEventListener('mouseleave', () => { drawing = false; });
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY
+        };
+      }
 
-      // Undo (remove last annotation of current page)
+      // ====== UTILITY FUNCTIONS ======
       document.getElementById('undoBtn').addEventListener('click', () => {
         if (!pdfDoc) return;
         annotations[currentPage].pop();
-        renderPage();
+        ctxAnnot.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
+        annotations[currentPage].forEach(ann => drawAnnotation(ann));
       });
 
-      // Download: merge annotations as images and add to PDF using pdf-lib
-      document.getElementById('downloadBtn').addEventListener('click', async () => {
+      document.getElementById('clearPageBtn').addEventListener('click', () => {
         if (!pdfDoc) return;
-        const { PDFDocument, StandardFonts, rgb } = PDFLib;
-        const pdfLibDoc = await PDFDocument.load(await fetch(pdfDoc.originalUrl || URL.createObjectURL(new Blob([pdfDoc._pdfInfo.data]))).then(r=>r.arrayBuffer()));
-        const pages = pdfLibDoc.getPages();
-        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-          const annots = annotations[pageNum];
-          if (!annots || annots.length === 0) continue;
-          // Render annotations onto a canvas and embed as image
-          const page = pages[pageNum-1];
-          const { width, height } = page.getSize();
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = width;
-          tempCanvas.height = height;
-          const tempCtx = tempCanvas.getContext('2d');
-          tempCtx.scale(1,1);
-          annots.forEach(ann => {
-            if (ann.type === 'pen') {
-              tempCtx.beginPath();
-              tempCtx.strokeStyle = ann.color;
-              tempCtx.lineWidth = ann.size;
-              tempCtx.lineCap = 'round';
-              if (ann.points && ann.points.length) {
-                tempCtx.moveTo(ann.points[0].x, ann.points[0].y);
-                for (let i=1;i<ann.points.length;i++) tempCtx.lineTo(ann.points[i].x, ann.points[i].y);
-                tempCtx.stroke();
-              }
-            } else if (ann.type === 'text') {
-              tempCtx.font = '20px sans-serif';
-              tempCtx.fillStyle = ann.color;
-              tempCtx.fillText(ann.text, ann.x, ann.y);
-            }
-          });
-          const pngImage = await pdfLibDoc.embedPng(tempCanvas.toDataURL());
-          page.drawImage(pngImage, { x:0, y:0, width, height, opacity:0.8 });
-        }
-        const pdfBytes = await pdfLibDoc.save();
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'annotated.pdf';
-        a.click();
+        if (!confirm('Clear all annotations on this page?')) return;
+        annotations[currentPage] = [];
+        ctxAnnot.clearRect(0, 0, annotCanvas.width, annotCanvas.height);
       });
 
-      // Enable pen tool by default
-      document.getElementById('penTool').click();
+      // ====== DOWNLOADS ======
+      async function getAnnotatedPdfBytes() {
+        if (!pdfBytes) return null;
+        const pdfLibDoc = await PDFLib.PDFDocument.load(pdfBytes);
+        const pages = pdfLibDoc.getPages();
+
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          const annots = annotations[pageNum] || [];
+          if (annots.length === 0) continue;
+
+          const page = pages[pageNum - 1];
+          const { width, height } = page.getSize();
+
+          // Render annotations onto a temporary canvas
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = Math.floor(width);
+          tempCanvas.height = Math.floor(height);
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.scale(1, 1);
+
+          annots.forEach(ann => drawAnnotationOnTemp(tempCtx, ann, width, height));
+
+          // Embed as PNG and draw on PDF page
+          const pngImage = await pdfLibDoc.embedPng(tempCanvas.toDataURL());
+          page.drawImage(pngImage, { x: 0, y: 0, width, height, opacity: 1 });
+        }
+
+        return await pdfLibDoc.save();
+      }
+
+      function drawAnnotationOnTemp(ctx, ann, pageW, pageH) {
+        const scaleX = pageW / annotCanvas.width;
+        const scaleY = pageH / annotCanvas.height;
+        ctx.save();
+        ctx.scale(scaleX, scaleY);
+        switch (ann.type) {
+          case 'pen':
+            ctx.beginPath();
+            ctx.strokeStyle = ann.color;
+            ctx.lineWidth = ann.size;
+            ctx.lineCap = 'round';
+            if (ann.points && ann.points.length > 0) {
+              ctx.moveTo(ann.points[0].x, ann.points[0].y);
+              for (let i = 1; i < ann.points.length; i++) ctx.lineTo(ann.points[i].x, ann.points[i].y);
+              ctx.stroke();
+            }
+            break;
+          case 'highlighter':
+            ctx.beginPath();
+            ctx.strokeStyle = ann.color + '60';
+            ctx.lineWidth = ann.size;
+            ctx.lineCap = 'round';
+            if (ann.points && ann.points.length > 0) {
+              ctx.moveTo(ann.points[0].x, ann.points[0].y);
+              for (let i = 1; i < ann.points.length; i++) ctx.lineTo(ann.points[i].x, ann.points[i].y);
+              ctx.stroke();
+            }
+            break;
+          case 'text':
+            ctx.font = `bold ${ann.size * 5}px sans-serif`;
+            ctx.fillStyle = ann.color;
+            ctx.fillText(ann.text, ann.x, ann.y);
+            break;
+          case 'rect':
+            ctx.strokeStyle = ann.color;
+            ctx.fillStyle = ann.fillColor + '40';
+            ctx.lineWidth = ann.size;
+            ctx.fillRect(ann.x, ann.y, ann.w, ann.h);
+            ctx.strokeRect(ann.x, ann.y, ann.w, ann.h);
+            break;
+        }
+        ctx.restore();
+      }
+
+      document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+        if (!pdfDoc) return alert('No PDF loaded');
+        const bytes = await getAnnotatedPdfBytes();
+        if (!bytes) return;
+        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'annotated.pdf');
+      });
+
+      document.getElementById('downloadPngBtn').addEventListener('click', async () => {
+        if (!pdfDoc) return alert('No PDF loaded');
+        const bytes = await getAnnotatedPdfBytes();
+        if (!bytes) return;
+        // Convert first page of annotated PDF to PNG using pdf.js
+        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        canvas.toBlob(blob => downloadBlob(blob, 'annotated.png', 'image/png'));
+      });
+
+      document.getElementById('downloadDocxBtn').addEventListener('click', async () => {
+        if (!pdfDoc) return alert('No PDF loaded');
+        // Extract text from all pages using pdf.js
+        let allText = '';
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items.map(item => item.str).join(' ');
+          allText += `Page ${i}\n${pageText}\n\n`;
+        }
+
+        // Create DOCX using docx library
+        const { Document, Packer, Paragraph, TextRun } = docx;
+        const doc = new Document({
+          sections: [{
+            children: allText.split('\n').map(line => new Paragraph({
+              children: [new TextRun(line || '')]
+            }))
+          }]
+        });
+        const blob = await Packer.toBlob(doc);
+        downloadBlob(blob, 'extracted-text.docx');
+      });
+
+      document.getElementById('printBtn').addEventListener('click', async () => {
+        if (!pdfDoc) return alert('No PDF loaded');
+        const bytes = await getAnnotatedPdfBytes();
+        if (!bytes) return;
+        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+        const printWindow = window.open(url, '_blank');
+        if (printWindow) printWindow.print();
+      });
+
+      function downloadBlob(blob, name, type) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        if (type) a.type = type;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // ====== INITIAL ======
+      setTool('cursor');
     })();
   </script>
 </body>

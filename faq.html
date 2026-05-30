@@ -1,114 +1,242 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Frequently Asked Questions — PixelPress</title>
-  <meta name="description" content="Find answers about PixelPress free online image tools: privacy, formats, compression, and more.">
-  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/faq.html">
-  <meta property="og:title" content="FAQ — PixelPress">
-  <meta property="og:description" content="Answers to common questions about our image tools.">
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="Find answers about PixelPress free online image & document tools: privacy, formats, AI features, compatibility, and more." />
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/faq.html" />
+  <meta property="og:title" content="FAQ — PixelPress" />
+  <meta property="og:description" content="Answers to common questions about our free online tools." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
   <style>
-    .faq-item { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px; margin-bottom:16px; }
-    .faq-item h3 { font-size:1.1rem; margin-bottom:8px; color:#1a1a2e; }
-    .faq-item p { color:#4b5563; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:850px; margin:0 auto; width:100%; padding:2rem 20px 4rem; }
+    .hero { text-align:center; margin-bottom:3rem; }
+    .hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,5vw,2.8rem); font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .faq-grid { display:flex; flex-direction:column; gap:12px; }
+    .faq-item { background:var(--card); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; transition:0.2s; }
+    .faq-item:hover { border-color:var(--accent); }
+    .faq-question { padding:1.2rem 1.5rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-weight:600; font-size:1.05rem; user-select:none; }
+    .faq-question i { transition:transform 0.3s; color:var(--accent); }
+    .faq-answer { max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; padding:0 1.5rem; color:var(--muted); line-height:1.8; }
+    .faq-item.open .faq-answer { max-height:500px; padding:0 1.5rem 1.2rem; }
+    .faq-item.open .faq-question i { transform:rotate(180deg); }
+    .search-box { margin-bottom:2rem; position:relative; }
+    .search-box input { width:100%; padding:14px 20px; border:1px solid var(--border); border-radius:12px; background:var(--card); color:var(--text); font-size:1rem; outline:none; }
+    .search-box input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--glow); }
+    .category-tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:1.5rem; }
+    .tab { padding:6px 16px; border-radius:999px; background:var(--card); border:1px solid var(--border); cursor:pointer; font-size:0.85rem; font-weight:500; transition:0.2s; }
+    .tab.active { background:var(--accent); color:white; border-color:var(--accent); }
+    .still-help { text-align:center; margin-top:3rem; }
+    .still-help a { color:var(--accent); font-weight:600; text-decoration:none; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
+    .footer-links { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+    .footer-links a { color:var(--muted); font-weight:500; text-decoration:none; }
+    .footer-links a:hover { color:var(--accent); }
   </style>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Are my images uploaded to any server?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No. All processing happens locally in your browser. Your files never leave your device."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Which image formats are supported?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We support JPG, PNG, and WEBP for most tools. Some tools may also accept other formats like BMP or TIFF."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is there a file size limit?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We recommend images under 10MB for optimal performance. Larger files may cause slowdowns, especially on mobile."
-        }
-      }
+      { "@type": "Question", "name": "Are my images uploaded to any server?", "acceptedAnswer": { "@type": "Answer", "text": "No. All processing happens locally in your browser. Your files never leave your device." } },
+      { "@type": "Question", "name": "Which image formats are supported?", "acceptedAnswer": { "@type": "Answer", "text": "We support JPG, PNG, WebP across most tools. PDF tools work with standard PDF documents." } },
+      { "@type": "Question", "name": "Is there a file size limit?", "acceptedAnswer": { "@type": "Answer", "text": "We recommend keeping files under 10MB for optimal performance. Larger files may cause slowdowns on mobile." } },
+      { "@type": "Question", "name": "How does the background remover work?", "acceptedAnswer": { "@type": "Answer", "text": "It uses AI running directly in your browser. Upload an image and the tool removes the background automatically." } },
+      { "@type": "Question", "name": "Can I use PixelPress on my phone?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely! All tools work on Android, iPhone, and tablets." } },
+      { "@type": "Question", "name": "Is PixelPress completely free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. All tools are free. We fund the site through advertising." } }
     ]
   }
   </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3P7QPQKV3K');
+  </script>
 </head>
 <body>
-  <header class="main-header">
-    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
-    <button class="btn-outline" onclick="history.back()">← Back</button>
-  </header>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
 
-  <main class="tool-page">
-    <h1>Frequently Asked Questions</h1>
+  <div class="main">
+    <div class="hero">
+      <h1>Frequently Asked Questions</h1>
+      <p style="color:var(--muted); margin-top:0.5rem;">Quick answers to common questions about PixelPress</p>
+    </div>
 
-    <div class="faq-item">
-      <h3>Are my images uploaded to any server?</h3>
-      <p>No. PixelPress processes everything inside your browser. Your images stay private and never touch a remote server.</p>
+    <div class="search-box">
+      <input type="text" id="faqSearch" placeholder="🔍 Search questions..." oninput="filterFAQs()" />
     </div>
-    <div class="faq-item">
-      <h3>Which image formats can I use?</h3>
-      <p>We support JPEG, PNG, and WebP across most tools. Some tools also work with BMP, TIFF, and SVG. Check each tool's page for specifics.</p>
-    </div>
-    <div class="faq-item">
-      <h3>Is there a file size limit?</h3>
-      <p>We recommend keeping files under 10MB for the best experience. Very large images may slow down processing, particularly on mobile devices.</p>
-    </div>
-    <div class="faq-item">
-      <h3>How does the background remover work?</h3>
-      <p>It uses an AI model that runs directly in your browser. After uploading, the tool automatically detects the subject and removes the background. It works offline once loaded.</p>
-    </div>
-    <div class="faq-item">
-      <h3>Can I use PixelPress on my phone?</h3>
-      <p>Absolutely! All tools are mobile-friendly and work on Android, iPhone, and tablets.</p>
-    </div>
-    <div class="faq-item">
-      <h3>Is PixelPress completely free?</h3>
-      <p>Yes. All tools are free to use. We fund the site through non-intrusive advertising.</p>
-    </div>
-    <div class="faq-item">
-      <h3>Which browsers are supported?</h3>
-      <p>We support Chrome, Firefox, Safari, Edge, and Samsung Internet. For the best experience, keep your browser updated.</p>
-    </div>
-    <div class="faq-item">
-      <h3>Will you add more tools in the future?</h3>
-      <p>Yes! We're constantly working on new features like batch processing and advanced editing. Stay tuned!</p>
-    </div>
-  </main>
 
-  <footer style="text-align:center; padding:30px 20px; border-top:1px solid #e5e7eb; margin-top:40px; color:#6b7280; font-size:0.9rem;">
+    <div class="category-tabs">
+      <button class="tab active" data-cat="all">All</button>
+      <button class="tab" data-cat="privacy">Privacy & Security</button>
+      <button class="tab" data-cat="usage">Usage & Features</button>
+      <button class="tab" data-cat="tech">Technical & Compatibility</button>
+      <button class="tab" data-cat="account">Account & Support</button>
+    </div>
+
+    <div class="faq-grid" id="faqContainer">
+      <!-- Privacy & Security -->
+      <div class="faq-item" data-cat="privacy">
+        <div class="faq-question" onclick="toggleFAQ(this)">🔒 Are my images uploaded to any server? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">No. PixelPress processes <strong>everything inside your browser</strong>. Your images, documents, and files stay on your device and are never uploaded to any remote server. You can even disconnect your internet after the page loads and all tools will continue working offline.</div>
+      </div>
+      <div class="faq-item" data-cat="privacy">
+        <div class="faq-question" onclick="toggleFAQ(this)">🔐 Is my data safe while using PixelPress? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">Absolutely. Since all processing is local, no third party can access your files. We use <strong>localStorage</strong> only for your preferences (theme, language) and recent tool history — this data never leaves your browser and is automatically cleared after 30 days of inactivity.</div>
+      </div>
+
+      <!-- Usage & Features -->
+      <div class="faq-item" data-cat="usage">
+        <div class="faq-question" onclick="toggleFAQ(this)">🖼️ Which image formats are supported? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">We fully support <strong>JPG, PNG, WebP</strong> across all image tools. Some tools also accept <strong>AVIF, BMP, TIFF, and SVG</strong>. PDF tools work with standard PDF documents. Check each tool's page for specific format support.</div>
+      </div>
+      <div class="faq-item" data-cat="usage">
+        <div class="faq-question" onclick="toggleFAQ(this)">📏 Is there a file size limit? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">We recommend keeping files under <strong>10MB</strong> for the smoothest experience. Larger files may cause slower processing, particularly on mobile devices or older browsers. There's no hard limit — the tool will process whatever your browser can handle.</div>
+      </div>
+      <div class="faq-item" data-cat="usage">
+        <div class="faq-question" onclick="toggleFAQ(this)">🫥 How does the background remover work? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">Our background remover uses an <strong>AI model that runs directly in your browser</strong>. When you upload an image, the AI detects the subject and removes the background automatically. It works offline once the model is loaded. Results are best with clear subjects on contrasting backgrounds.</div>
+      </div>
+      <div class="faq-item" data-cat="usage">
+        <div class="faq-question" onclick="toggleFAQ(this)">💰 Is PixelPress completely free? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">Yes! All <strong>30+ tools are 100% free</strong> with no hidden fees, premium walls, or forced sign‑ups. We sustain the website through non‑intrusive advertising. You'll never be asked to pay for any feature.</div>
+      </div>
+
+      <!-- Technical & Compatibility -->
+      <div class="faq-item" data-cat="tech">
+        <div class="faq-question" onclick="toggleFAQ(this)">🌐 Which browsers are supported? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">PixelPress works on all modern browsers: <strong>Google Chrome, Mozilla Firefox, Apple Safari, Microsoft Edge, and Samsung Internet</strong>. For the best experience, keep your browser updated to the latest version.</div>
+      </div>
+      <div class="faq-item" data-cat="tech">
+        <div class="faq-question" onclick="toggleFAQ(this)">📱 Can I use PixelPress on my phone or tablet? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">Absolutely! All tools are <strong>fully responsive</strong> and work seamlessly on Android phones, iPhones, iPads, and other tablets. The interface adapts to your screen size for easy editing on the go.</div>
+      </div>
+      <div class="faq-item" data-cat="tech">
+        <div class="faq-question" onclick="toggleFAQ(this)">🛑 Why is a tool not working on my browser? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">Try these steps:<br>1. <strong>Update your browser</strong> to the latest version.<br>2. <strong>Disable extensions</strong> (ad blockers can sometimes interfere).<br>3. <strong>Clear browser cache</strong> and reload the page.<br>4. Try a <strong>different browser</strong> (Chrome recommended).<br>5. Check your <strong>internet connection</strong> — some tools need to download AI models on first use.</div>
+      </div>
+
+      <!-- Account & Support -->
+      <div class="faq-item" data-cat="account">
+        <div class="faq-question" onclick="toggleFAQ(this)">📝 Do I need to create an account? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">No. PixelPress requires <strong>no registration, no login, and no account</strong>. Just visit the website and start using any tool immediately. Your preferences are saved locally in your browser.</div>
+      </div>
+      <div class="faq-item" data-cat="account">
+        <div class="faq-question" onclick="toggleFAQ(this)">🆕 Will you add more tools in the future? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">Yes! We're constantly working on new tools and improvements. Planned features include <strong>batch processing, advanced AI editing, video tools, and more format support</strong>. Stay tuned — all future tools will remain free.</div>
+      </div>
+      <div class="faq-item" data-cat="account">
+        <div class="faq-question" onclick="toggleFAQ(this)">📧 How can I contact support? <i class="fa-solid fa-chevron-down"></i></div>
+        <div class="faq-answer">You can reach us through our <a href="./contact.html" style="color:var(--accent);">Contact page</a>. We typically respond within 24-48 hours. For urgent issues, you can also reach us on WhatsApp at <strong>+92 343 2535207</strong>.</div>
+      </div>
+    </div>
+
+    <div class="still-help">
+      <p style="color:var(--muted);">Still have questions?</p>
+      <a href="./contact.html"><i class="fa-solid fa-envelope"></i> Contact Us</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="./about.html">About</a>
+      <a href="./contact.html">Contact</a>
+      <a href="./privacy-policy.html">Privacy</a>
+      <a href="./terms.html">Terms</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="./blog/">Blog</a>
+    </div>
     <p>© 2026 PixelPress. All rights reserved.</p>
-    <div style="margin-top:10px;">
-      <a href="./about.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">About</a>
-      <a href="./contact.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Contact</a>
-      <a href="./privacy-policy.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Privacy</a>
-      <a href="./terms.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Terms</a>
-      <a href="./faq.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">FAQ</a>
-      <a href="./blog/" style="color:#2563eb; text-decoration:none; margin:0 8px;">Blog</a>
-    </div>
   </footer>
+
+  <script>
+    (function() {
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+
+      // FAQ Accordion
+      window.toggleFAQ = function(element) {
+        const item = element.parentElement;
+        const isOpen = item.classList.contains('open');
+        // Close all
+        document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+        // Open clicked (if wasn't already open)
+        if (!isOpen) item.classList.add('open');
+      };
+
+      // Category Filter
+      document.querySelectorAll('.category-tabs .tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.category-tabs .tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const cat = tab.dataset.cat;
+          document.querySelectorAll('.faq-item').forEach(item => {
+            if (cat === 'all' || item.dataset.cat === cat) {
+              item.style.display = 'block';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // Search Filter
+      window.filterFAQs = function() {
+        const query = document.getElementById('faqSearch').value.toLowerCase();
+        document.querySelectorAll('.faq-item').forEach(item => {
+          const text = item.textContent.toLowerCase();
+          if (query === '' || text.includes(query)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      };
+
+      // Open first FAQ by default
+      document.querySelector('.faq-item')?.classList.add('open');
+    })();
+  </script>
 </body>
 </html>

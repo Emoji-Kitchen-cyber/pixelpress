@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,202 +9,207 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-/* ----- GLOBAL THEME (PixelPress compatible) ----- */
+/* ========= GLOBAL THEME (PixelPress) ========= */
 :root {
-  --bg: #f5f5f7;
-  --surface: rgba(255,255,255,0.75);
-  --card: #ffffff;
-  --border: rgba(0,0,0,0.06);
-  --text: #1d1d1f;
-  --muted: #6e6e73;
-  --accent: #ec4899;
-  --accent2: #a78bfa;
-  --glow: rgba(236,72,153,0.1);
-  --green: #22c55e;
-  --blue: #3b82f6;
-  --red: #ef4444;
-  --mono: 'JetBrains Mono', monospace;
-  --sans: system-ui, -apple-system, sans-serif;
-  --map-bg: #f0f0f0;
+  --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+  --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+  --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1);
+  --green: #10b981; --blue: #3b82f6; --red: #ef4444;
+  --mono: 'JetBrains Mono', monospace; --sans: system-ui, -apple-system, sans-serif;
 }
 [data-theme="dark"] {
-  --bg: #09090e;
-  --surface: rgba(21,21,30,0.7);
-  --card: #15151e;
-  --border: rgba(255,255,255,0.08);
-  --text: #e8e8f0;
-  --muted: #86868b;
+  --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+  --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
   --glow: rgba(236,72,153,0.25);
-  --map-bg: #0d1117;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--text);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  font-size: 13px;
+  font-family: var(--sans); background: var(--bg); color: var(--text);
+  height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px;
   transition: background 0.3s, color 0.3s;
 }
 
-/* ----- TOPBAR ----- */
+/* ========= TOP BAR ========= */
 .topbar {
-  height: 48px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 8px;
-  flex-shrink: 0;
-  z-index: 1000;
-  overflow-x: auto;
+  height: 48px; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0;
+  z-index: 1100; overflow-x: auto; backdrop-filter: blur(20px);
 }
 .topbar .brand { display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .brand-dot { width:8px; height:8px; background:var(--green); border-radius:50%; animation:blink 2s infinite; }
 @keyframes blink{ 50%{opacity:0.3} }
 .brand-name { font-family:var(--mono); font-weight:600; font-size:14px; color:var(--text); }
 .brand-name span { color:var(--green); }
-.divider { width:1px; height:28px; background:var(--border); }
+.divider { width:1px; height:28px; background:var(--border); margin:0 6px; }
 .tool-group { display:flex; gap:2px; }
 .t-btn {
   height:32px; padding:0 10px; border:1px solid transparent; border-radius:5px;
-  background:transparent; color:var(--muted); cursor:pointer;
-  font-family:var(--mono); font-size:10px; font-weight:500; display:flex; align-items:center; gap:4px;
-  white-space:nowrap; transition:0.12s;
+  background:transparent; color:var(--muted); cursor:pointer; font-family:var(--mono); font-size:10px;
+  display:flex; align-items:center; gap:4px; white-space:nowrap; transition:0.12s;
 }
 .t-btn:hover { background:var(--card); color:var(--text); border-color:var(--border); }
 .t-btn.active { background:rgba(34,197,94,0.1); color:var(--green); border-color:rgba(34,197,94,0.3); }
 .topbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
 .chip { font-family:var(--mono); font-size:9px; padding:2px 8px; border-radius:3px; border:1px solid var(--border); color:var(--muted); background:var(--card); }
 
-/* ----- LAYOUT ----- */
+/* ========= MAIN LAYOUT ========= */
 .workspace { display:flex; flex:1; overflow:hidden; }
 
-/* ----- PANELS ----- */
+/* ========= PANELS ========= */
 .panel {
-  background:var(--surface); border-color:var(--border);
-  display:flex; flex-direction:column; overflow-y:auto;
+  background: var(--surface); border-color: var(--border);
+  display: flex; flex-direction: column; overflow-y: auto; transition: transform 0.3s;
 }
-.left-panel { width:260px; border-right:1px solid var(--border); }
-.right-panel { width:240px; border-left:1px solid var(--border); }
-.panel-block { padding:10px 14px; border-bottom:1px solid var(--border); }
-.block-title { font-family:var(--mono); font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+.left-panel { width: 280px; border-right: 1px solid var(--border); }
+.right-panel { width: 250px; border-left: 1px solid var(--border); }
+.panel-block { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.block-title {
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
+}
 
-/* Draw grid (sidebar) */
-.draw-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+/* ========= DRAW GRID ========= */
+.draw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .d-btn {
-  background:var(--card); border:1px solid var(--border); border-radius:6px;
-  padding:8px 4px 6px; color:var(--muted); cursor:pointer; display:flex; flex-direction:column;
-  align-items:center; gap:3px; font-family:var(--mono); font-size:9px; transition:0.12s;
+  background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 4px; color: var(--muted); cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; font-family: var(--mono); font-size: 9px; transition: 0.12s;
 }
-.d-btn:hover { border-color:var(--green); color:var(--text); }
-.d-btn.active { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.08); }
+.d-btn:hover { border-color: var(--green); color: var(--text); }
+.d-btn.active { border-color: var(--green); color: var(--green); background: rgba(34,197,94,0.08); }
 
-/* Feature list */
-.feat-list { flex:1; overflow-y:auto; padding:6px 10px 10px; }
+/* ========= FEATURE LIST ========= */
+.feat-list { flex: 1; overflow-y: auto; padding: 6px 10px; }
 .feat-item {
-  background:var(--card); border:1px solid var(--border); border-radius:5px;
-  padding:8px 10px; margin-bottom:4px; display:flex; align-items:center; gap:8px;
-  cursor:pointer; transition:0.12s; font-size:12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 5px;
+  padding: 6px 8px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  cursor: pointer; transition: 0.12s; font-size: 12px;
 }
-.feat-item:hover { border-color:var(--muted); }
-.feat-item.selected { border-color:var(--accent); background:var(--glow); }
-.feat-swatch { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
-.feat-name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.feat-checkbox { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
-.feat-del { background:none; border:none; color:var(--muted); cursor:pointer; padding:2px 5px; border-radius:3px; }
-.feat-del:hover { color:var(--red); }
+.feat-item:hover { border-color: var(--muted); }
+.feat-item.selected { border-color: var(--accent); background: var(--glow); }
+.feat-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.feat-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feat-checkbox { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.feat-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 2px; }
+.feat-del:hover { color: var(--red); }
 
-/* MAP */
-.map-wrap { flex:1; position:relative; display:flex; flex-direction:column; }
-#map { flex:1; background:var(--map-bg); }
+/* ========= MAP ========= */
+.map-wrap { flex: 1; position: relative; display: flex; flex-direction: column; }
+#map { flex: 1; background: #eaeaea; }
+[data-theme="dark"] #map { background: #0d1117; }
 
-/* Floating map controls */
+/* ========= FLOATING CONTROLS ========= */
 .map-floats {
-  position:absolute; top:10px; right:10px; z-index:800; display:flex; flex-direction:column; gap:6px;
+  position: absolute; top: 10px; right: 10px; z-index: 800;
+  display: flex; flex-direction: column; gap: 6px;
 }
-.map-floats .mf-btn {
-  background:var(--card); border:1px solid var(--border); border-radius:6px;
-  padding:6px 10px; color:var(--muted); cursor:pointer; font-family:var(--mono); font-size:10px;
-  display:flex; align-items:center; gap:5px; transition:0.12s;
+.mf-btn {
+  background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 10px; color: var(--muted); cursor: pointer; font-family: var(--mono); font-size: 10px;
+  display: flex; align-items: center; gap: 5px; transition: 0.12s;
 }
-.mf-btn:hover { color:var(--text); border-color:var(--muted); }
+.mf-btn:hover { color: var(--text); border-color: var(--muted); }
 
-/* STATUS BAR */
+/* ========= STATUS BAR ========= */
 .statusbar {
-  height:26px; background:var(--surface); border-top:1px solid var(--border);
-  display:flex; align-items:center; padding:0 14px; gap:20px; font-family:var(--mono); font-size:10px; color:var(--muted);
+  height: 26px; background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 14px; gap: 20px;
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
 }
 
-/* BUTTONS */
-.btn { padding:8px 14px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; }
-.btn-primary { background:var(--accent); color:white; border:none; }
-.btn-primary:hover { background:var(--accent2); }
-.btn-success { background:var(--green); color:white; border:none; }
+/* ========= BUTTONS ========= */
+.btn {
+  padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text); cursor: pointer; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px; font-size: 12px; transition: 0.12s;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: white; border: none; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-success { background: var(--green); color: white; border: none; }
+.btn-danger { background: var(--red); color: white; border: none; }
 
-/* Toggle panels (mobile) */
+/* ========= ATTRIBUTE TABLE ========= */
+.attr-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
+.attr-row input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; color: var(--text); font-size: 11px; }
+.attr-row .attr-key { width: 40%; }
+.attr-row .attr-val { width: 60%; }
+
+/* ========= RESPONSIVE ========= */
 @media (max-width: 850px) {
-  .left-panel, .right-panel { position:fixed; top:48px; bottom:0; z-index:1500; width:280px; transform:translateX(-100%); transition:transform 0.3s; }
-  .left-panel.open { transform:translateX(0); box-shadow:2px 0 10px rgba(0,0,0,0.2); }
-  .right-panel { right:0; left:auto; transform:translateX(100%); }
-  .right-panel.open { transform:translateX(0); }
-  .panel-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1499; display:none; }
-  .panel-backdrop.show { display:block; }
-  .topbar .t-btn { padding:0 8px; font-size:9px; }
+  .left-panel, .right-panel {
+    position: fixed; top: 48px; bottom: 0; z-index: 1500; width: 280px;
+    transform: translateX(-100%); transition: transform 0.3s;
+  }
+  .left-panel.open, .right-panel.open { transform: translateX(0); box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+  .right-panel { right: 0; left: auto; transform: translateX(100%); }
+  .panel-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1499; display: none; }
+  .panel-backdrop.show { display: block; }
 }
-/* Scrollbar */
-::-webkit-scrollbar { width:4px; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
-/* Legend */
-.legend-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11px; }
-.legend-color { width:12px; height:12px; border-radius:2px; }
+/* ========= LEGEND ========= */
+.legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 11px; }
+.legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+/* ========= MODAL ========= */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
+}
 </style>
 </head>
 <body>
 
-<!-- ─── TOPBAR ─── -->
+<!-- ══════════ TOPBAR ══════════ -->
 <div class="topbar">
   <div class="brand"><div class="brand-dot"></div><div class="brand-name">Geo<span>Forge</span></div></div>
   <div class="divider"></div>
-  <div class="tool-group" id="draw-tools">
-    <button class="t-btn" id="tb-point" onclick="activateTool('point')">📍 POINT</button>
-    <button class="t-btn" id="tb-line" onclick="activateTool('line')">📏 LINE</button>
-    <button class="t-btn" id="tb-polygon" onclick="activateTool('polygon')">⬛ POLYGON</button>
-    <button class="t-btn" id="tb-rectangle" onclick="activateTool('rectangle')">▭ RECT</button>
-    <button class="t-btn" id="tb-circle" onclick="activateTool('circle')">⭕ CIRCLE</button>
-    <button class="t-btn" id="tb-edit" onclick="activateEditMode()">✏️ EDIT</button>
+  <div class="tool-group">
+    <button class="t-btn" id="tb-point" onclick="activateTool('point')">📍 Point</button>
+    <button class="t-btn" id="tb-line" onclick="activateTool('line')">📏 Line</button>
+    <button class="t-btn" id="tb-polygon" onclick="activateTool('polygon')">⬛ Polygon</button>
+    <button class="t-btn" id="tb-rectangle" onclick="activateTool('rectangle')">▭ Rect</button>
+    <button class="t-btn" id="tb-circle" onclick="activateTool('circle')">⭕ Circle</button>
+    <button class="t-btn" id="tb-edit" onclick="activateEditMode()">✏️ Edit</button>
   </div>
   <div class="divider"></div>
-  <button class="t-btn" onclick="undo()">↩️ UNDO</button>
-  <button class="t-btn" onclick="redo()">↪️ REDO</button>
-  <button class="t-btn accent" onclick="zoomToAll()">🔍 FIT</button>
-  <button class="t-btn danger" onclick="clearAll()">🗑 CLEAR</button>
+  <button class="t-btn" onclick="undo()">↩️ Undo</button>
+  <button class="t-btn" onclick="redo()">↪️ Redo</button>
+  <button class="t-btn" onclick="saveProject()">💾 Save</button>
+  <button class="t-btn" onclick="loadProject()">📂 Open</button>
+  <button class="t-btn" onclick="zoomToAll()">🔍 Fit</button>
+  <button class="t-btn danger" onclick="clearAll()">🗑 Clear</button>
   <div class="topbar-right">
     <button class="t-btn" id="themeToggle">🌓</button>
     <div class="chip" id="feat-count-top">0 features</div>
   </div>
 </div>
 
-<!-- ─── WORKSPACE ─── -->
+<!-- ══════════ WORKSPACE ══════════ -->
 <div class="workspace">
-  <!-- Left panel (overlay on mobile) -->
+  <!-- LEFT PANEL -->
   <div class="panel left-panel" id="leftPanel">
     <div class="panel-block">
       <div class="block-title">Feature Properties</div>
-      <input class="f-input" type="text" id="feat-name" placeholder="Name" style="margin-bottom:6px; width:100%; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
-      <input class="f-input" type="text" id="feat-cat" placeholder="Category" style="margin-bottom:6px; width:100%; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
-      <input class="f-input" type="text" id="feat-desc" placeholder="Description" style="width:100%; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
-      <div style="display:flex; gap:6px; margin-top:6px;">
-        <input class="f-input" type="color" id="feat-color" value="#22c55e" style="height:32px;">
-        <input class="f-input" type="number" id="feat-opacity" value="40" min="0" max="100" style="width:60px;">
+      <div style="display:flex; gap:4px; flex-direction:column;">
+        <input class="f-input" type="text" id="feat-name" placeholder="Name" style="margin-bottom:4px; padding:4px; border-radius:4px; background:var(--card); border:1px solid var(--border); color:var(--text);">
+        <input class="f-input" type="text" id="feat-cat" placeholder="Category" style="margin-bottom:4px; padding:4px; border-radius:4px; background:var(--card); border:1px solid var(--border); color:var(--text);">
+        <input class="f-input" type="text" id="feat-desc" placeholder="Description" style="margin-bottom:4px; padding:4px; border-radius:4px; background:var(--card); border:1px solid var(--border); color:var(--text);">
+        <div style="display:flex; gap:4px;">
+          <input type="color" id="feat-color" value="#22c55e" style="height:32px; border:1px solid var(--border); border-radius:4px;">
+          <input type="number" id="feat-opacity" value="40" min="0" max="100" style="width:60px; background:var(--card); border:1px solid var(--border); border-radius:4px; color:var(--text);">
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        <div class="block-title">Custom Attributes</div>
+        <div id="attrContainer"></div>
+        <button class="btn" onclick="addAttribute()">+ Add Field</button>
       </div>
     </div>
     <div class="panel-block">
@@ -219,20 +224,21 @@ body {
       </div>
     </div>
     <div class="block-title" style="padding:6px 14px;">Features <span id="feat-count-badge">0</span></div>
-    <input type="text" class="f-input" id="searchInput" placeholder="Search / filter..." style="margin:0 10px 6px; width:auto; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
+    <input type="text" id="searchInput" placeholder="Search..." style="margin:0 10px 6px; padding:4px; border-radius:4px; background:var(--card); border:1px solid var(--border); color:var(--text);">
     <div class="feat-list" id="feat-list"></div>
-    <div style="padding:6px 10px; display:flex; gap:6px;">
-      <button class="btn" onclick="deleteSelected()">🗑 Delete Sel</button>
-      <button class="btn" onclick="exportSelected()">📤 Export Sel</button>
+    <div style="padding:6px 10px; display:flex; gap:4px; flex-wrap:wrap;">
+      <button class="btn" onclick="deleteSelected()">🗑 Delete</button>
+      <button class="btn" onclick="mergeSelected()">🔗 Merge</button>
+      <button class="btn" onclick="exportSelected()">📤 Export</button>
     </div>
   </div>
 
-  <!-- Map -->
+  <!-- MAP -->
   <div class="map-wrap">
     <div id="map"></div>
     <div class="map-floats">
-      <div class="mf-btn" onclick="document.getElementById('leftPanel').classList.toggle('open'); document.getElementById('panelBackdrop').classList.toggle('show')">📋 Panel</div>
-      <div class="mf-btn" onclick="document.getElementById('rightPanel').classList.toggle('open'); document.getElementById('panelBackdrop').classList.toggle('show')">📊 More</div>
+      <button class="mf-btn" onclick="togglePanel('leftPanel')">📋 Panel</button>
+      <button class="mf-btn" onclick="togglePanel('rightPanel')">📊 More</button>
     </div>
     <div class="statusbar">
       <span id="coord-display">LAT: — | LNG: —</span>
@@ -241,11 +247,11 @@ body {
     </div>
   </div>
 
-  <!-- Right panel (overlay on mobile) -->
+  <!-- RIGHT PANEL -->
   <div class="panel right-panel" id="rightPanel">
     <div class="panel-block">
-      <div class="block-title">Export</div>
-      <button class="btn-primary" style="width:100%; margin-bottom:6px;" onclick="exportShapefileZip()">📦 SHAPEFILE ZIP</button>
+      <div class="block-title">Export GIS Package</div>
+      <button class="btn-primary" style="width:100%; margin-bottom:6px;" onclick="exportShapefileZip()">📦 Download ZIP</button>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
         <button class="btn" onclick="exportGeoJSON()">GeoJSON</button>
         <button class="btn" onclick="exportKML()">KML</button>
@@ -257,7 +263,7 @@ body {
     </div>
     <div class="panel-block">
       <div class="block-title">Import</div>
-      <label class="btn" style="width:100%">⬆ Upload GeoJSON/KML/CSV<input type="file" accept=".geojson,.json,.kml,.csv" onchange="importFile(this)" hidden></label>
+      <label class="btn" style="width:100%; cursor:pointer;">⬆ Upload GeoJSON/KML/CSV<input type="file" accept=".geojson,.json,.kml,.csv" onchange="importFile(this)" hidden></label>
     </div>
     <div class="panel-block">
       <div class="block-title">Statistics</div>
@@ -282,13 +288,15 @@ body {
 
 <div class="toast" id="toast"></div>
 
+<!-- ══════════ SCRIPT ══════════ -->
 <script>
-// ════════════ STATE ════════════
+// ========== GLOBAL STATE ==========
 let features = [], selectedIds = new Set(), currentTool = null, drawHandlers = {}, drawnItems, map;
 let historyStack = [], historyIdx = -1, maxHistory = 40;
 let baseLayers = {}, currentBase;
+const catPalette = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a78bfa','#ec4899','#10b981','#6366f1','#d946ef','#f43f5e'];
 
-// ════════════ MAP INIT ════════════
+// ========== MAP INIT ==========
 map = L.map('map', { zoomControl: false }).setView([30.3753, 69.3451], 6);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 drawnItems = new L.FeatureGroup().addTo(map);
@@ -306,11 +314,10 @@ map.on('mousemove', e => {
 });
 map.on('zoomend', () => document.getElementById('zoom-display').textContent = `ZOOM: ${map.getZoom()}`);
 
-// ════════════ THEME ════════════
+// ========== THEME ==========
 function syncTheme() {
-  const saved = localStorage.getItem('pixelpress-theme');
-  const theme = saved || 'light';
-  document.documentElement.setAttribute('data-theme', theme);
+  const saved = localStorage.getItem('pixelpress-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
 }
 document.getElementById('themeToggle').addEventListener('click', () => {
   const cur = document.documentElement.getAttribute('data-theme');
@@ -320,43 +327,38 @@ document.getElementById('themeToggle').addEventListener('click', () => {
 });
 syncTheme();
 
-// ════════════ RESPONSIVE PANELS ════════════
+// ========== RESPONSIVE PANELS ==========
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  const backdrop = document.getElementById('panelBackdrop');
+  panel.classList.toggle('open');
+  backdrop.classList.toggle('show', panel.classList.contains('open'));
+}
 function closePanels() {
   document.getElementById('leftPanel').classList.remove('open');
   document.getElementById('rightPanel').classList.remove('open');
   document.getElementById('panelBackdrop').classList.remove('show');
 }
 
-// ════════════ HISTORY ════════════
+// ========== HISTORY ==========
 function pushHistory() {
   const snap = JSON.stringify(features.map(f => ({
     id: f.id, type: f.type, name: f.name, cat: f.cat, desc: f.desc,
-    color: f.color, op: f.op, geojson: f.layer.toGeoJSON ? f.layer.toGeoJSON() : f.geojson
+    color: f.color, op: f.op, attrs: f.attrs, geojson: f.layer.toGeoJSON()
   })));
   if (historyIdx < historyStack.length - 1) historyStack = historyStack.slice(0, historyIdx + 1);
   historyStack.push(snap);
   if (historyStack.length > maxHistory) historyStack.shift();
   historyIdx = historyStack.length - 1;
 }
-async function undo() {
-  if (historyIdx <= 0) return;
-  historyIdx--;
-  await restoreFromHistory();
-}
-async function redo() {
-  if (historyIdx >= historyStack.length - 1) return;
-  historyIdx++;
-  await restoreFromHistory();
-}
+async function undo() { if (historyIdx > 0) { historyIdx--; await restoreFromHistory(); } }
+async function redo() { if (historyIdx < historyStack.length - 1) { historyIdx++; await restoreFromHistory(); } }
 async function restoreFromHistory() {
   const snap = JSON.parse(historyStack[historyIdx]);
-  drawnItems.clearLayers();
-  features = [];
+  drawnItems.clearLayers(); features = [];
   snap.forEach(item => {
-    const lyr = L.geoJSON(item.geojson, {
-      style: { color: item.color, fillColor: item.color, fillOpacity: item.op || 0.4 },
-      pointToLayer: (f, ll) => L.marker(ll)
-    }).addTo(drawnItems);
+    const lyr = L.geoJSON(item.geojson, { style: { color: item.color, fillColor: item.color, fillOpacity: item.op || 0.4 },
+      pointToLayer: (f, ll) => L.marker(ll) }).addTo(drawnItems);
     lyr.eachLayer(layer => {
       const feat = { ...item, layer, geojson: item.geojson };
       features.push(feat);
@@ -364,27 +366,24 @@ async function restoreFromHistory() {
       if (layer.bindPopup) layer.bindPopup(`<strong>${item.name}</strong><br>${item.cat}`);
     });
   });
-  renderFeatureList();
-  updateStats();
-  updateCounter();
+  renderFeatureList(); updateStats(); updateCounter();
 }
 pushHistory();
 
-// ════════════ DRAW TOOLS ════════════
+// ========== DRAW TOOLS ==========
 function getOpts() {
-  return { color: document.getElementById('feat-color').value,
-           fillColor: document.getElementById('feat-color').value,
-           fillOpacity: (parseInt(document.getElementById('feat-opacity').value) || 40) / 100,
-           weight: 2 };
+  const color = document.getElementById('feat-color').value;
+  const op = (parseInt(document.getElementById('feat-opacity').value) || 40) / 100;
+  return { color, fillColor: color, fillOpacity: op, weight: 2, showLength: true, showArea: true };
 }
 function activateTool(tool) {
   deactivateTool();
   drawHandlers = {
     point: new L.Draw.Marker(map),
-    line: new L.Draw.Polyline(map, { shapeOptions: getOpts() }),
-    polygon: new L.Draw.Polygon(map, { shapeOptions: getOpts() }),
-    rectangle: new L.Draw.Rectangle(map, { shapeOptions: getOpts() }),
-    circle: new L.Draw.Circle(map, { shapeOptions: getOpts() })
+    line: new L.Draw.Polyline(map, { shapeOptions: getOpts(), showLength: true }),
+    polygon: new L.Draw.Polygon(map, { shapeOptions: getOpts(), showArea: true }),
+    rectangle: new L.Draw.Rectangle(map, { shapeOptions: getOpts(), showArea: true }),
+    circle: new L.Draw.Circle(map, { shapeOptions: getOpts(), showArea: true })
   };
   currentTool = tool;
   drawHandlers[tool].enable();
@@ -398,15 +397,11 @@ function deactivateTool() {
   document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('active-tool-display').textContent = 'TOOL: PAN';
 }
-
 function activateEditMode() {
   deactivateTool();
-  if (features.length === 0) return;
   const selected = features.filter(f => selectedIds.has(f.id));
   if (selected.length === 0) { toast('Select a feature first', true); return; }
-  selected.forEach(f => {
-    if (f.layer.editing) f.layer.editing.enable();
-  });
+  selected.forEach(f => { if (f.layer.editing) f.layer.editing.enable(); });
 }
 
 map.on(L.Draw.Event.CREATED, function(e) {
@@ -417,31 +412,27 @@ map.on(L.Draw.Event.CREATED, function(e) {
   const cat = document.getElementById('feat-cat').value.trim() || 'Uncategorized';
   const desc = document.getElementById('feat-desc').value.trim() || '';
   const type = e.layerType;
-
   if (layer.setStyle) layer.setStyle({ color, fillColor: color, fillOpacity: op, weight: 2 });
-  const geojson = layer.toGeoJSON ? layer.toGeoJSON() : null;
+  const geojson = layer.toGeoJSON();
   const id = `f_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
-
-  const feat = { id, type, name, cat, desc, color, op, layer, geojson };
+  const feat = { id, type, name, cat, desc, color, op, layer, geojson, attrs: [] };
   features.push(feat);
   drawnItems.addLayer(layer);
   if (layer.bindPopup) layer.bindPopup(`<strong>${name}</strong><br>${cat}`);
   layer.on('click', () => selectFeature(id));
   addFeatureToList(feat);
-  updateStats();
-  updateCounter();
-  pushHistory();
+  updateStats(); updateCounter(); pushHistory();
   toast(`✓ ${name} added`);
   selectFeature(id);
   if (currentTool && currentTool !== 'point') setTimeout(() => activateTool(currentTool), 150);
 });
 
-// ════════════ FEATURE LIST ════════════
+// ========== FEATURE LIST ==========
 function renderFeatureList() {
   const list = document.getElementById('feat-list');
   const filter = document.getElementById('searchInput').value.toLowerCase();
   const filtered = features.filter(f => !filter || f.name.toLowerCase().includes(filter) || f.cat.toLowerCase().includes(filter));
-  list.innerHTML = filtered.length ? '' : '<div class="empty-state">No features</div>';
+  list.innerHTML = filtered.length ? '' : '<div class="empty-state" style="padding:20px;text-align:center;color:var(--muted);">No features</div>';
   filtered.forEach(f => {
     const div = document.createElement('div');
     div.className = `feat-item ${selectedIds.has(f.id) ? 'selected' : ''}`;
@@ -449,24 +440,23 @@ function renderFeatureList() {
       <input type="checkbox" class="feat-checkbox" ${selectedIds.has(f.id) ? 'checked' : ''}>
       <div class="feat-swatch" style="background:${f.color}"></div>
       <span class="feat-name">${f.name}</span>
-      <button class="feat-del" data-id="${f.id}">×</button>
+      <button class="feat-del">×</button>
     `;
     div.querySelector('.feat-checkbox').addEventListener('change', (e) => {
-      if (e.target.checked) selectedIds.add(f.id);
-      else selectedIds.delete(f.id);
+      if (e.target.checked) selectedIds.add(f.id); else selectedIds.delete(f.id);
       renderFeatureList();
     });
     div.addEventListener('click', (e) => {
-      if (e.target.tagName !== 'INPUT') selectFeature(f.id);
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') selectFeature(f.id);
     });
     div.querySelector('.feat-del').addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteFeature(f.id);
+      e.stopPropagation(); deleteFeature(f.id);
     });
     list.appendChild(div);
   });
 }
 function addFeatureToList(feat) { renderFeatureList(); }
+
 function selectFeature(id) {
   selectedIds.clear(); selectedIds.add(id);
   const feat = features.find(f => f.id === id);
@@ -476,6 +466,7 @@ function selectFeature(id) {
     document.getElementById('feat-desc').value = feat.desc;
     document.getElementById('feat-color').value = feat.color;
     document.getElementById('feat-opacity').value = Math.round((feat.op||0.4)*100);
+    renderAttrs(feat);
     try {
       if (feat.layer.getBounds) map.flyToBounds(feat.layer.getBounds().pad(0.1), {duration:0.5});
       else if (feat.layer.getLatLng) map.flyTo(feat.layer.getLatLng(), Math.max(map.getZoom(),12), {duration:0.5});
@@ -486,13 +477,8 @@ function selectFeature(id) {
 function deleteFeature(id) {
   const feat = features.find(f => f.id === id);
   if (!feat) return;
-  drawnItems.removeLayer(feat.layer);
-  features = features.filter(f => f.id !== id);
-  selectedIds.delete(id);
-  renderFeatureList();
-  updateStats();
-  updateCounter();
-  pushHistory();
+  drawnItems.removeLayer(feat.layer); features = features.filter(f => f.id !== id);
+  selectedIds.delete(id); renderFeatureList(); updateStats(); updateCounter(); pushHistory();
   toast('Feature deleted');
 }
 function deleteSelected() {
@@ -502,32 +488,75 @@ function deleteSelected() {
     const f = features.find(x => x.id === id);
     if (f) { drawnItems.removeLayer(f.layer); features = features.filter(x => x.id !== id); }
   });
-  selectedIds.clear();
-  renderFeatureList();
-  updateStats();
-  updateCounter();
-  pushHistory();
+  selectedIds.clear(); renderFeatureList(); updateStats(); updateCounter(); pushHistory();
   toast('Selected deleted');
 }
 function clearAll() {
   if (!features.length) return;
   if (!confirm('Clear all features?')) return;
-  drawnItems.clearLayers();
-  features = [];
-  selectedIds.clear();
-  renderFeatureList();
-  updateStats();
-  updateCounter();
-  pushHistory();
-  toast('All cleared');
+  drawnItems.clearLayers(); features = []; selectedIds.clear();
+  renderFeatureList(); updateStats(); updateCounter(); pushHistory(); toast('Cleared');
 }
 document.getElementById('searchInput').addEventListener('input', renderFeatureList);
 
-// ════════════ STATS (with manual shoelace area) ════════════
+// ========== ATTRIBUTES ==========
+function renderAttrs(feat) {
+  const container = document.getElementById('attrContainer');
+  container.innerHTML = '';
+  feat.attrs.forEach((attr, i) => {
+    const row = document.createElement('div');
+    row.className = 'attr-row';
+    row.innerHTML = `
+      <input class="attr-key" value="${attr.key}" placeholder="key" onchange="updateAttr('${feat.id}',${i},'key',this.value)">
+      <input class="attr-val" value="${attr.val}" placeholder="value" onchange="updateAttr('${feat.id}',${i},'val',this.value)">
+      <button class="btn btn-danger" style="padding:2px 4px;" onclick="removeAttr('${feat.id}',${i})">✕</button>
+    `;
+    container.appendChild(row);
+  });
+}
+function addAttribute() {
+  const id = [...selectedIds][0];
+  if (!id) { toast('Select a feature first', true); return; }
+  const feat = features.find(f => f.id === id);
+  if (!feat) return;
+  feat.attrs.push({ key: '', val: '' });
+  renderAttrs(feat);
+  pushHistory();
+}
+function updateAttr(id, index, prop, value) {
+  const feat = features.find(f => f.id === id);
+  if (feat) { feat.attrs[index][prop] = value; pushHistory(); }
+}
+function removeAttr(id, index) {
+  const feat = features.find(f => f.id === id);
+  if (feat) { feat.attrs.splice(index, 1); renderAttrs(feat); pushHistory(); }
+}
+
+// ========== MERGE ==========
+function mergeSelected() {
+  if (selectedIds.size < 2) { toast('Select at least 2 features', true); return; }
+  const selected = features.filter(f => selectedIds.has(f.id));
+  // Simple merge: combine geometries into a Multi* geometry, keep first feature's attributes
+  const first = selected[0];
+  const mergedGeoms = selected.map(f => f.geojson.geometry);
+  const type = mergedGeoms[0].type.startsWith('Multi') ? mergedGeoms[0].type : 'Multi' + mergedGeoms[0].type;
+  const coords = mergedGeoms.map(g => g.coordinates);
+  const mergedGeo = { type: 'Feature', geometry: { type, coordinates: type.includes('Point') ? coords.flat() : coords }, properties: {} };
+  const layer = L.geoJSON(mergedGeo, { style: { color: first.color, fillOpacity: first.op } }).addTo(drawnItems);
+  layer.eachLayer(l => l.on('click', () => selectFeature(first.id)));
+  // Remove original layers
+  selected.forEach(f => drawnItems.removeLayer(f.layer));
+  features = features.filter(f => !selectedIds.has(f.id));
+  first.layer = layer; first.geojson = mergedGeo;
+  features.push(first);
+  selectedIds.clear(); selectedIds.add(first.id);
+  renderFeatureList(); updateStats(); updateCounter(); pushHistory();
+  toast('Merged into ' + first.name);
+}
+
+// ========== STATS ==========
 function shoelaceArea(latlngs) {
-  const R = 6378137;
-  let area = 0;
-  const n = latlngs.length;
+  const R = 6378137; let area = 0; const n = latlngs.length;
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n;
     const xi = latlngs[i].lng * Math.PI / 180;
@@ -538,27 +567,20 @@ function shoelaceArea(latlngs) {
   }
   return Math.abs(area / 2) * R * R;
 }
-
 function haversine(a, b) {
   const R = 6378137;
   const dLat = (b.lat - a.lat) * Math.PI / 180;
   const dLng = (b.lng - a.lng) * Math.PI / 180;
-  const x = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) *
-            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) * Math.sin(dLng/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
 }
-
 function updateStats() {
   document.getElementById('s-pts').textContent = features.filter(f => f.type==='marker').length;
   document.getElementById('s-lns').textContent = features.filter(f => f.type==='polyline').length;
   document.getElementById('s-pls').textContent = features.filter(f => ['polygon','rectangle','circle'].includes(f.type)).length;
   let totalArea = 0, totalLen = 0;
   features.forEach(f => {
-    if (f.type === 'polygon' && f.layer.getLatLngs) {
-      const lls = f.layer.getLatLngs()[0];
-      totalArea += shoelaceArea(lls);
-    }
+    if (f.type === 'polygon' && f.layer.getLatLngs) totalArea += shoelaceArea(f.layer.getLatLngs()[0]);
     if (f.type === 'polyline' && f.layer.getLatLngs) {
       const lls = f.layer.getLatLngs();
       for (let i=1; i<lls.length; i++) totalLen += haversine(lls[i-1], lls[i]);
@@ -578,57 +600,90 @@ function updateCounter() {
   document.getElementById('feat-count-top').textContent = n + ' features';
 }
 
-// ════════════ EXPORT SELECTED ════════════
+// ========== EXPORT SELECTED ==========
 function exportSelected() {
   const sel = features.filter(f => selectedIds.has(f.id));
-  if (sel.length === 0) { toast('No features selected', true); return; }
-  const fc = { type: 'FeatureCollection', features: sel.map(f => f.geojson) };
+  if (sel.length === 0) { toast('No selection', true); return; }
+  const fc = { type:'FeatureCollection', features: sel.map(f => f.geojson) };
   downloadText(JSON.stringify(fc, null, 2), 'geoforge_selected.geojson', 'application/json');
   toast('Selected exported as GeoJSON');
 }
 
-// ════════════ BASEMAP ════════════
+// ========== BASEMAP ==========
 function changeBasemap(key, btn) {
   map.removeLayer(currentBase);
   currentBase = baseLayers[key].addTo(map);
   currentBase.bringToBack();
   document.querySelectorAll('.bm-pill').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  btn.classList.add('active');
 }
 
-// ════════════ FULL EXPORTS ════════════
-function downloadText(text, name, mime) {
-  const blob = new Blob([text], {type: mime});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name; a.click();
+// ========== PROJECT SAVE / LOAD ==========
+function saveProject() {
+  if (!features.length) { toast('No features to save', true); return; }
+  const project = {
+    version: '1.0',
+    features: features.map(f => ({
+      id: f.id, type: f.type, name: f.name, cat: f.cat, desc: f.desc,
+      color: f.color, op: f.op, attrs: f.attrs, geojson: f.geojson
+    }))
+  };
+  downloadText(JSON.stringify(project), 'geoforge_project.geoforge', 'application/json');
+  toast('Project saved');
 }
+function loadProject() {
+  const input = document.createElement('input'); input.type = 'file'; input.accept = '.geoforge,.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const project = JSON.parse(ev.target.result);
+        if (!project.features) throw new Error('Invalid project');
+        clearAll();
+        project.features.forEach(item => {
+          const lyr = L.geoJSON(item.geojson, { style: { color: item.color, fillOpacity: item.op || 0.4 },
+            pointToLayer: (f, ll) => L.marker(ll) }).addTo(drawnItems);
+          lyr.eachLayer(layer => {
+            const feat = { ...item, layer, geojson: item.geojson };
+            features.push(feat);
+            layer.on('click', () => selectFeature(feat.id));
+            if (layer.bindPopup) layer.bindPopup(`<strong>${item.name}</strong><br>${item.cat}`);
+          });
+        });
+        renderFeatureList(); updateStats(); updateCounter(); pushHistory();
+        zoomToAll();
+        toast('Project loaded');
+      } catch { toast('Invalid file', true); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ========== FULL EXPORTS ==========
+function downloadText(text, name, mime) { const b = new Blob([text],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); }
 function buildGeoJSON() { return { type:'FeatureCollection', features: features.map(f => f.geojson) }; }
 function exportGeoJSON() { downloadText(JSON.stringify(buildGeoJSON(),null,2), 'geoforge.geojson', 'application/json'); toast('GeoJSON exported'); }
 function exportKML() {
-  const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>${features.map((f,i)=>{
-    const g = f.geojson.geometry;
-    let geom='';
+  const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>${features.map(f => {
+    const g = f.geojson.geometry; let geom='';
     if (g.type==='Point') geom=`<Point><coordinates>${g.coordinates[0]},${g.coordinates[1]}</coordinates></Point>`;
     else if (g.type==='LineString') geom=`<LineString><coordinates>${g.coordinates.map(c=>c.join(',')).join(' ')}</coordinates></LineString>`;
     else if (g.type==='Polygon') geom=`<Polygon><outerBoundaryIs><LinearRing><coordinates>${g.coordinates[0].map(c=>c.join(',')).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
     return `<Placemark><name>${f.name}</name>${geom}</Placemark>`;
   }).join('')}</Document></kml>`;
-  downloadText(kml, 'geoforge.kml', 'application/vnd.google-earth.kml+xml');
-  toast('KML exported');
+  downloadText(kml, 'geoforge.kml', 'application/vnd.google-earth.kml+xml'); toast('KML exported');
 }
 function exportCSV() {
-  let csv = 'FID,NAME,CATEGORY,DESCRIPTION,TYPE,LAT,LNG\n';
+  let csv = 'FID,NAME,CATEGORY,LAT,LNG\n';
   features.forEach((f,i) => {
-    const g = f.geojson.geometry;
-    let lat='', lng='';
+    const g = f.geojson.geometry; let lat='',lng='';
     if (g.type==='Point') { lat=g.coordinates[1]; lng=g.coordinates[0]; }
-    else if (g.type==='LineString') { lat=g.coordinates[0][1]; lng=g.coordinates[0][0]; }
-    else if (g.type==='Polygon') { lat=g.coordinates[0][0][1]; lng=g.coordinates[0][0][0]; }
-    csv += `${i+1},"${f.name}","${f.cat}","${f.desc}","${f.type}",${lat},${lng}\n`;
+    csv += `${i+1},"${f.name}","${f.cat}",${lat},${lng}\n`;
   });
-  downloadText(csv, 'geoforge.csv', 'text/csv');
-  toast('CSV exported');
+  downloadText(csv, 'geoforge.csv', 'text/csv'); toast('CSV exported');
 }
 function exportWKT() {
   const wkt = features.map(f => {
@@ -638,33 +693,22 @@ function exportWKT() {
     if (g.type==='Polygon') return `POLYGON((${g.coordinates[0].map(c=>c.join(' ')).join(', ')}))`;
     return '';
   }).join('\n');
-  downloadText(wkt, 'geoforge.wkt', 'text/plain');
-  toast('WKT exported');
+  downloadText(wkt, 'geoforge.wkt', 'text/plain'); toast('WKT exported');
 }
 function exportTopoJSON() {
   const topo = { type:'Topology', objects:{ geoforge: { type:'GeometryCollection', geometries: features.map(f => f.geojson.geometry) }}, arcs:[] };
-  downloadText(JSON.stringify(topo,null,2), 'geoforge.topojson', 'application/json');
-  toast('TopoJSON exported');
+  downloadText(JSON.stringify(topo,null,2), 'geoforge.topojson', 'application/json'); toast('TopoJSON exported');
 }
 function exportDXF() {
   let dxf = '0\nSECTION\n2\nENTITIES\n';
   features.forEach(f => {
     const g = f.geojson.geometry;
     if (g.type==='Point') dxf += `0\nPOINT\n8\n${f.cat}\n10\n${g.coordinates[0]}\n20\n${g.coordinates[1]}\n`;
-    else if (g.type==='LineString') {
-      for (let i=1; i<g.coordinates.length; i++) {
-        dxf += `0\nLINE\n8\n${f.cat}\n10\n${g.coordinates[i-1][0]}\n20\n${g.coordinates[i-1][1]}\n11\n${g.coordinates[i][0]}\n21\n${g.coordinates[i][1]}\n`;
-      }
-    } else if (g.type==='Polygon') {
-      const ring = g.coordinates[0];
-      for (let i=0; i<ring.length-1; i++) {
-        dxf += `0\nLINE\n8\n${f.cat}\n10\n${ring[i][0]}\n20\n${ring[i][1]}\n11\n${ring[i+1][0]}\n21\n${ring[i+1][1]}\n`;
-      }
-    }
+    else if (g.type==='LineString') for (let i=1; i<g.coordinates.length; i++) dxf += `0\nLINE\n8\n${f.cat}\n10\n${g.coordinates[i-1][0]}\n20\n${g.coordinates[i-1][1]}\n11\n${g.coordinates[i][0]}\n21\n${g.coordinates[i][1]}\n`;
+    else if (g.type==='Polygon') for (let i=0; i<g.coordinates[0].length-1; i++) dxf += `0\nLINE\n8\n${f.cat}\n10\n${g.coordinates[0][i][0]}\n20\n${g.coordinates[0][i][1]}\n11\n${g.coordinates[0][i+1][0]}\n21\n${g.coordinates[0][i+1][1]}\n`;
   });
   dxf += '0\nENDSEC\n0\nEOF\n';
-  downloadText(dxf, 'geoforge.dxf', 'application/dxf');
-  toast('DXF exported');
+  downloadText(dxf, 'geoforge.dxf', 'application/dxf'); toast('DXF exported');
 }
 async function exportShapefileZip() {
   if (!features.length) { toast('No features', true); return; }
@@ -673,48 +717,32 @@ async function exportShapefileZip() {
   zip.file('geoforge.prj', 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]');
   zip.file('geoforge.kml', document.querySelector('kml')?.textContent || '');
   const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'geoforge_shapefile.zip';
-  a.click();
-  toast('✓ Shapefile ZIP exported');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'geoforge_gis_package.zip'; a.click();
+  toast('✓ GIS package downloaded');
 }
 
-// ════════════ IMPORT ════════════
+// ========== IMPORT ==========
 function importFile(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const data = e.target.result;
-      let fc;
-      if (file.name.endsWith('.kml')) {
-        const parser = new DOMParser();
-        fc = kmlToGeoJSON(parser.parseFromString(data, 'application/xml'));
-      } else if (file.name.endsWith('.csv')) {
-        fc = csvToGeoJSON(data);
-      } else {
-        fc = JSON.parse(data);
-      }
+      const data = e.target.result; let fc;
+      if (file.name.endsWith('.kml')) { const parser = new DOMParser(); fc = kmlToGeoJSON(parser.parseFromString(data, 'application/xml')); }
+      else if (file.name.endsWith('.csv')) fc = csvToGeoJSON(data);
+      else fc = JSON.parse(data);
       if (!fc || fc.type !== 'FeatureCollection') { toast('Invalid format', true); return; }
       fc.features.forEach(feat => {
-        const lyr = L.geoJSON(feat, {style: {color: feat.properties?.COLOR || '#22c55e', fillOpacity: 0.4}});
+        const lyr = L.geoJSON(feat, {style: {color: feat.properties?.COLOR || '#22c55e', fillOpacity: 0.4}}).addTo(drawnItems);
         lyr.eachLayer(layer => {
           const id = `f_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
-          const f = { id, type: layer.feature?.geometry.type === 'Point' ? 'marker' : layer.feature?.geometry.type === 'LineString' ? 'polyline' : 'polygon',
+          const f = { id, type: feat.geometry.type === 'Point' ? 'marker' : feat.geometry.type === 'LineString' ? 'polyline' : 'polygon',
                       name: feat.properties?.NAME || 'Imported', cat: feat.properties?.CATEGORY || 'Imported',
-                      desc: '', color: feat.properties?.COLOR || '#22c55e', op: 0.4, layer, geojson: feat };
-          features.push(f);
-          drawnItems.addLayer(layer);
-          layer.on('click', () => selectFeature(f.id));
+                      desc: '', color: feat.properties?.COLOR || '#22c55e', op: 0.4, layer, geojson: feat, attrs: [] };
+          features.push(f); layer.on('click', () => selectFeature(f.id));
         });
       });
-      renderFeatureList();
-      updateStats();
-      updateCounter();
-      pushHistory();
-      zoomToAll();
+      renderFeatureList(); updateStats(); updateCounter(); pushHistory(); zoomToAll();
       toast(`✓ Imported ${fc.features.length} features`);
     } catch(err) { toast('Import failed: '+err.message, true); }
     input.value = '';
@@ -722,89 +750,50 @@ function importFile(input) {
   reader.readAsText(file);
 }
 function kmlToGeoJSON(xml) {
-  const feats = [];
-  xml.querySelectorAll('Placemark').forEach(pm => {
+  const feats = []; xml.querySelectorAll('Placemark').forEach(pm => {
     const name = pm.querySelector('name')?.textContent || 'Feature';
-    let geom = null;
-    const pt = pm.querySelector('Point');
-    if (pt) {
-      const [lng,lat] = pt.textContent.trim().split(',').map(Number);
-      geom = { type:'Point', coordinates:[lng,lat] };
-    }
-    if (geom) feats.push({ type:'Feature', geometry:geom, properties:{ NAME:name } });
+    const pt = pm.querySelector('Point'); if (pt) { const [lng,lat] = pt.textContent.trim().split(',').map(Number); feats.push({type:'Feature', geometry:{type:'Point',coordinates:[lng,lat]}, properties:{NAME:name}}); }
   });
-  return { type:'FeatureCollection', features:feats };
+  return {type:'FeatureCollection', features:feats};
 }
 function csvToGeoJSON(text) {
-  const lines = text.trim().split('\n');
-  const header = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
-  const latI = header.indexOf('LAT'), lngI = header.indexOf('LNG');
-  if (latI<0 || lngI<0) throw new Error('CSV must have LAT,LNG');
-  const feats = lines.slice(1).map(line => {
-    const cols = line.split(',').map(c => c.trim().replace(/"/g,''));
-    const lat = parseFloat(cols[latI]), lng = parseFloat(cols[lngI]);
+  const lines = text.trim().split('\n'); const header = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  const latI=header.indexOf('LAT'), lngI=header.indexOf('LNG'); if (latI<0||lngI<0) throw new Error('CSV must have LAT,LNG');
+  return {type:'FeatureCollection', features: lines.slice(1).map(line => {
+    const cols = line.split(',').map(c=>c.trim().replace(/"/g,'')); const lat=parseFloat(cols[latI]), lng=parseFloat(cols[lngI]);
     if (isNaN(lat)||isNaN(lng)) return null;
-    return { type:'Feature', geometry:{ type:'Point', coordinates:[lng,lat] }, properties:{ NAME: cols[0] || 'Point' } };
-  }).filter(Boolean);
-  return { type:'FeatureCollection', features:feats };
+    return {type:'Feature', geometry:{type:'Point', coordinates:[lng,lat]}, properties:{NAME: cols[0] || 'Point'}};
+  }).filter(Boolean)};
 }
 
-// ════════════ HELPERS ════════════
-function zoomToAll() {
-  if (!features.length) return;
-  const group = new L.featureGroup(features.map(f => f.layer));
-  map.flyToBounds(group.getBounds().pad(0.1), { duration:0.6 });
-}
-function toast(msg, err=false) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.className = 'toast show' + (err?' err':'');
-  clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-}
+// ========== HELPERS ==========
+function zoomToAll() { if (features.length) map.flyToBounds(new L.featureGroup(features.map(f=>f.layer)).getBounds().pad(0.1), {duration:0.6}); }
+function toast(msg, err=false) { const el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast show'+(err?' err':''); clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => el.classList.remove('show'), 2800); }
 
-// ════════════ AUTO-SAVE ════════════
-setInterval(() => {
-  if (features.length) localStorage.setItem('geoforge_features', JSON.stringify(features.map(f => ({
-    id:f.id, type:f.type, name:f.name, cat:f.cat, desc:f.desc, color:f.color, op:f.op,
-    geojson: f.layer.toGeoJSON ? f.layer.toGeoJSON() : f.geojson
-  }))));
-}, 10000);
-
-// Restore on load
+// ========== AUTO-SAVE & RESTORE ==========
+setInterval(() => { if (features.length) localStorage.setItem('geoforge_features', JSON.stringify(features.map(f => ({ id:f.id, type:f.type, name:f.name, cat:f.cat, desc:f.desc, color:f.color, op:f.op, attrs:f.attrs, geojson: f.layer.toGeoJSON() })))); }, 10000);
 window.addEventListener('load', () => {
   const saved = localStorage.getItem('geoforge_features');
-  if (saved) {
-    try {
-      const arr = JSON.parse(saved);
-      arr.forEach(item => {
-        const lyr = L.geoJSON(item.geojson, { style: { color: item.color, fillOpacity: item.op } }).addTo(drawnItems);
-        lyr.eachLayer(layer => {
-          const feat = { ...item, layer, geojson: item.geojson };
-          features.push(feat);
-          layer.on('click', () => selectFeature(feat.id));
-        });
-      });
-      renderFeatureList();
-      updateStats();
-      updateCounter();
-      pushHistory();
-    } catch(e) {}
-  }
+  if (saved) try {
+    JSON.parse(saved).forEach(item => {
+      const lyr = L.geoJSON(item.geojson, { style: { color: item.color, fillOpacity: item.op } }).addTo(drawnItems);
+      lyr.eachLayer(layer => { const feat = { ...item, layer, geojson: item.geojson }; features.push(feat); layer.on('click', () => selectFeature(feat.id)); });
+    });
+    renderFeatureList(); updateStats(); updateCounter(); pushHistory();
+  } catch(e) {}
 });
 
-// Keyboard shortcuts
+// ========== KEYBOARD SHORTCUTS ==========
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
   if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveProject(); }
   if (e.key === 'Delete') { deleteSelected(); }
   if (e.key === 'Escape') { deactivateTool(); }
 });
 
-// Initial render
-renderFeatureList();
-updateStats();
-updateCounter();
-pushHistory();
+// ========== INITIAL RENDER ==========
+renderFeatureList(); updateStats(); updateCounter(); pushHistory();
 </script>
 </body>
 </html>

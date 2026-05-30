@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCR Scanner – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:var(--fbody); min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:900px; margin:0 auto; width:100%; padding:2rem 20px; }
+    .upload-area { border:2px dashed var(--border); border-radius:var(--r); padding:2rem; text-align:center; cursor:pointer; background:var(--card); margin-bottom:1.5rem; transition:0.2s; }
+    .upload-area:hover { border-color:var(--accent); background:var(--glow); }
+    .upload-area i { font-size:2.5rem; color:var(--accent); }
+    .upload-area input { display:none; }
+    .toolbar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+    .btn { padding:10px 20px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; display:inline-flex; align-items:center; gap:8px; font-weight:600; transition:0.2s; }
+    .btn-primary { background:var(--accent); color:white; border:none; }
+    .btn-primary:hover { background:var(--accent2); }
+    .progress-bar { height:6px; background:var(--border); border-radius:10px; margin:1rem 0; display:none; }
+    .progress-fill { height:100%; background:var(--accent); width:0%; border-radius:10px; transition:width 0.3s; }
+    .result-box { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.5rem; position:relative; min-height:200px; }
+    textarea { width:100%; min-height:200px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:12px; font-family:'JetBrains Mono',monospace; resize:vertical; }
+    .lang-select { margin-left:auto; }
+    .history-item { display:flex; justify-content:space-between; align-items:center; padding:8px; border:1px solid var(--border); border-radius:8px; margin-bottom:4px; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+  <div class="main">
+    <div class="upload-area" id="uploadZone">
+      <i class="fa-solid fa-image"></i>
+      <h2>Upload image for OCR</h2>
+      <p>JPG, PNG, WebP – extract text with 100+ languages</p>
+      <input type="file" id="imageInput" accept="image/*" />
+    </div>
+    <div class="toolbar">
+      <button class="btn btn-primary" id="extractBtn" disabled>Extract Text</button>
+      <button class="btn" id="copyBtn">Copy</button>
+      <button class="btn" id="downloadBtn">Download .txt</button>
+      <select class="btn lang-select" id="langSelect">
+        <option value="eng">English</option>
+        <option value="ara">Arabic</option>
+        <option value="urd">Urdu</option>
+        <option value="hin">Hindi</option>
+        <option value="spa">Spanish</option>
+        <option value="fra">French</option>
+        <option value="deu">German</option>
+        <option value="chi_sim">Chinese (Simplified)</option>
+        <option value="jpn">Japanese</option>
+        <option value="rus">Russian</option>
+        <!-- more can be added -->
+      </select>
+    </div>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="result-box">
+      <textarea id="outputText" readonly placeholder="Extracted text will appear here..."></textarea>
+    </div>
+    <h3 style="margin-top:2rem;">Recent Scans</h3>
+    <div id="history"></div>
+  </div>
+  <footer>© 2026 PixelPress – OCR runs entirely in your browser</footer>
+
+  <script>
+    (function() {
+      const uploadZone = document.getElementById('uploadZone');
+      const imageInput = document.getElementById('imageInput');
+      const extractBtn = document.getElementById('extractBtn');
+      const output = document.getElementById('outputText');
+      const langSelect = document.getElementById('langSelect');
+      const progressBar = document.getElementById('progressBar');
+      const progressFill = document.getElementById('progressFill');
+      const historyDiv = document.getElementById('history');
+
+      let currentImage = null;
+
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+
+      uploadZone.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            currentImage = ev.target.result;
+            extractBtn.disabled = false;
+            output.value = '';
+            // preview thumbnail? not needed
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      });
+
+      function addHistory(text, lang) {
+        const history = JSON.parse(localStorage.getItem('ocr_history') || '[]');
+        history.unshift({ text: text.substring(0,100), lang, time: new Date().toISOString() });
+        if (history.length > 20) history.pop();
+        localStorage.setItem('ocr_history', JSON.stringify(history));
+        renderHistory();
+      }
+
+      function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('ocr_history') || '[]');
+        historyDiv.innerHTML = history.map((h,i) => `
+          <div class="history-item">
+            <span>${h.text}... (${h.lang})</span>
+            <button class="btn" onclick="loadHistory(${i})">Load</button>
+          </div>
+        `).join('');
+      }
+
+      window.loadHistory = (index) => {
+        const history = JSON.parse(localStorage.getItem('ocr_history') || '[]');
+        if (index < history.length) {
+          output.value = history[index].text;
+          langSelect.value = history[index].lang;
+        }
+      };
+
+      extractBtn.addEventListener('click', async () => {
+        if (!currentImage) return;
+        extractBtn.disabled = true;
+        progressBar.style.display = 'block';
+        progressFill.style.width = '0%';
+        const lang = langSelect.value;
+
+        try {
+          const worker = await Tesseract.createWorker(lang);
+          const { data: { text } } = await worker.recognize(currentImage);
+          output.value = text;
+          await worker.terminate();
+          addHistory(text, lang);
+        } catch (e) {
+          output.value = 'Error: ' + e.message;
+        } finally {
+          extractBtn.disabled = false;
+          progressBar.style.display = 'none';
+        }
+      });
+
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(output.value).then(() => alert('Copied!'));
+      });
+
+      document.getElementById('downloadBtn').addEventListener('click', () => {
+        const blob = new Blob([output.value], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ocr-text.txt';
+        a.click();
+      });
+
+      renderHistory();
+    })();
+  </script>
+</body>
+</html>

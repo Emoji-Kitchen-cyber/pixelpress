@@ -1,193 +1,345 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced Color Picker - PixelPress</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>Color Picker Pro – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
     :root {
-      --bg: #f5f5f7;
-      --surface: rgba(255, 255, 255, 0.75);
-      --card: #ffffff;
-      --border: rgba(0, 0, 0, 0.06);
-      --text: #1d1d1f;
-      --muted: #6e6e73;
-      --accent: #ec4899;
-      --accent2: #a78bfa;
-      --glow: rgba(236, 72, 153, 0.1);
-      --r: 16px;
-      --fhead: 'Syne', sans-serif;
-      --fbody: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --fmono: 'JetBrains Mono', monospace;
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
     }
-
     [data-theme="dark"] {
-      --bg: #09090e;
-      --surface: rgba(21, 21, 30, 0.7);
-      --card: #15151e;
-      --border: rgba(255, 255, 255, 0.08);
-      --text: #e8e8f0;
-      --muted: #86868b;
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: var(--fbody); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.4s, color 0.4s; }
-    
-    /* Navbar matching index.html */
-    nav { position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(1rem, 5vw, 3rem); height: 64px; background: var(--surface); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
-    .nav-logo { font-family: var(--fhead); font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; text-transform: uppercase; text-decoration: none; color: var(--text); }
-    .nav-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .back-btn { display: flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
-    .back-btn:hover { color: var(--accent); }
-
-    /* Tool Workspace */
-    .main { max-width: 800px; margin: 0 auto; width: 100%; padding: 3rem 20px; flex: 1; }
-    .tool-header { text-align: center; margin-bottom: 2rem; }
-    .tool-header h1 { font-family: var(--fhead); font-size: 2.5rem; margin-bottom: 10px; }
-    
-    .workspace { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-    
-    .color-preview { width: 100%; height: 150px; border-radius: 12px; background-color: #ec4899; margin-bottom: 1.5rem; border: 1px solid var(--border); transition: background-color 0.1s; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
-    
-    .controls { display: grid; grid-template-columns: 1fr auto; gap: 15px; margin-bottom: 2rem; align-items: center; }
-    input[type="color"] { width: 100%; height: 50px; border: none; border-radius: 8px; cursor: pointer; background: transparent; }
-    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-    input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 8px; }
-    
-    .btn { background: var(--accent); color: white; border: none; padding: 0 20px; height: 50px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; }
-    .btn:hover { opacity: 0.9; }
-
-    .output-grid { display: grid; gap: 15px; }
-    .output-group { display: flex; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 15px; }
-    .output-group label { width: 50px; font-weight: 700; color: var(--muted); font-size: 14px; }
-    .output-group input { flex: 1; background: transparent; border: none; color: var(--text); font-family: var(--fmono); font-size: 15px; outline: none; }
-    .copy-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 5px; transition: color 0.2s; }
-    .copy-btn:hover { color: var(--accent); }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:1100px; margin:0 auto; width:100%; padding:1.5rem 20px; display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+    @media(max-width:800px) { .main { grid-template-columns:1fr; } }
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.5rem; display:flex; flex-direction:column; gap:1rem; }
+    .color-preview { width:100%; height:120px; border-radius:8px; border:1px solid var(--border); }
+    .input-group { display:flex; flex-direction:column; gap:4px; }
+    label { font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; }
+    input[type="color"] { width:100%; height:44px; border:none; cursor:pointer; border-radius:8px; }
+    .harmony-swatches { display:flex; gap:6px; flex-wrap:wrap; }
+    .swatch { flex:1; min-width:50px; height:60px; border-radius:6px; position:relative; cursor:pointer; }
+    .swatch .hex-label { position:absolute; bottom:4px; left:4px; font-size:0.7rem; color:white; text-shadow:0 0 2px black; }
+    .contrast-row { display:flex; gap:8px; align-items:center; }
+    .contrast-bg, .contrast-fg { width:40px; height:40px; border-radius:4px; border:1px solid var(--border); }
+    .btn { padding:10px 18px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; }
+    .btn:hover { border-color:var(--accent); }
+    .btn-primary { background:var(--accent); color:white; border:none; }
+    .btn-primary:hover { background:#db2777; }
+    .history-bar { display:flex; gap:6px; flex-wrap:wrap; }
+    .hist-swatch { width:32px; height:32px; border-radius:4px; border:1px solid var(--border); cursor:pointer; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
 <body>
-
   <nav>
-    <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
-    <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
-    <div style="width: 70px;"></div>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
   </nav>
 
   <div class="main">
-    <div class="tool-header">
-      <h1>Color Picker</h1>
-      <p style="color: var(--muted);">Advanced color inspection, extraction, and HEX copying.</p>
+    <!-- Left column: Picker & Info -->
+    <div class="panel">
+      <div class="color-preview" id="preview"></div>
+      <input type="color" id="colorInput" value="#ec4899" />
+      <button class="btn" id="eyeDropperBtn" title="Pick from screen"><i class="fa-solid fa-eye-dropper"></i> Pick from Screen</button>
+      <div class="input-group">
+        <label>HEX</label>
+        <input type="text" id="hexVal" readonly />
+      </div>
+      <div class="input-group">
+        <label>RGB</label>
+        <input type="text" id="rgbVal" readonly />
+      </div>
+      <div class="input-group">
+        <label>HSL</label>
+        <input type="text" id="hslVal" readonly />
+      </div>
+      <div class="input-group">
+        <label>CMYK (approx)</label>
+        <input type="text" id="cmykVal" readonly />
+      </div>
+      <button class="btn" id="addToHistoryBtn"><i class="fa-solid fa-plus"></i> Add to History</button>
+      <div>
+        <strong>History</strong>
+        <div class="history-bar" id="historyBar"></div>
+        <button class="btn" id="clearHistoryBtn">Clear</button>
+      </div>
     </div>
 
-    <div class="workspace">
-      <div class="color-preview" id="preview"></div>
-      
-      <div class="controls">
-        <input type="color" id="colorInput" value="#ec4899">
-        <button class="btn" id="eyeDropperBtn" title="Pick color from screen"><i class="fa-solid fa-eye-dropper"></i> Pick Screen Color</button>
+    <!-- Right column: Advanced tools -->
+    <div class="panel">
+      <div>
+        <h3 style="font-family:'Syne';">Harmonies</h3>
+        <select id="harmonyMode">
+          <option value="complementary">Complementary</option>
+          <option value="analogous">Analogous</option>
+          <option value="triadic">Triadic</option>
+          <option value="tetradic">Tetradic</option>
+          <option value="mono">Monochromatic</option>
+        </select>
+        <div class="harmony-swatches" id="harmonySwatches"></div>
       </div>
 
-      <div class="output-grid">
-        <div class="output-group">
-          <label>HEX</label>
-          <input type="text" id="hexOut" readonly>
-          <button class="copy-btn" onclick="copyText('hexOut')"><i class="fa-regular fa-copy"></i></button>
-        </div>
-        <div class="output-group">
-          <label>RGB</label>
-          <input type="text" id="rgbOut" readonly>
-          <button class="copy-btn" onclick="copyText('rgbOut')"><i class="fa-regular fa-copy"></i></button>
-        </div>
-        <div class="output-group">
-          <label>HSL</label>
-          <input type="text" id="hslOut" readonly>
-          <button class="copy-btn" onclick="copyText('hslOut')"><i class="fa-regular fa-copy"></i></button>
-        </div>
+      <div>
+        <h3 style="font-family:'Syne';">Image Extractor</h3>
+        <button class="btn" onclick="document.getElementById('extractImage').click()"><i class="fa-solid fa-image"></i> Upload Image</button>
+        <input type="file" id="extractImage" accept="image/*" hidden />
+        <div id="extractedColors" class="harmony-swatches" style="margin-top:8px;"></div>
       </div>
+
+      <div>
+        <h3 style="font-family:'Syne';">Contrast Checker</h3>
+        <div class="contrast-row">
+          <div class="contrast-bg" id="contrastBg" style="background:#ffffff;"></div>
+          <div class="contrast-fg" id="contrastFg" style="background:#000000;"></div>
+          <span id="contrastRatio">Ratio: 21.0 (AAA)</span>
+        </div>
+        <input type="color" id="fgColorInput" value="#000000" style="width:100%; margin-top:8px;" />
+      </div>
+
+      <div>
+        <h3 style="font-family:'Syne';">Gradient Generator</h3>
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <input type="color" id="gradStart" value="#ec4899" />
+          <input type="color" id="gradEnd" value="#a78bfa" />
+          <select id="gradType"><option value="linear">Linear</option><option value="radial">Radial</option></select>
+        </div>
+        <div id="gradientPreview" style="height:60px; border-radius:8px;"></div>
+        <button class="btn" id="copyGradientCSS">Copy CSS</button>
+      </div>
+
+      <button class="btn btn-primary" id="exportPaletteBtn">Export Palette (JSON)</button>
     </div>
   </div>
 
+  <footer>© 2026 PixelPress – Color Picker Pro</footer>
+
   <script>
-    // Sync Theme with index.html
-    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
-
-    const colorInput = document.getElementById('colorInput');
-    const preview = document.getElementById('preview');
-    const hexOut = document.getElementById('hexOut');
-    const rgbOut = document.getElementById('rgbOut');
-    const hslOut = document.getElementById('hslOut');
-    const eyeDropperBtn = document.getElementById('eyeDropperBtn');
-
-    // Hide EyeDropper button if browser doesn't support it
-    if (!window.EyeDropper) { eyeDropperBtn.style.display = 'none'; }
-
-    function hexToRGB(hex) {
-      let r = 0, g = 0, b = 0;
-      if (hex.length === 4) {
-        r = "0x" + hex + hex; g = "0x" + hex + hex; b = "0x" + hex + hex;
-      } else if (hex.length === 7) {
-        r = "0x" + hex + hex; g = "0x" + hex + hex; b = "0x" + hex + hex;
+    (function() {
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
       }
-      return `rgb(${+r}, ${+g}, ${+b})`;
-    }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
 
-    function hexToHSL(hex) {
-      let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      let r = parseInt(result, 16) / 255;
-      let g = parseInt(result, 16) / 255;
-      let b = parseInt(result, 16) / 255;
-      let max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h, s, l = (max + min) / 2;
-      if (max == min) { h = s = 0; } 
-      else {
-        let d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch(max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
+      const colorInput = document.getElementById('colorInput');
+      const preview = document.getElementById('preview');
+      const hexVal = document.getElementById('hexVal');
+      const rgbVal = document.getElementById('rgbVal');
+      const hslVal = document.getElementById('hslVal');
+      const cmykVal = document.getElementById('cmykVal');
+      let history = JSON.parse(localStorage.getItem('colorHistory')||'[]');
+      if (history.length>12) history = history.slice(-12);
+
+      function hexToRgb(hex) {
+        const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+        return {r,g,b};
+      }
+      function rgbToHsl(r,g,b) {
+        r/=255;g/=255;b/=255;
+        const max=Math.max(r,g,b), min=Math.min(r,g,b);
+        let h,s,l=(max+min)/2;
+        if(max===min) h=s=0;
+        else {
+          const d=max-min;
+          s=l>0.5? d/(2-max-min) : d/(max+min);
+          switch(max){ case r: h=((g-b)/d+(g<b?6:0))*60; break; case g: h=((b-r)/d+2)*60; break; case b: h=((r-g)/d+4)*60; break; }
         }
-        h /= 6;
+        return {h:Math.round(h), s:Math.round(s*100), l:Math.round(l*100)};
       }
-      return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
-    }
-
-    function updateColors(hex) {
-      preview.style.backgroundColor = hex;
-      hexOut.value = hex.toUpperCase();
-      rgbOut.value = hexToRGB(hex);
-      hslOut.value = hexToHSL(hex);
-    }
-
-    colorInput.addEventListener('input', (e) => updateColors(e.target.value));
-
-    eyeDropperBtn.addEventListener('click', async () => {
-      const eyeDropper = new EyeDropper();
-      try {
-        const result = await eyeDropper.open();
-        colorInput.value = result.sRGBHex;
-        updateColors(result.sRGBHex);
-      } catch (e) {
-        console.log('EyeDropper closed or failed');
+      function rgbToCmyk(r,g,b) {
+        let c=1-(r/255), m=1-(g/255), y=1-(b/255), k=Math.min(c,m,y);
+        if (k===1) return {c:0,m:0,y:0,k:100};
+        return {
+          c:Math.round((c-k)/(1-k)*100),
+          m:Math.round((m-k)/(1-k)*100),
+          y:Math.round((y-k)/(1-k)*100),
+          k:Math.round(k*100)
+        };
       }
-    });
+      function hslToHex(h,s,l) {
+        s/=100; l/=100;
+        let c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+        let r,g,b;
+        if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}
+        r=Math.round((r+m)*255).toString(16).padStart(2,'0');
+        g=Math.round((g+m)*255).toString(16).padStart(2,'0');
+        b=Math.round((b+m)*255).toString(16).padStart(2,'0');
+        return `#${r}${g}${b}`;
+      }
 
-    function copyText(id) {
-      const el = document.getElementById(id);
-      el.select();
-      document.execCommand('copy');
-      
-      const btn = el.nextElementSibling;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-check" style="color: #10b981;"></i>';
-      setTimeout(() => btn.innerHTML = originalHtml, 1500);
-    }
+      function updateUI(hex) {
+        preview.style.backgroundColor = hex;
+        hexVal.value = hex.toUpperCase();
+        const rgb = hexToRgb(hex);
+        rgbVal.value = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+        hslVal.value = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+        const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
+        cmykVal.value = `cmyk(${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%)`;
+        generateHarmonies(hex);
+        updateContrast();
+        updateGradient();
+      }
 
-    // Init
-    updateColors(colorInput.value);
+      function generateHarmonies(hex) {
+        const hsl = rgbToHsl(...Object.values(hexToRgb(hex)));
+        const mode = document.getElementById('harmonyMode').value;
+        let colors = [];
+        const base = hex;
+        const makeSwatch = (h,s,l) => hslToHex(h,s,l);
+        if (mode==='complementary') colors = [base, makeSwatch((hsl.h+180)%360,hsl.s,hsl.l)];
+        else if (mode==='analogous') colors = [base, makeSwatch((hsl.h+30)%360,hsl.s,hsl.l), makeSwatch((hsl.h-30+360)%360,hsl.s,hsl.l)];
+        else if (mode==='triadic') colors = [base, makeSwatch((hsl.h+120)%360,hsl.s,hsl.l), makeSwatch((hsl.h+240)%360,hsl.s,hsl.l)];
+        else if (mode==='tetradic') colors = [base, makeSwatch((hsl.h+90)%360,hsl.s,hsl.l), makeSwatch((hsl.h+180)%360,hsl.s,hsl.l), makeSwatch((hsl.h+270)%360,hsl.s,hsl.l)];
+        else colors = [base, makeSwatch(hsl.h,hsl.s,Math.min(100, hsl.l+20)), makeSwatch(hsl.h,hsl.s,Math.max(0, hsl.l-20))];
+        
+        const container = document.getElementById('harmonySwatches');
+        container.innerHTML = colors.map(c => `<div class="swatch" style="background:${c}" onclick="selectColor('${c}')"><span class="hex-label">${c.toUpperCase()}</span></div>`).join('');
+      }
+
+      window.selectColor = (hex) => {
+        colorInput.value = hex;
+        updateUI(hex);
+      };
+
+      function updateContrast() {
+        const fgHex = document.getElementById('fgColorInput').value;
+        const bgHex = colorInput.value;
+        const fg = hexToRgb(fgHex);
+        const bg = hexToRgb(bgHex);
+        const lum = (c) => { const sRGB = c/255; return sRGB <= 0.03928 ? sRGB/12.92 : Math.pow((sRGB+0.055)/1.055,2.4); };
+        const l1 = 0.2126*lum(fg.r)+0.7152*lum(fg.g)+0.0722*lum(fg.b);
+        const l2 = 0.2126*lum(bg.r)+0.7152*lum(bg.g)+0.0722*lum(bg.b);
+        const ratio = (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);
+        const pass = ratio>=7 ? 'AAA' : (ratio>=4.5 ? 'AA' : 'Fail');
+        document.getElementById('contrastRatio').textContent = `Ratio: ${ratio.toFixed(1)} (${pass})`;
+        document.getElementById('contrastBg').style.background = bgHex;
+        document.getElementById('contrastFg').style.background = fgHex;
+      }
+
+      document.getElementById('fgColorInput').addEventListener('input', updateContrast);
+
+      function updateGradient() {
+        const start = document.getElementById('gradStart').value;
+        const end = document.getElementById('gradEnd').value;
+        const type = document.getElementById('gradType').value;
+        const div = document.getElementById('gradientPreview');
+        div.style.background = type==='linear' ? `linear-gradient(90deg, ${start}, ${end})` : `radial-gradient(circle, ${start}, ${end})`;
+      }
+
+      document.getElementById('gradStart').addEventListener('input', updateGradient);
+      document.getElementById('gradEnd').addEventListener('input', updateGradient);
+      document.getElementById('gradType').addEventListener('change', updateGradient);
+
+      document.getElementById('copyGradientCSS').addEventListener('click', () => {
+        const start = document.getElementById('gradStart').value;
+        const end = document.getElementById('gradEnd').value;
+        const type = document.getElementById('gradType').value;
+        const css = `background: ${type==='linear'?'linear-gradient(90deg, '+start+', '+end+')':'radial-gradient(circle, '+start+', '+end+')'};`;
+        navigator.clipboard.writeText(css).then(() => alert('Copied!'));
+      });
+
+      // History
+      function renderHistory() {
+        const bar = document.getElementById('historyBar');
+        bar.innerHTML = history.map(c => `<div class="hist-swatch" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');
+        localStorage.setItem('colorHistory', JSON.stringify(history));
+      }
+
+      document.getElementById('addToHistoryBtn').addEventListener('click', () => {
+        const hex = colorInput.value;
+        history = history.filter(c => c!==hex);
+        history.push(hex);
+        if (history.length>12) history.shift();
+        renderHistory();
+      });
+
+      document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        history = [];
+        renderHistory();
+      });
+
+      // Eye dropper
+      if (window.EyeDropper) {
+        document.getElementById('eyeDropperBtn').addEventListener('click', async () => {
+          const dropper = new EyeDropper();
+          try {
+            const result = await dropper.open();
+            colorInput.value = result.sRGBHex;
+            updateUI(result.sRGBHex);
+          } catch {}
+        });
+      } else {
+        document.getElementById('eyeDropperBtn').style.display = 'none';
+      }
+
+      colorInput.addEventListener('input', (e) => updateUI(e.target.value));
+      document.getElementById('harmonyMode').addEventListener('change', () => generateHarmonies(colorInput.value));
+
+      // Image extractor
+      document.getElementById('extractImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = 40;
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0,0,size,size);
+          const data = ctx.getImageData(0,0,size,size).data;
+          const colorMap = {};
+          for (let i=0;i<data.length;i+=4) {
+            const hex = '#'+[data[i],data[i+1],data[i+2]].map(c=>c.toString(16).padStart(2,'0')).join('');
+            colorMap[hex] = (colorMap[hex]||0)+1;
+          }
+          const sorted = Object.entries(colorMap).sort((a,b)=>b[1]-a[1]).slice(0,6).map(e=>e[0]);
+          document.getElementById('extractedColors').innerHTML = sorted.map(c => `<div class="swatch" style="background:${c}" onclick="selectColor('${c}')"><span class="hex-label">${c.toUpperCase()}</span></div>`).join('');
+        };
+        img.src = URL.createObjectURL(file);
+      });
+
+      document.getElementById('exportPaletteBtn').addEventListener('click', () => {
+        const colors = [...document.querySelectorAll('#harmonySwatches .swatch')].map(s => s.style.background);
+        const json = JSON.stringify(colors, null, 2);
+        const blob = new Blob([json], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'palette.json';
+        a.click();
+      });
+
+      // Init
+      updateUI(colorInput.value);
+      renderHistory();
+    })();
   </script>
 </body>
 </html>

@@ -1,99 +1,173 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — PixelPress</title>
-  <meta name="description" content="PixelPress privacy policy: learn how we protect your data while using our browser-based image tools.">
-  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/privacy-policy.html">
-  <meta property="og:title" content="Privacy Policy">
-  <meta property="og:description" content="Your privacy is our priority.">
-  <meta property="og:url" content="https://pixelpress-smoky.vercel.app/privacy-policy.html">
-  <meta name="twitter:card" content="summary">
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="PixelPress privacy policy: learn how we protect your data while using our browser‑based tools." />
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/privacy-policy.html" />
+  <meta property="og:title" content="Privacy Policy — PixelPress" />
+  <meta property="og:description" content="Your privacy is our priority. All processing is local." />
+  <meta property="og:url" content="https://pixelpress-smoky.vercel.app/privacy-policy.html" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
   <style>
-    .policy-content { max-width:800px; margin:0 auto; }
-    .policy-content h2 { font-size:1.2rem; margin:24px 0 12px; color:#1a1a2e; }
-    .policy-content p, .policy-content li { color:#374151; line-height:1.7; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:800px; margin:0 auto; width:100%; padding:2rem 20px 4rem; }
+    .hero { text-align:center; margin-bottom:3rem; }
+    .hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,5vw,2.8rem); font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .section { margin-bottom:2rem; }
+    .section h2 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; margin-bottom:0.8rem; }
+    .section p, .section li { color:var(--muted); line-height:1.8; font-size:1rem; }
+    .section ul { padding-left:20px; }
+    .highlight-box { background:var(--card); border:1px solid var(--accent); border-radius:var(--r); padding:1.2rem; margin:1.5rem 0; }
+    .highlight-box strong { color:var(--accent); }
+    .contact-info { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.2rem; margin-top:1rem; }
+    .contact-info a { color:var(--accent); text-decoration:none; font-weight:500; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
+    .footer-links { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+    .footer-links a { color:var(--muted); font-weight:500; text-decoration:none; }
+    .footer-links a:hover { color:var(--accent); }
   </style>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3P7QPQKV3K');
+  </script>
 </head>
 <body>
-  <header class="main-header">
-    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
-    <button class="btn-outline" onclick="history.back()">← Back</button>
-  </header>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
 
-  <main class="tool-page">
-    <h1>Privacy Policy</h1>
-    <p style="color:#6b7280;">Last updated: June 2026</p>
-    <div class="policy-content">
-      <h2>1. Our Privacy Commitment</h2>
-      <p>PixelPress is designed with privacy at its core. All image processing happens directly in your browser. We do not upload, store, or have access to your images. This policy explains what little data we do collect.</p>
+  <div class="main">
+    <div class="hero">
+      <h1>Privacy Policy</h1>
+      <p style="color:var(--muted); margin-top:0.5rem;">Last updated: June 2026</p>
+    </div>
 
-      <h2>2. Information We Don't Collect</h2>
+    <div class="highlight-box">
+      <strong>🔒 Key Promise:</strong> PixelPress processes <strong>all files directly in your browser</strong>. Your images, documents, and data <strong>never leave your device</strong> and are <strong>never uploaded to any server</strong>.
+    </div>
+
+    <div class="section">
+      <h2>1. Information We Don't Collect</h2>
       <ul>
-        <li>Your images — they stay on your device and are processed locally.</li>
-        <li>Personal identification information (name, email) unless you voluntarily provide it via our contact form.</li>
-        <li>Files you upload are never transmitted to any server.</li>
+        <li><strong>Your files</strong> — images, PDFs, documents stay 100% on your device. They are processed locally using your browser's engine.</li>
+        <li><strong>Personal identification</strong> — we do not collect your name, email, or phone number unless you voluntarily provide it via our contact form.</li>
+        <li><strong>Uploads</strong> — there is no "upload" step. Files are read into browser memory and discarded when you close the tab.</li>
       </ul>
+    </div>
 
-      <h2>3. Automatically Collected Data</h2>
-      <p>Like most websites, we use Google Analytics (via Vercel Analytics or similar) to understand general usage patterns. This collects:</p>
+    <div class="section">
+      <h2>2. Automatically Collected Data</h2>
+      <p>Like most websites, we use <strong>Google Analytics</strong> to understand general usage patterns. This automatically collects:</p>
       <ul>
         <li>Pages visited and time spent</li>
         <li>Browser type and device category</li>
-        <li>Approximate geographic region (country level)</li>
+        <li>Approximate geographic region (country level only)</li>
       </ul>
-      <p>No personally identifiable information is gathered through analytics.</p>
+      <p><strong>No personally identifiable information</strong> is gathered through analytics. Your IP address is anonymized.</p>
+    </div>
 
-      <h2>4. Cookies</h2>
-      <p>We use minimal cookies for functionality (e.g., remembering tool preferences). We also use third-party cookies from Google AdSense to serve relevant ads. You can disable cookies in your browser settings.</p>
-
-      <h2>5. Third-Party Services</h2>
-      <p>We may use:</p>
+    <div class="section">
+      <h2>3. Cookies & Local Storage</h2>
+      <p>We use <strong>minimal cookies</strong> for:</p>
       <ul>
-        <li><strong>Google AdSense</strong> — displays ads based on your interests. Google's use of advertising cookies enables it to serve ads based on your visit to our site and other sites. You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" style="color:#2563eb;">Google Ads Settings</a>.</li>
-        <li><strong>Formspree</strong> (for contact form) — processes submitted messages on our behalf. We receive the form data via email.</li>
+        <li>Remembering your theme preference (dark/light mode)</li>
+        <li>Remembering your language choice (English/Arabic)</li>
       </ul>
+      <p>We use <strong>localStorage</strong> to save your tool history (e.g., shortened URLs, extracted text). This data stays on your device and is automatically cleared after 30 days of inactivity.</p>
+    </div>
 
-      <h2>6. External Links</h2>
-      <p>Our site may link to external resources. We are not responsible for their privacy practices.</p>
-
-      <h2>7. Children's Privacy</h2>
-      <p>Our services are not directed to individuals under 13. We do not knowingly collect personal data from children.</p>
-
-      <h2>8. Changes to This Policy</h2>
-      <p>We will update this page if our practices change. Continued use of the site means you accept the revised policy.</p>
-
-      <h2>9. Contact</h2>
-      <p>For privacy concerns, contact us at:</p>
+    <div class="section">
+      <h2>4. Third‑Party Services</h2>
+      <p>We use the following trusted services:</p>
       <ul>
-        <li>Email: <a href="mailto:jahangirgujjar056@gmail.com" style="color:#2563eb;">jahangirgujjar056@gmail.com</a></li>
-        <li>WhatsApp: <a href="https://wa.me/923432535207" style="color:#2563eb;">+92 343 2535207</a></li>
+        <li><strong>Google Analytics</strong> — anonymous usage statistics.</li>
+        <li><strong>Google AdSense</strong> — displays non‑intrusive ads to keep our tools free. Google may use cookies to serve relevant ads. You can opt out at <a href="https://www.google.com/settings/ads" style="color:var(--accent);">Google Ads Settings</a>.</li>
+        <li><strong>Formspree</strong> — processes our contact form submissions. When you send a message, it is forwarded to our email.</li>
+        <li><strong>CDN Providers</strong> (Cloudflare, jsDelivr, UNPKG) — deliver JavaScript libraries required for our tools to function.</li>
       </ul>
     </div>
-  </main>
 
-  <footer style="text-align:center; padding:30px 20px; border-top:1px solid #e5e7eb; margin-top:40px; color:#6b7280; font-size:0.9rem;">
+    <div class="section">
+      <h2>5. External Links</h2>
+      <p>Our site may contain links to external resources. We are <strong>not responsible</strong> for the privacy practices or content of third‑party websites.</p>
+    </div>
+
+    <div class="section">
+      <h2>6. Children's Privacy</h2>
+      <p>Our services are <strong>not directed to individuals under 13</strong>. We do not knowingly collect personal data from children. If you believe your child has provided us with personal information, please contact us immediately.</p>
+    </div>
+
+    <div class="section">
+      <h2>7. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last updated" date. Continued use of PixelPress after changes means you accept the revised policy.</p>
+    </div>
+
+    <div class="section">
+      <h2>8. Contact Us</h2>
+      <p>For any privacy concerns or questions, reach out:</p>
+      <div class="contact-info">
+        <p><i class="fa-solid fa-envelope"></i> Email: <a href="mailto:jahangirgujjar056@gmail.com">jahangirgujjar056@gmail.com</a></p>
+        <p><i class="fa-brands fa-whatsapp"></i> WhatsApp: <a href="https://wa.me/923432535207">+92 343 2535207</a></p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="./about.html">About</a>
+      <a href="./contact.html">Contact</a>
+      <a href="./privacy-policy.html">Privacy</a>
+      <a href="./terms.html">Terms</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="./blog/">Blog</a>
+    </div>
     <p>© 2026 PixelPress. All rights reserved.</p>
-    <div style="margin-top:10px;">
-      <a href="./about.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">About</a>
-      <a href="./contact.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Contact</a>
-      <a href="./privacy-policy.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Privacy</a>
-      <a href="./terms.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Terms</a>
-      <a href="./faq.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">FAQ</a>
-      <a href="./blog/" style="color:#2563eb; text-decoration:none; margin:0 8px;">Blog</a>
-    </div>
   </footer>
+
+  <script>
+    (function() {
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+    })();
+  </script>
 </body>
 </html>

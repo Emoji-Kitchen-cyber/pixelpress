@@ -7,8 +7,18 @@
   <title id="siteTitle">PixelPress — Free Online Image & Document Toolkit</title>
   <meta name="description" content="Free online image tools: compress, resize, crop, convert, remove background, blur faces, and more. All processing happens in your browser – private and fast." />
   <link rel="canonical" href="https://pixelpress-smoky.vercel.app/" />
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 script-src 'self' 'unsafe-inline' 'unsafe-eval' cdnjs.cloudflare.com unpkg.com cdn.jsdelivr.net cdnjs.com www.googletagmanager.com www.google-analytics.com;
+                 style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com unpkg.com;
+                 font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com;
+                 img-src 'self' data: blob: https:;
+                 connect-src 'self' https:;
+                 frame-src 'none';
+                 object-src 'none';" />
   
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        onerror="this.onerror=null;this.href='https://unpkg.com/@fortawesome/fontawesome-free@6.4.0/css/all.min.css'" />
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -71,7 +81,6 @@
     
     .nav-actions { display: flex; align-items: center; gap: 1rem; }
     
-    /* INTERACTIVE PILLED CONTROL SYSTEM */
     .control-btn {
       background: var(--card); border: 1px solid var(--border); width: 38px; height: 38px;
       border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -79,7 +88,6 @@
     }
     .control-btn:hover { transform: scale(1.05); border-color: var(--accent); }
 
-    /* BEAUTIFUL LANG PILLED SWITCH BUTTON */
     .lang-pill-container { display: flex; align-items: center; gap: 8px; }
     .lang-p-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
     @media (max-width: 600px) { .lang-p-label { display: none; } }
@@ -99,7 +107,6 @@
     body.rtl .switch-p-btn::before { left: auto; right: 2px; }
     body.rtl .switch-p-btn.active::before { transform: translateX(-24px); }
 
-    /* ── HIGH-FIDELITY SIDEBAR DRAWER ── */
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.15); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 299; display: none; }
     .sidebar-overlay.show { display: block; }
 
@@ -124,7 +131,6 @@
     .sidebar-links a:hover i, .sidebar-links a.active i { color: var(--accent); }
     .menu-section-title { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 16px 14px 6px; }
 
-    /* ── WORKSPACE CORE ENGINE ── */
     .hero { text-align: center; padding: clamp(2.5rem, 6vw, 4.5rem) 1rem 2rem; }
     .hero h1 { font-family: var(--fhead); font-size: clamp(1.8rem, 4.5vw, 3.2rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 12px; color: var(--text); }
     .hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -132,7 +138,6 @@
 
     .main { max-width: 1140px; margin: 0 auto; width: 100%; padding: 0 20px 5rem; flex: 1; }
 
-    /* PREMIUM SEARCH COMMAND CONSOLE */
     .search-container { max-width: 580px; margin: 0 auto 2.5rem; position: relative; }
     .search-bar {
       width: 100%; padding: 14px 20px 14px 45px; font-family: inherit; font-size: 15.5px;
@@ -146,7 +151,6 @@
     .search-kbd { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-family: var(--fmono); font-size: 11px; color: var(--muted); background: var(--bg); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); pointer-events: none; }
     body.rtl .search-kbd { right: auto; left: 16px; }
 
-    /* DYNAMIC FILTER METRICS */
     .filter-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 2.5rem; flex-wrap: wrap; }
     .filter-pill {
       background: var(--card); border: 1px solid var(--border); color: var(--muted);
@@ -156,14 +160,12 @@
     .filter-pill:hover { border-color: var(--accent); color: var(--text); }
     .filter-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 
-    /* 2-COLUMN PREMIUM MATRIX LAYOUT */
     .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
     @media (max-width: 850px) { .tools-grid { grid-template-columns: 1fr; gap: 15px; } }
     
     .tool-link { text-decoration: none; color: inherit; display: block; }
     .tool-link.hidden { display: none; }
 
-    /* PREMIUM CARD HOVER LOGIC FRAMEWORKS */
     .tool-card {
       background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
       padding: 24px; display: flex; align-items: flex-start; gap: 18px; height: 100%;
@@ -185,12 +187,103 @@
 
     #noResults { text-align: center; color: var(--muted); padding: 4rem 0; width: 100%; display: none; font-size: 15px; }
 
-    /* FOOTER INTEGRATION LAYERS */
     footer { text-align: center; margin-top: 60px; padding: 35px 20px; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--border); background: var(--card); }
     .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; }
     .footer-links a { color: var(--muted); font-weight: 500; }
     .footer-links a:hover { color: var(--accent); text-decoration: underline; }
   </style>
+
+  <script>
+    // CDN Fallback Loader
+    window.cdnFallback = function(primaryUrl, backupUrl, callback) {
+      var script = document.createElement('script');
+      script.src = primaryUrl;
+      script.onerror = function() {
+        console.warn('Primary CDN failed for', primaryUrl, '- loading backup');
+        var fallback = document.createElement('script');
+        fallback.src = backupUrl;
+        fallback.onload = callback || function(){};
+        document.head.appendChild(fallback);
+      };
+      script.onload = callback || function(){};
+      document.head.appendChild(script);
+    };
+
+    // Global error logger
+    window.onerror = function(message, source, lineno, colno, error) {
+      var errors = [];
+      try { errors = JSON.parse(localStorage.getItem('pixelpress_errors') || '[]'); } catch(e) {}
+      errors.push({
+        message: message,
+        source: source || 'unknown',
+        line: lineno,
+        time: new Date().toISOString(),
+        userAgent: navigator.userAgent.substring(0, 100)
+      });
+      if (errors.length > 30) errors.shift();
+      try { localStorage.setItem('pixelpress_errors', JSON.stringify(errors)); } catch(e) {}
+      return false; // Let default handler run too
+    };
+
+    // localStorage expiry helper
+    window.storeWithExpiry = function(key, value, days) {
+      days = days || 30;
+      var item = { value: value, expiry: Date.now() + (days * 86400000) };
+      try { localStorage.setItem(key, JSON.stringify(item)); } catch(e) { clearOldStorage(key, item); }
+    };
+
+    function clearOldStorage(key, item) {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        try {
+          var data = JSON.parse(localStorage.getItem(keys[i]));
+          if (data && data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(keys[i]);
+          }
+        } catch(e) { /* skip non-JSON items */ }
+      }
+      try { localStorage.setItem(key, JSON.stringify(item)); } catch(e) {}
+    }
+
+    window.getWithExpiry = function(key) {
+      var item = localStorage.getItem(key);
+      if (!item) return null;
+      try {
+        var parsed = JSON.parse(item);
+        if (Date.now() > parsed.expiry) { localStorage.removeItem(key); return null; }
+        return parsed.value;
+      } catch(e) { return null; }
+    };
+
+    // Weekly cleanup
+    setInterval(function() {
+      var keys = Object.keys(localStorage);
+      for (var i = 0; i < keys.length; i++) {
+        try {
+          var data = JSON.parse(localStorage.getItem(keys[i]));
+          if (data && data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(keys[i]);
+          }
+        } catch(e) {}
+      }
+    }, 604800000);
+
+    // Performance observer for LCP
+    if ('PerformanceObserver' in window) {
+      try {
+        var lcpObserver = new PerformanceObserver(function(list) {
+          var entries = list.getEntries();
+          if (entries.length > 0) {
+            var lcp = entries[entries.length - 1];
+            if (lcp.startTime > 2500) {
+              console.warn('LCP warning:', Math.round(lcp.startTime) + 'ms');
+            }
+          }
+        });
+        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch(e) {}
+    }
+  </script>
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
   <script>
@@ -280,7 +373,6 @@
         toolsRegistry: [
           { href: "./index.html", icon: "fa-house", text: "Home", section: "home", isUtilityCard: false },
           
-          // Image Utilities Group
           { href: "./compress.html", icon: "fa-box", text: "Compress Image", section: "image", cat: "optimize", emoji: "📦", title: "Compress IMAGE", desc: "Compress <strong>JPG</strong>, <strong>PNG</strong>, and <strong>WEBP</strong> while saving space and maintaining quality.", isUtilityCard: true },
           { href: "./resize.html", icon: "fa-arrows-maximize", text: "Resize Image", section: "image", cat: "edit", emoji: "📐", title: "Resize IMAGE", desc: "Define your dimensions, by percent or pixel, and resize your <strong>JPG</strong>, <strong>PNG</strong>, and <strong>WEBP</strong> images.", isUtilityCard: true },
           { href: "./photo-editor.html", icon: "fa-wand-magic-sparkles", text: "Photo Editor", section: "image", cat: "edit create", emoji: "✨", title: "Photo Editor", desc: "Edit photos directly in your browser with fine-tuned filters, brightness, contrast, rotations, and instant download.", isUtilityCard: true },
@@ -294,16 +386,13 @@
           { href: "./screenshot-editor.html", icon: "fa-desktop", text: "Screenshot Editor", section: "image", cat: "edit create", emoji: "💻", title: "Screenshot Editor", desc: "Wrap captures in beautiful device frames and gradients.", isUtilityCard: true },
           { href: "./favicon-generator.html", icon: "fa-icons", text: "Favicon Generator", section: "image", cat: "create convert", emoji: "🎯", title: "Favicon Generator", desc: "Convert raw assets into standard multi-size .ico targets.", isUtilityCard: true },
           
-          // Document Utilities Group
           { href: "./pdf-to-jpg.html", icon: "fa-file-pdf", text: "PDF to JPG", section: "doc", cat: "convert doc", emoji: "📄", title: "PDF to JPG", desc: "Extract all pages from a <strong>PDF</strong> file or convert PDF pages into high-quality <strong>JPG</strong> images instantly.", isUtilityCard: true },
           { href: "./jpg-to-pdf.html", icon: "fa-file-image", text: "JPG to PDF", section: "doc", cat: "convert doc", emoji: "🖼️", title: "JPG to PDF", desc: "Convert your <strong>JPG</strong>, <strong>PNG</strong>, or <strong>WEBP</strong> images into a single compact <strong>PDF</strong> document easily.", isUtilityCard: true },
           { href: "./split-pdf.html", icon: "fa-scissors", text: "Split PDF", section: "doc", cat: "doc", emoji: "✂️", title: "Split PDF", desc: "Extract specific page ranges or split every single page of your <strong>PDF</strong> document into separate separate files seamlessly.", isUtilityCard: true },
           { href: "./merge-pdf.html", icon: "fa-object-group", text: "Merge PDF", section: "doc", cat: "doc", emoji: "🗂️", title: "Merge PDF", desc: "Combine multiple <strong>PDF</strong> documents into a single consolidated file in whatever order you want.", isUtilityCard: true },
           { href: "./compress-pdf.html", icon: "fa-compress", text: "Compress PDF", section: "doc", cat: "optimize doc", emoji: "📉", title: "Compress PDF", desc: "Shrink the file size of your <strong>PDF</strong> document dynamically while maximizing internal asset rendering profiles.", isUtilityCard: true },
-          // New PDF Annotator
           { href: "./pdf-annotator.html", icon: "fa-pen-ruler", text: "PDF Annotator & Editor", section: "doc", cat: "edit doc", emoji: "🖊️", title: "PDF Annotator", desc: "Add text, draw, highlight, sign PDFs directly in your browser.", isUtilityCard: true },
 
-          // Developer/Core SaaS Utilities
           { href: "./qr-generator.html", icon: "fa-qrcode", text: "QR Code Generator", section: "utility", cat: "create utility", emoji: "📱", title: "QR Code Generator", desc: "Generate custom trackable high-quality vector <strong>QR codes</strong> instantly for URLs, plain texts, or configurations.", isUtilityCard: true },
           { href: "./password-generator.html", icon: "fa-key", text: "Password Generator", section: "utility", cat: "security utility", emoji: "🔑", title: "Password Generator", desc: "Create cryptographically secure random passwords instantly using client-side entropy controls.", isUtilityCard: true },
           { href: "./json-formatter.html", icon: "fa-code", text: "JSON Formatter", section: "utility", cat: "utility", emoji: "💻", title: "JSON Formatter & Validator", desc: "Parse, format, prettify, and validate unminified structural <strong>JSON arrays</strong> with real-time lint logs.", isUtilityCard: true },
@@ -312,13 +401,10 @@
           { href: "./palette-generator.html", icon: "fa-palette", text: "Palette Generator", section: "utility", cat: "utility create", emoji: "🌈", title: "Palette Generator", desc: "Algorithmic aesthetic color scheme generator.", isUtilityCard: true },
           { href: "./unit-converter.html", icon: "fa-calculator", text: "Unit Converter", section: "utility", cat: "utility", emoji: "📏", title: "Unit Converter", desc: "High performance responsive digital metrics calculator.", isUtilityCard: true },
           { href: "./dxf-dwg-converter.html", icon: "fa-drafting-compass", text: "CAD Converter", section: "utility", cat: "utility convert", emoji: "📐", title: "CAD Converter", desc: "DXF & DWG structural CAD metadata utility.", isUtilityCard: true },
-          // New OCR
           { href: "./ocr.html", icon: "fa-file-text", text: "Image to Text (OCR)", section: "utility", cat: "utility ai", emoji: "📝", title: "OCR Scanner", desc: "Extract text from images with 100+ languages. Free, fast, client‑side.", isUtilityCard: true },
 
-          // GIS & Mapping
           { href: "./geoforge.html", icon: "fa-map-location-dot", text: "GeoForge — Shapefile Studio", section: "gis", cat: "gis create utility convert", emoji: "🌍", title: "GeoForge Shapefile Studio", desc: "Draw <strong>Points, Lines & Polygons</strong> on a live map. Export as <strong>Shapefile ZIP</strong>, GeoJSON, KML, or CSV — ArcGIS & QGIS compatible. Free & browser-only.<span class='tool-badge-new'>NEW</span>", isUtilityCard: true },
 
-          // Info Pages Group
           { href: "./about.html", icon: "fa-circle-info", text: "About Us", section: "info", isUtilityCard: false },
           { href: "./contact.html", icon: "fa-envelope", text: "Contact", section: "info", isUtilityCard: false },
           { href: "./faq.html", icon: "fa-circle-question", text: "FAQ", section: "info", isUtilityCard: false },
@@ -378,7 +464,6 @@
           { href: "./split-pdf.html", icon: "fa-scissors", text: "تقسيم ملف PDF", section: "doc", cat: "doc", emoji: "✂️", title: "تقسيم ملفات PDF", desc: "استخراج نطاقات صفحات معينة أو تقسيم كل صفحة من صفحات مستند PDF الخاص بك بسلاسة.", isUtilityCard: true },
           { href: "./merge-pdf.html", icon: "fa-object-group", text: "دمج ملفات PDF", section: "doc", cat: "doc", emoji: "🗂️", title: "دمج ملفات PDF", desc: "دمج مستندات PDF متعددة في ملف واحد موحد بالترتيب الذي تريده بكل سهولة.", isUtilityCard: true },
           { href: "./compress-pdf.html", icon: "fa-compress", text: "ضغط ملف PDF", section: "doc", cat: "optimize doc", emoji: "📉", title: "تقليل حجم PDF", desc: "تقليل حجم ملف مستند PDF الخاص بك ديناميكيًا مع الحفاظ على جودة الأصول الداخلية.", isUtilityCard: true },
-          // New PDF Annotator Arabic
           { href: "./pdf-annotator.html", icon: "fa-pen-ruler", text: "محرر PDF وملاحظات", section: "doc", cat: "edit doc", emoji: "🖊️", title: "محرر PDF", desc: "أضف نصًا ورسومات وتوقيعات وملاحظات على ملفات PDF.", isUtilityCard: true },
 
           { href: "./qr-generator.html", icon: "fa-qrcode", text: "مولد الرموز QR", section: "utility", cat: "create utility", emoji: "📱", title: "إنشاء رموز QR مخصصة", desc: "قم بإنشاء رموز استجابة سريعة QR عالية الجودة ومخصصة فورًا للروابط أو النصوص.", isUtilityCard: true },
@@ -389,7 +474,6 @@
           { href: "./palette-generator.html", icon: "fa-palette", text: "مولد لوحة الألوان", section: "utility", cat: "utility create", emoji: "🌈", title: "مولد لوحة الألوان", desc: "مولد خوارزمي لأنظمة الألوان الجمالية.", isUtilityCard: true },
           { href: "./unit-converter.html", icon: "fa-calculator", text: "محول الوحدات", section: "utility", cat: "utility", emoji: "📏", title: "محول الوحدات", desc: "حاسبة مقاييس رقمية متجاوبة وعالية الأداء.", isUtilityCard: true },
           { href: "./dxf-dwg-converter.html", icon: "fa-drafting-compass", text: "محول CAD", section: "utility", cat: "utility convert", emoji: "📐", title: "محول CAD", desc: "أداة البيانات الوصفية الهيكلية لملفات DXF و DWG.", isUtilityCard: true },
-          // New OCR Arabic
           { href: "./ocr.html", icon: "fa-file-text", text: "استخراج النص من الصور", section: "utility", cat: "utility ai", emoji: "📝", title: "OCR Scanner", desc: "استخرج النص من الصور بأكثر من 100 لغة. مجاني وسريع.", isUtilityCard: true },
 
           { href: "./geoforge.html", icon: "fa-map-location-dot", text: "GeoForge — استوديو الخرائط", section: "gis", cat: "gis create utility convert", emoji: "🌍", title: "GeoForge — استوديو الخرائط", desc: "ارسم <strong>نقاطاً وخطوطاً ومضلعات</strong> على خريطة تفاعلية. صدّر كـ <strong>Shapefile ZIP</strong> أو GeoJSON أو KML — متوافق مع ArcGIS وQGIS. مجاني بالكامل.<span class='tool-badge-new'>جديد</span>", isUtilityCard: true },
@@ -416,7 +500,6 @@
 
     let currentLang = 'en';
 
-    // HIGH PERFORMANCE RENDER LOGIC ENGINE
     function renderUI() {
       const data = languageData[currentLang];
       
@@ -430,7 +513,6 @@
       const searchBox = document.getElementById('toolSearch');
       searchBox.placeholder = data.searchPlaceholder;
 
-      // Dynamic Category Filter System
       const filterBox = document.getElementById('filterContainer');
       filterBox.innerHTML = '';
       data.filters.forEach((f, i) => {
@@ -442,12 +524,9 @@
         filterBox.appendChild(btn);
       });
 
-      // Unified Matrix Rendering Engine (Tools Grid Dashboard)
       const toolsGrid = document.getElementById('toolsList');
       toolsGrid.innerHTML = '';
-      
       const gridItems = data.toolsRegistry.filter(item => item.isUtilityCard);
-      
       gridItems.forEach(t => {
         toolsGrid.innerHTML += `
           <a href="${t.href}" class="tool-link" data-category="${t.cat}">
@@ -461,44 +540,33 @@
           </a>`;
       });
 
-      // Dynamic Footnotes Layout Engine
       const fLinks = document.getElementById('footerLinks');
       fLinks.innerHTML = '';
-      data.footer.forEach(item => {
-        fLinks.innerHTML += `<a href="${item.href}">${item.text}</a>`;
-      });
+      data.footer.forEach(item => { fLinks.innerHTML += `<a href="${item.href}">${item.text}</a>`; });
 
-      // ── SAFE MATRIX-BASED SIDEBAR COMPILER ──
       const sidebarBox = document.getElementById('sidebarLinks');
       sidebarBox.innerHTML = '';
-
       const homeLink = data.toolsRegistry.find(item => item.section === 'home');
-      if (homeLink) {
-        sidebarBox.innerHTML += `<a href="${homeLink.href}"><i class="fa-solid ${homeLink.icon}"></i> ${homeLink.text}</a>`;
-      }
+      if (homeLink) sidebarBox.innerHTML += `<a href="${homeLink.href}"><i class="fa-solid ${homeLink.icon}"></i> ${homeLink.text}</a>`;
 
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.image}</div>`;
-      data.toolsRegistry.forEach(item => { if (item.section === 'image') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
+      data.toolsRegistry.forEach(item => { if (item.section === 'image') sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; });
 
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.doc}</div>`;
-      data.toolsRegistry.forEach(item => { if (item.section === 'doc') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
+      data.toolsRegistry.forEach(item => { if (item.section === 'doc') sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; });
 
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.utility}</div>`;
-      data.toolsRegistry.forEach(item => { if (item.section === 'utility') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
+      data.toolsRegistry.forEach(item => { if (item.section === 'utility') sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; });
 
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.gis}</div>`;
-      data.toolsRegistry.forEach(item => { if (item.section === 'gis') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
+      data.toolsRegistry.forEach(item => { if (item.section === 'gis') sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; });
 
-      sidebarBox.innerHTML += `
-        <div style="height: 1px; background: var(--border); margin: 10px 0;"></div>
-        <div class="menu-section-title">${data.sidebarTitles.info}</div>
-      `;
-      data.toolsRegistry.forEach(item => { if (item.section === 'info') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
-      
+      sidebarBox.innerHTML += `<div style="height:1px;background:var(--border);margin:10px 0;"></div><div class="menu-section-title">${data.sidebarTitles.info}</div>`;
+      data.toolsRegistry.forEach(item => { if (item.section === 'info') sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; });
+
       evaluateLiveSearchFilters();
     }
 
-    // MULTI-LANGUAGE TRANSLATION TRANSITION CONTROLLERS
     function toggleLanguage() {
       const toggleBtn = document.getElementById('langToggleBtn');
       if (currentLang === 'en') {
@@ -513,32 +581,22 @@
       renderUI();
     }
 
-    // REALTIME LIVE SEARCH & METRIC ENGINE EVALUATOR
     const searchInput = document.getElementById('toolSearch');
-    
     function evaluateLiveSearchFilters() {
       const query = searchInput.value.toLowerCase().trim();
       const activePill = document.querySelector('.filter-pill.active');
       const targetCategory = activePill ? activePill.getAttribute('data-target') : 'all';
       let aggregateMatchCount = 0;
-      
       const links = document.querySelectorAll('.tool-link');
       links.forEach(link => {
         const title = link.querySelector('h2').textContent.toLowerCase();
         const description = link.querySelector('p').textContent.toLowerCase();
         const categories = link.getAttribute('data-category').split(' ');
-
         const queryMatch = title.includes(query) || description.includes(query);
         const categoryMatch = targetCategory === 'all' || categories.includes(targetCategory);
-
-        if(queryMatch && categoryMatch) {
-          link.classList.remove('hidden');
-          aggregateMatchCount++;
-        } else {
-          link.classList.add('hidden');
-        }
+        if(queryMatch && categoryMatch) { link.classList.remove('hidden'); aggregateMatchCount++; }
+        else { link.classList.add('hidden'); }
       });
-
       document.getElementById('noResults').style.display = aggregateMatchCount === 0 ? 'block' : 'none';
     }
 
@@ -551,25 +609,16 @@
 
     searchInput.addEventListener('input', evaluateLiveSearchFilters);
 
-    // SIDEBAR DRAWER OVERLAY CONTROLLERS
     function toggleMenu(show) {
       const menu = document.getElementById('sideMenu');
       const overlay = document.getElementById('menuOverlay');
-      if (show) {
-        menu.classList.add('open');
-        overlay.classList.add('show');
-      } else {
-        menu.classList.remove('open');
-        overlay.classList.remove('show');
-      }
+      if (show) { menu.classList.add('open'); overlay.classList.add('show'); }
+      else { menu.classList.remove('open'); overlay.classList.remove('show'); }
     }
 
-    // LOCALSTORAGE SYNC THEME CONTROLLER MODULE
     const themeToggle = document.getElementById('themeToggle');
     const getSystemThemeSetting = () => localStorage.getItem('pixelpress-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
     document.documentElement.setAttribute('data-theme', getSystemThemeSetting());
-
     themeToggle.addEventListener('click', () => {
       const currentSetting = document.documentElement.getAttribute('data-theme');
       const targetSetting = currentSetting === 'dark' ? 'light' : 'dark';
@@ -577,15 +626,10 @@
       localStorage.setItem('pixelpress-theme', targetSetting);
     });
 
-    // INSTANT TERMINAL SEARCH CAPTURE (⌘ + K / Ctrl + K)
     window.addEventListener('keydown', e => {
-      if((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInput.focus();
-      }
+      if((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); }
     });
 
-    // Execute Startup System Pipeline
     renderUI();
   </script>
 

@@ -199,12 +199,12 @@ body {
   <div class="panel left-panel" id="leftPanel">
     <div class="panel-block">
       <div class="block-title">Feature Properties</div>
-      <input class="f-input" type="text" id="feat-name" placeholder="Name" style="margin-bottom:6px;">
-      <input class="f-input" type="text" id="feat-cat" placeholder="Category" style="margin-bottom:6px;">
-      <input class="f-input" type="text" id="feat-desc" placeholder="Description">
+      <input class="f-input" type="text" id="feat-name" placeholder="Name" style="margin-bottom:6px; width:100%; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
+      <input class="f-input" type="text" id="feat-cat" placeholder="Category" style="margin-bottom:6px; width:100%; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
+      <input class="f-input" type="text" id="feat-desc" placeholder="Description" style="width:100%; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
       <div style="display:flex; gap:6px; margin-top:6px;">
-        <input class="f-input" type="color" id="feat-color" value="#22c55e">
-        <input class="f-input" type="number" id="feat-opacity" value="40" min="0" max="100">
+        <input class="f-input" type="color" id="feat-color" value="#22c55e" style="height:32px;">
+        <input class="f-input" type="number" id="feat-opacity" value="40" min="0" max="100" style="width:60px;">
       </div>
     </div>
     <div class="panel-block">
@@ -219,7 +219,7 @@ body {
       </div>
     </div>
     <div class="block-title" style="padding:6px 14px;">Features <span id="feat-count-badge">0</span></div>
-    <input type="text" class="f-input" id="searchInput" placeholder="Search / filter..." style="margin:0 10px 6px; width:auto;">
+    <input type="text" class="f-input" id="searchInput" placeholder="Search / filter..." style="margin:0 10px 6px; width:auto; background:var(--card); border:1px solid var(--border); padding:4px; border-radius:4px; color:var(--text);">
     <div class="feat-list" id="feat-list"></div>
     <div style="padding:6px 10px; display:flex; gap:6px;">
       <button class="btn" onclick="deleteSelected()">🗑 Delete Sel</button>
@@ -368,7 +368,7 @@ async function restoreFromHistory() {
   updateStats();
   updateCounter();
 }
-pushHistory(); // initial empty state
+pushHistory();
 
 // ════════════ DRAW TOOLS ════════════
 function getOpts() {
@@ -399,7 +399,6 @@ function deactivateTool() {
   document.getElementById('active-tool-display').textContent = 'TOOL: PAN';
 }
 
-// Edit mode (modify vertices)
 function activateEditMode() {
   deactivateTool();
   if (features.length === 0) return;
@@ -408,23 +407,6 @@ function activateEditMode() {
   selected.forEach(f => {
     if (f.layer.editing) f.layer.editing.enable();
   });
-}
-
-// Snap helper
-function snapTo(latlng) {
-  let minDist = 20, snapPt = null;
-  features.forEach(f => {
-    if (f.layer.getLatLngs) {
-      const lls = f.layer.getLatLngs();
-      (Array.isArray(lls[0]) ? lls : [lls]).forEach(ring => {
-        ring.forEach(pt => {
-          const d = latlng.distanceTo(pt);
-          if (d < minDist) { minDist = d; snapPt = pt; }
-        });
-      });
-    }
-  });
-  return snapPt || latlng;
 }
 
 map.on(L.Draw.Event.CREATED, function(e) {
@@ -541,26 +523,49 @@ function clearAll() {
 }
 document.getElementById('searchInput').addEventListener('input', renderFeatureList);
 
-// ════════════ STATS ════════════
+// ════════════ STATS (with manual shoelace area) ════════════
+function shoelaceArea(latlngs) {
+  const R = 6378137;
+  let area = 0;
+  const n = latlngs.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    const xi = latlngs[i].lng * Math.PI / 180;
+    const yi = Math.log(Math.tan(Math.PI/4 + latlngs[i].lat * Math.PI / 360));
+    const xj = latlngs[j].lng * Math.PI / 180;
+    const yj = Math.log(Math.tan(Math.PI/4 + latlngs[j].lat * Math.PI / 360));
+    area += xi * yj - xj * yi;
+  }
+  return Math.abs(area / 2) * R * R;
+}
+
+function haversine(a, b) {
+  const R = 6378137;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLng = (b.lng - a.lng) * Math.PI / 180;
+  const x = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
 function updateStats() {
   document.getElementById('s-pts').textContent = features.filter(f => f.type==='marker').length;
   document.getElementById('s-lns').textContent = features.filter(f => f.type==='polyline').length;
   document.getElementById('s-pls').textContent = features.filter(f => ['polygon','rectangle','circle'].includes(f.type)).length;
-  // area & length simplified
   let totalArea = 0, totalLen = 0;
   features.forEach(f => {
     if (f.type === 'polygon' && f.layer.getLatLngs) {
       const lls = f.layer.getLatLngs()[0];
-      totalArea += L.GeometryUtil ? L.GeometryUtil.geodesicArea(lls) : 0;
+      totalArea += shoelaceArea(lls);
     }
     if (f.type === 'polyline' && f.layer.getLatLngs) {
       const lls = f.layer.getLatLngs();
-      for (let i=1; i<lls.length; i++) totalLen += lls[i-1].distanceTo(lls[i]);
+      for (let i=1; i<lls.length; i++) totalLen += haversine(lls[i-1], lls[i]);
     }
   });
   document.getElementById('s-area').textContent = totalArea > 0 ? (totalArea/1e6).toFixed(2) + ' km²' : '—';
   document.getElementById('s-len').textContent = totalLen > 0 ? (totalLen/1000).toFixed(2) + ' km' : '—';
-  // legend
   const cats = new Set(features.map(f => f.cat));
   document.getElementById('legend').innerHTML = [...cats].map(c => {
     const col = features.find(f => f.cat === c)?.color || '#000';
@@ -577,7 +582,6 @@ function updateCounter() {
 function exportSelected() {
   const sel = features.filter(f => selectedIds.has(f.id));
   if (sel.length === 0) { toast('No features selected', true); return; }
-  // export only selected as GeoJSON
   const fc = { type: 'FeatureCollection', features: sel.map(f => f.geojson) };
   downloadText(JSON.stringify(fc, null, 2), 'geoforge_selected.geojson', 'application/json');
   toast('Selected exported as GeoJSON');
@@ -592,18 +596,15 @@ function changeBasemap(key, btn) {
   if (btn) btn.classList.add('active');
 }
 
-// ════════════ FULL EXPORTS (existing + DXF) ════════════
-function buildGeoJSON() {
-  return { type:'FeatureCollection', features: features.map(f => f.geojson) };
-}
+// ════════════ FULL EXPORTS ════════════
 function downloadText(text, name, mime) {
   const blob = new Blob([text], {type: mime});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = name; a.click();
 }
+function buildGeoJSON() { return { type:'FeatureCollection', features: features.map(f => f.geojson) }; }
 function exportGeoJSON() { downloadText(JSON.stringify(buildGeoJSON(),null,2), 'geoforge.geojson', 'application/json'); toast('GeoJSON exported'); }
-// KML, CSV, WKT, TopoJSON same as previous but simplified
 function exportKML() {
   const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>${features.map((f,i)=>{
     const g = f.geojson.geometry;
@@ -720,7 +721,6 @@ function importFile(input) {
   };
   reader.readAsText(file);
 }
-// KML/CSV parsers (simplified)
 function kmlToGeoJSON(xml) {
   const feats = [];
   xml.querySelectorAll('Placemark').forEach(pm => {

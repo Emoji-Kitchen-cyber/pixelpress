@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OCR Scanner – PixelPress</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Tesseract.js v5 (stable) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -57,7 +58,8 @@
     textarea { width:100%; min-height:200px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:12px; font-family:'JetBrains Mono',monospace; resize:vertical; }
     .lang-select { margin-left:auto; }
     .history-item { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:4px; background:var(--bg); }
-    .history-item button { background:transparent; border:none; color:var(--accent); cursor:pointer; }
+    .history-item button { background:transparent; border:none; color:var(--accent); cursor:pointer; font-size:0.9rem; }
+    .error-msg { color:var(--red, #ef4444); margin-top:0.5rem; display:none; }
     footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
@@ -76,6 +78,7 @@
       <p>JPG, PNG, WebP – extract text with 100+ languages</p>
       <input type="file" id="imageInput" accept="image/*" />
       <img id="previewImg" class="preview-img" alt="Preview" />
+      <div id="errorMessage" class="error-msg"></div>
     </div>
     <div class="toolbar">
       <button class="btn btn-primary" id="extractBtn" disabled>
@@ -118,7 +121,7 @@
 
   <script>
     (function() {
-      // ====== DOM ======
+      // ====== DOM Elements ======
       const uploadZone = document.getElementById('uploadZone');
       const imageInput = document.getElementById('imageInput');
       const previewImg = document.getElementById('previewImg');
@@ -130,10 +133,17 @@
       const copyBtn = document.getElementById('copyBtn');
       const downloadBtn = document.getElementById('downloadBtn');
       const historyContainer = document.getElementById('historyContainer');
+      const errorMessage = document.getElementById('errorMessage');
 
       let currentImage = null;  // data URL
 
-      // ====== THEME SYNC ======
+      // ====== Check Tesseract availability ======
+      if (typeof Tesseract === 'undefined') {
+        showError('❌ Tesseract OCR library failed to load. Please check your internet connection and try again.');
+        extractBtn.disabled = true;
+      }
+
+      // ====== Theme Sync ======
       function syncTheme() {
         const saved = localStorage.getItem('pixelpress-theme') || 'light';
         document.documentElement.setAttribute('data-theme', saved);
@@ -146,7 +156,18 @@
       });
       syncTheme();
 
-      // ====== UPLOAD HANDLING ======
+      // ====== Error Display ======
+      function showError(msg) {
+        errorMessage.textContent = msg;
+        errorMessage.style.display = 'block';
+        setTimeout(() => { errorMessage.style.display = 'none'; }, 7000);
+      }
+
+      function hideError() {
+        errorMessage.style.display = 'none';
+      }
+
+      // ====== Upload Handling ======
       uploadZone.addEventListener('click', () => imageInput.click());
       imageInput.addEventListener('change', handleFile);
       uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = 'var(--accent)'; });
@@ -164,9 +185,10 @@
 
       function loadImage(file) {
         if (!file.type.startsWith('image/')) {
-          alert('Please upload a valid image file.');
+          showError('Please upload a valid image file (JPG, PNG, WebP).');
           return;
         }
+        hideError();
         const reader = new FileReader();
         reader.onload = (ev) => {
           currentImage = ev.target.result;  // data URL
@@ -177,14 +199,41 @@
           copyBtn.disabled = true;
           downloadBtn.disabled = true;
           progressBar.style.display = 'none';
+          progressFill.style.width = '0%';
+        };
+        reader.onerror = () => {
+          showError('Failed to read the image file.');
         };
         reader.readAsDataURL(file);
         imageInput.value = '';
       }
 
-      // ====== OCR EXTRACTION ======
+      // ====== OCR Extraction ======
+      let ocrWorker = null;
+
+      async function getWorker(lang) {
+        if (ocrWorker) {
+          await ocrWorker.terminate();
+          ocrWorker = null;
+        }
+        const worker = await Tesseract.createWorker(lang, 1, {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              progressFill.style.width = Math.round(m.progress * 100) + '%';
+            } else if (m.status === 'loading tesseract core') {
+              progressFill.style.width = '10%';
+            }
+          }
+        });
+        return worker;
+      }
+
       extractBtn.addEventListener('click', async () => {
         if (!currentImage) return;
+        if (typeof Tesseract === 'undefined') {
+          showError('OCR engine not available. Please reload the page.');
+          return;
+        }
         extractBtn.disabled = true;
         progressBar.style.display = 'block';
         progressFill.style.width = '0%';
@@ -193,38 +242,31 @@
         const lang = langSelect.value;
 
         try {
-          // Create worker with progress logger
-          const worker = await Tesseract.createWorker(lang, 1, {
-            logger: m => {
-              if (m.status === 'recognizing text') {
-                progressFill.style.width = Math.round(m.progress * 100) + '%';
-              } else if (m.status === 'loading tesseract core') {
-                progressFill.style.width = '10%';
-              }
-            }
-          });
-
+          const worker = await getWorker(lang);
           const { data: { text } } = await worker.recognize(currentImage);
           outputText.value = text;
           await worker.terminate();
+          ocrWorker = null;
 
-          // Enable copy/download
           copyBtn.disabled = false;
           downloadBtn.disabled = false;
-
-          // Save to history
           addHistory(text, lang);
           progressFill.style.width = '100%';
-          setTimeout(() => { progressBar.style.display = 'none'; }, 1000);
+          setTimeout(() => { progressBar.style.display = 'none'; }, 800);
         } catch (err) {
-          outputText.value = '❌ Error: ' + err.message;
+          console.error(err);
+          showError('❌ OCR failed: ' + (err.message || 'Unknown error. Try a different image or language.'));
           progressBar.style.display = 'none';
+          if (ocrWorker) {
+            await ocrWorker.terminate();
+            ocrWorker = null;
+          }
         } finally {
           extractBtn.disabled = false;
         }
       });
 
-      // ====== COPY & DOWNLOAD ======
+      // ====== Copy & Download ======
       copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(outputText.value).then(() => alert('Copied to clipboard!'));
       });
@@ -237,10 +279,9 @@
         a.click();
       });
 
-      // ====== HISTORY ======
+      // ====== History ======
       function addHistory(text, lang) {
         const history = JSON.parse(localStorage.getItem('ocr_history') || '[]');
-        // Keep only last 20 entries
         history.unshift({ text: text.substring(0, 200), lang, time: new Date().toISOString() });
         if (history.length > 20) history.pop();
         localStorage.setItem('ocr_history', JSON.stringify(history));
@@ -281,6 +322,13 @@
 
       // Initial history render
       renderHistory();
+
+      // Cleanup on page unload (optional)
+      window.addEventListener('beforeunload', async () => {
+        if (ocrWorker) {
+          await ocrWorker.terminate();
+        }
+      });
     })();
   </script>
 </body>

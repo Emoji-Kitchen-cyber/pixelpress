@@ -1,71 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3P7QPQKV3K');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Disclaimer — PixelPress</title>
-  <meta name="description" content="Disclaimers about PixelPress image tools: AI limitations, browser compatibility, and more.">
-  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/disclaimer.html">
-  <meta property="og:title" content="Disclaimer">
-  <meta property="og:description" content="Important disclaimers regarding our tools.">
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="Disclaimers about PixelPress tools: AI limitations, accuracy, browser compatibility, third‑party components, and terms of use." />
+  <link rel="canonical" href="https://pixelpress-smoky.vercel.app/disclaimer.html" />
+  <meta property="og:title" content="Disclaimer — PixelPress" />
+  <meta property="og:description" content="Important disclaimers regarding our free online tools." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
   <style>
-    .disclaimer-content { max-width:800px; margin:0 auto; }
-    .disclaimer-content h2 { font-size:1.2rem; margin:24px 0 12px; }
-    .disclaimer-content p, .disclaimer-content li { color:#374151; line-height:1.7; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa; --glow: rgba(236,72,153,0.1); --r: 16px;
+      --amber: #f59e0b;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+      --glow: rgba(236,72,153,0.25);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:850px; margin:0 auto; width:100%; padding:2rem 20px 4rem; }
+    .hero { text-align:center; margin-bottom:3rem; }
+    .hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,5vw,2.8rem); font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .notice-box { background:var(--card); border:2px solid var(--amber); border-radius:var(--r); padding:1.5rem; margin-bottom:2rem; display:flex; gap:12px; align-items:flex-start; }
+    .notice-box i { color:var(--amber); font-size:1.5rem; margin-top:2px; }
+    .notice-box p { color:var(--muted); line-height:1.7; font-size:0.95rem; }
+    .section { margin-bottom:2rem; }
+    .section h2 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; margin-bottom:0.8rem; display:flex; align-items:center; gap:8px; }
+    .section h2 i { color:var(--accent); }
+    .section p, .section li { color:var(--muted); line-height:1.8; font-size:1rem; }
+    .section ul { padding-left:20px; }
+    .highlight { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.2rem; margin:1rem 0; }
+    .highlight strong { color:var(--accent); }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
+    .footer-links { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+    .footer-links a { color:var(--muted); font-weight:500; text-decoration:none; }
+    .footer-links a:hover { color:var(--accent); }
   </style>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P7QPQKV3K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3P7QPQKV3K');
+  </script>
 </head>
 <body>
-  <header class="main-header">
-    <a href="./index.html" class="logo">PIXEL<span style="color:#ec4899;">PRESS</span></a>
-    <button class="btn-outline" onclick="history.back()">← Back</button>
-  </header>
-
-  <main class="tool-page">
-    <h1>Disclaimer</h1>
-    <div class="disclaimer-content">
-      <h2>1. Tool Accuracy</h2>
-      <p>Image editing tools (like background removal, face blur) rely on AI models that may not produce perfect results in every scenario. Always review outputs before use.</p>
-
-      <h2>2. AI Limitations</h2>
-      <p>Our AI features run locally in your browser. Results can vary depending on image quality, subject complexity, and device performance. PixelPress makes no guarantees of suitability for professional or commercial use without manual verification.</p>
-
-      <h2>3. No Warranty</h2>
-      <p>The site is provided "as is" without warranties of any kind. We are not responsible for any loss or damage arising from the use of our tools.</p>
-
-      <h2>4. Third-Party Components</h2>
-      <p>Some tools incorporate open-source AI models (background removal, face detection). These are used as-is; we do not own or control their development. Any issues should be reported to the respective project maintainers.</p>
-
-      <h2>5. Browser Compatibility</h2>
-      <p>We support modern browsers (Chrome, Firefox, Safari, Edge). Performance may vary on older browsers or low-end devices. Some advanced features may not work on all platforms.</p>
-
-      <h2>6. Informational Use</h2>
-      <p>All content and tools are for informational and personal use. They are not a substitute for professional software where high precision is required.</p>
-
-      <h2>7. Changes</h2>
-      <p>We may update this disclaimer. Check back periodically.</p>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
     </div>
-  </main>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
 
-  <footer style="text-align:center; padding:30px 20px; border-top:1px solid #e5e7eb; margin-top:40px; color:#6b7280; font-size:0.9rem;">
+  <div class="main">
+    <div class="hero">
+      <h1>Disclaimer</h1>
+      <p style="color:var(--muted); margin-top:0.5rem;">Please read these disclaimers carefully before using our tools</p>
+    </div>
+
+    <div class="notice-box">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p><strong>Important:</strong> PixelPress provides tools for <strong>general informational and personal use</strong>. While we strive for accuracy, our tools may not be suitable for professional, legal, medical, or commercial applications without independent verification. Always review outputs before use.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-robot"></i> 1. AI & Tool Accuracy</h2>
+      <p>Several PixelPress tools use <strong>AI models</strong> (background removal, face blur, OCR) that run directly in your browser. These models are trained on large datasets but may not produce perfect results in every scenario. Factors affecting accuracy include:</p>
+      <ul>
+        <li>Image quality, resolution, and lighting conditions</li>
+        <li>Subject complexity and background clutter</li>
+        <li>Device processing power and browser capabilities</li>
+        <li>Language and script variations (OCR)</li>
+      </ul>
+      <div class="highlight">
+        <strong>Recommendation:</strong> Always <strong>manually review</strong> AI‑generated outputs before using them for any purpose. Do not rely solely on automated results for critical tasks.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-shield"></i> 2. No Warranty</h2>
+      <p>PixelPress is provided <strong>"as is"</strong> and <strong>"as available"</strong> without any warranties, express or implied. We do not guarantee that:</p>
+      <ul>
+        <li>Tools will always be available or error‑free</li>
+        <li>Results will meet your specific requirements or expectations</li>
+        <li>Any defects or bugs will be immediately corrected</li>
+        <li>The website is free from viruses or harmful components</li>
+      </ul>
+      <p>To the fullest extent permitted by law, PixelPress and its creators disclaim all liability for any loss, damage, or inconvenience arising from the use or inability to use our tools.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-puzzle-piece"></i> 3. Third‑Party Components</h2>
+      <p>Some tools incorporate <strong>open‑source libraries and AI models</strong> developed by third parties. These include:</p>
+      <ul>
+        <li><strong>Face Detection:</strong> face‑api.js</li>
+        <li><strong>Background Removal:</strong> @imgly/background‑removal</li>
+        <li><strong>OCR:</strong> Tesseract.js</li>
+        <li><strong>PDF Processing:</strong> pdf.js, pdf‑lib</li>
+        <li><strong>GIS Mapping:</strong> Leaflet.js, leaflet‑draw</li>
+      </ul>
+      <p>We do not own, control, or guarantee the accuracy of these third‑party components. They are used <strong>as‑is</strong> under their respective open‑source licenses. Any issues or limitations in these components are beyond our control.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-globe"></i> 4. Browser & Device Compatibility</h2>
+      <p>PixelPress supports <strong>modern browsers</strong> including Chrome, Firefox, Safari, and Edge (latest 2 versions). Performance and feature availability may vary depending on:</p>
+      <ul>
+        <li>Browser version and rendering engine</li>
+        <li>Device RAM and CPU capabilities</li>
+        <li>Operating system (Windows, macOS, Linux, Android, iOS)</li>
+        <li>Internet connection speed (for initial AI model downloads)</li>
+      </ul>
+      <p>Some advanced features may not work on older browsers, low‑end devices, or browsers with JavaScript disabled. We recommend using the <strong>latest version of Google Chrome</strong> for the best experience.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-file-lines"></i> 5. Informational & Personal Use</h2>
+      <p>All content, tools, and outputs on PixelPress are provided for <strong>general informational and personal use only</strong>. They are not intended to be a substitute for:</p>
+      <ul>
+        <li>Professional image editing software (e.g., Adobe Photoshop)</li>
+        <li>Professional GIS software (e.g., ArcGIS, QGIS)</li>
+        <li>Professional OCR or document processing solutions</li>
+        <li>Legal, medical, financial, or other professional advice</li>
+      </ul>
+      <p>If you require high precision, professional‑grade outputs, or certified accuracy, please use dedicated professional software appropriate for your needs.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-scale-balanced"></i> 6. Limitation of Liability</h2>
+      <p>In no event shall PixelPress, its creators, or contributors be liable for any <strong>direct, indirect, incidental, special, consequential, or punitive damages</strong> arising out of or relating to your use of our tools, including but not limited to:</p>
+      <ul>
+        <li>Loss of data or profits</li>
+        <li>Business interruption</li>
+        <li>Damage to hardware or software</li>
+        <li>Any decisions made based on tool outputs</li>
+      </ul>
+      <p>Your sole remedy for dissatisfaction with PixelPress is to <strong>stop using the website</strong>.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> 7. Changes & Updates</h2>
+      <p>We reserve the right to <strong>modify, update, or discontinue</strong> any tool or feature at any time without prior notice. This Disclaimer may be updated periodically. Continued use of PixelPress after changes constitutes acceptance of the revised Disclaimer. Please check this page regularly.</p>
+    </div>
+
+    <div class="section">
+      <h2><i class="fa-solid fa-circle-check"></i> 8. Your Responsibilities</h2>
+      <p>By using PixelPress, you acknowledge and agree that:</p>
+      <ul>
+        <li>You are responsible for <strong>reviewing and verifying</strong> all outputs before use</li>
+        <li>You will not use our tools for any <strong>illegal, harmful, or unethical</strong> purposes</li>
+        <li>You understand the limitations of browser‑based processing</li>
+        <li>You accept the inherent risks of using free, client‑side tools</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="./about.html">About</a>
+      <a href="./contact.html">Contact</a>
+      <a href="./privacy-policy.html">Privacy</a>
+      <a href="./terms.html">Terms</a>
+      <a href="./faq.html">FAQ</a>
+      <a href="./blog/">Blog</a>
+    </div>
     <p>© 2026 PixelPress. All rights reserved.</p>
-    <div style="margin-top:10px;">
-      <a href="./about.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">About</a>
-      <a href="./contact.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Contact</a>
-      <a href="./privacy-policy.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Privacy</a>
-      <a href="./terms.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">Terms</a>
-      <a href="./faq.html" style="color:#2563eb; text-decoration:none; margin:0 8px;">FAQ</a>
-      <a href="./blog/" style="color:#2563eb; text-decoration:none; margin:0 8px;">Blog</a>
-    </div>
   </footer>
+
+  <script>
+    (function() {
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+    })();
+  </script>
 </body>
 </html>

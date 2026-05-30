@@ -183,15 +183,6 @@
     .tool-info-pane p { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
     .tool-info-pane p strong { color: var(--text); font-weight: 600; }
 
-    /* ── [GEOFORGE ADDITION] NEW BADGE STYLE — does not affect any existing card ── */
-    .tool-badge-new {
-      display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
-      text-transform: uppercase; background: linear-gradient(135deg, #ec4899, #a78bfa);
-      color: #fff; padding: 2px 7px; border-radius: 99px; margin-left: 6px;
-      vertical-align: middle; position: relative; top: -1px;
-    }
-    body.rtl .tool-badge-new { margin-left: 0; margin-right: 6px; }
-
     #noResults { text-align: center; color: var(--muted); padding: 4rem 0; width: 100%; display: none; font-size: 15px; }
 
     /* FOOTER INTEGRATION LAYERS */
@@ -283,20 +274,10 @@
           { id: 'security', text: 'Security' },
           { id: 'doc', text: 'Documents' },
           { id: 'utility', text: 'Utilities' },
-          // ── [GEOFORGE ADDITION] New filter pill ──
           { id: 'gis', text: '🗺️ GIS & Maps' }
         ],
-        sidebarTitles: {
-          image: "Image Utilities",
-          doc: "Document Utilities",
-          utility: "Developer & Core Utilities",
-          // ── [GEOFORGE ADDITION] New sidebar section title ──
-          gis: "GIS & Mapping",
-          info: "Info & Pages"
-        },
-        // SINGLE SOURCE MATRIX
+        sidebarTitles: { image: "Image Utilities", doc: "Document Utilities", utility: "Developer & Core Utilities", gis: "GIS & Mapping", info: "Info & Pages" },
         toolsRegistry: [
-          // Navigation / Structural Links
           { href: "./index.html", icon: "fa-house", text: "Home", section: "home", isUtilityCard: false },
           
           // Image Utilities Group
@@ -319,6 +300,8 @@
           { href: "./split-pdf.html", icon: "fa-scissors", text: "Split PDF", section: "doc", cat: "doc", emoji: "✂️", title: "Split PDF", desc: "Extract specific page ranges or split every single page of your <strong>PDF</strong> document into separate separate files seamlessly.", isUtilityCard: true },
           { href: "./merge-pdf.html", icon: "fa-object-group", text: "Merge PDF", section: "doc", cat: "doc", emoji: "🗂️", title: "Merge PDF", desc: "Combine multiple <strong>PDF</strong> documents into a single consolidated file in whatever order you want.", isUtilityCard: true },
           { href: "./compress-pdf.html", icon: "fa-compress", text: "Compress PDF", section: "doc", cat: "optimize doc", emoji: "📉", title: "Compress PDF", desc: "Shrink the file size of your <strong>PDF</strong> document dynamically while maximizing internal asset rendering profiles.", isUtilityCard: true },
+          // New PDF Annotator
+          { href: "./pdf-annotator.html", icon: "fa-pen-ruler", text: "PDF Annotator & Editor", section: "doc", cat: "edit doc", emoji: "🖊️", title: "PDF Annotator", desc: "Add text, draw, highlight, sign PDFs directly in your browser.", isUtilityCard: true },
 
           // Developer/Core SaaS Utilities
           { href: "./qr-generator.html", icon: "fa-qrcode", text: "QR Code Generator", section: "utility", cat: "create utility", emoji: "📱", title: "QR Code Generator", desc: "Generate custom trackable high-quality vector <strong>QR codes</strong> instantly for URLs, plain texts, or configurations.", isUtilityCard: true },
@@ -329,21 +312,11 @@
           { href: "./palette-generator.html", icon: "fa-palette", text: "Palette Generator", section: "utility", cat: "utility create", emoji: "🌈", title: "Palette Generator", desc: "Algorithmic aesthetic color scheme generator.", isUtilityCard: true },
           { href: "./unit-converter.html", icon: "fa-calculator", text: "Unit Converter", section: "utility", cat: "utility", emoji: "📏", title: "Unit Converter", desc: "High performance responsive digital metrics calculator.", isUtilityCard: true },
           { href: "./dxf-dwg-converter.html", icon: "fa-drafting-compass", text: "CAD Converter", section: "utility", cat: "utility convert", emoji: "📐", title: "CAD Converter", desc: "DXF & DWG structural CAD metadata utility.", isUtilityCard: true },
+          // New OCR
+          { href: "./ocr.html", icon: "fa-file-text", text: "Image to Text (OCR)", section: "utility", cat: "utility ai", emoji: "📝", title: "OCR Scanner", desc: "Extract text from images with 100+ languages. Free, fast, client‑side.", isUtilityCard: true },
 
-          // ── [GEOFORGE ADDITION START] ──
-          // GIS & Mapping Section
-          {
-            href: "./geoforge.html",
-            icon: "fa-map-location-dot",
-            text: "GeoForge — Shapefile Studio",
-            section: "gis",
-            cat: "gis create utility convert",
-            emoji: "🌍",
-            title: "GeoForge Shapefile Studio",
-            desc: "Draw <strong>Points, Lines & Polygons</strong> on a live map. Export as <strong>Shapefile ZIP</strong>, GeoJSON, KML, or CSV — ArcGIS & QGIS compatible. Free & browser-only.<span class='tool-badge-new'>NEW</span>",
-            isUtilityCard: true
-          },
-          // ── [GEOFORGE ADDITION END] ──
+          // GIS & Mapping
+          { href: "./geoforge.html", icon: "fa-map-location-dot", text: "GeoForge — Shapefile Studio", section: "gis", cat: "gis create utility convert", emoji: "🌍", title: "GeoForge Shapefile Studio", desc: "Draw <strong>Points, Lines & Polygons</strong> on a live map. Export as <strong>Shapefile ZIP</strong>, GeoJSON, KML, or CSV — ArcGIS & QGIS compatible. Free & browser-only.<span class='tool-badge-new'>NEW</span>", isUtilityCard: true },
 
           // Info Pages Group
           { href: "./about.html", icon: "fa-circle-info", text: "About Us", section: "info", isUtilityCard: false },
@@ -381,17 +354,9 @@
           { id: 'security', text: 'الأمان والحماية' },
           { id: 'doc', text: 'المستندات' },
           { id: 'utility', text: 'أدوات ذكية' },
-          // ── [GEOFORGE ADDITION] Arabic filter pill ──
           { id: 'gis', text: '🗺️ خرائط GIS' }
         ],
-        sidebarTitles: {
-          image: "أدوات الصور",
-          doc: "أدوات المستندات",
-          utility: "أدوات المطورين والخدمات العامة",
-          // ── [GEOFORGE ADDITION] Arabic sidebar section title ──
-          gis: "أدوات GIS والخرائط",
-          info: "المعلومات والصفحات"
-        },
+        sidebarTitles: { image: "أدوات الصور", doc: "أدوات المستندات", utility: "أدوات المطورين والخدمات العامة", gis: "أدوات GIS والخرائط", info: "المعلومات والصفحات" },
         toolsRegistry: [
           { href: "./index.html", icon: "fa-house", text: "الرئيسية", section: "home", isUtilityCard: false },
           
@@ -413,6 +378,8 @@
           { href: "./split-pdf.html", icon: "fa-scissors", text: "تقسيم ملف PDF", section: "doc", cat: "doc", emoji: "✂️", title: "تقسيم ملفات PDF", desc: "استخراج نطاقات صفحات معينة أو تقسيم كل صفحة من صفحات مستند PDF الخاص بك بسلاسة.", isUtilityCard: true },
           { href: "./merge-pdf.html", icon: "fa-object-group", text: "دمج ملفات PDF", section: "doc", cat: "doc", emoji: "🗂️", title: "دمج ملفات PDF", desc: "دمج مستندات PDF متعددة في ملف واحد موحد بالترتيب الذي تريده بكل سهولة.", isUtilityCard: true },
           { href: "./compress-pdf.html", icon: "fa-compress", text: "ضغط ملف PDF", section: "doc", cat: "optimize doc", emoji: "📉", title: "تقليل حجم PDF", desc: "تقليل حجم ملف مستند PDF الخاص بك ديناميكيًا مع الحفاظ على جودة الأصول الداخلية.", isUtilityCard: true },
+          // New PDF Annotator Arabic
+          { href: "./pdf-annotator.html", icon: "fa-pen-ruler", text: "محرر PDF وملاحظات", section: "doc", cat: "edit doc", emoji: "🖊️", title: "محرر PDF", desc: "أضف نصًا ورسومات وتوقيعات وملاحظات على ملفات PDF.", isUtilityCard: true },
 
           { href: "./qr-generator.html", icon: "fa-qrcode", text: "مولد الرموز QR", section: "utility", cat: "create utility", emoji: "📱", title: "إنشاء رموز QR مخصصة", desc: "قم بإنشاء رموز استجابة سريعة QR عالية الجودة ومخصصة فورًا للروابط أو النصوص.", isUtilityCard: true },
           { href: "./password-generator.html", icon: "fa-key", text: "مولد كلمات المرور", section: "utility", cat: "security utility", emoji: "🔑", title: "إنشاء كلمات مرور آمنة", desc: "أنشئ كلمات مرور عشوائية قوية ومحمية تشفيرًا بشكل فوري وبشكل محلي بالكامل.", isUtilityCard: true },
@@ -422,20 +389,10 @@
           { href: "./palette-generator.html", icon: "fa-palette", text: "مولد لوحة الألوان", section: "utility", cat: "utility create", emoji: "🌈", title: "مولد لوحة الألوان", desc: "مولد خوارزمي لأنظمة الألوان الجمالية.", isUtilityCard: true },
           { href: "./unit-converter.html", icon: "fa-calculator", text: "محول الوحدات", section: "utility", cat: "utility", emoji: "📏", title: "محول الوحدات", desc: "حاسبة مقاييس رقمية متجاوبة وعالية الأداء.", isUtilityCard: true },
           { href: "./dxf-dwg-converter.html", icon: "fa-drafting-compass", text: "محول CAD", section: "utility", cat: "utility convert", emoji: "📐", title: "محول CAD", desc: "أداة البيانات الوصفية الهيكلية لملفات DXF و DWG.", isUtilityCard: true },
+          // New OCR Arabic
+          { href: "./ocr.html", icon: "fa-file-text", text: "استخراج النص من الصور", section: "utility", cat: "utility ai", emoji: "📝", title: "OCR Scanner", desc: "استخرج النص من الصور بأكثر من 100 لغة. مجاني وسريع.", isUtilityCard: true },
 
-          // ── [GEOFORGE ADDITION START — ARABIC] ──
-          {
-            href: "./geoforge.html",
-            icon: "fa-map-location-dot",
-            text: "GeoForge — استوديو الخرائط",
-            section: "gis",
-            cat: "gis create utility convert",
-            emoji: "🌍",
-            title: "GeoForge — استوديو الخرائط",
-            desc: "ارسم <strong>نقاطاً وخطوطاً ومضلعات</strong> على خريطة تفاعلية. صدّر كـ <strong>Shapefile ZIP</strong> أو GeoJSON أو KML — متوافق مع ArcGIS وQGIS. مجاني بالكامل.<span class='tool-badge-new'>جديد</span>",
-            isUtilityCard: true
-          },
-          // ── [GEOFORGE ADDITION END — ARABIC] ──
+          { href: "./geoforge.html", icon: "fa-map-location-dot", text: "GeoForge — استوديو الخرائط", section: "gis", cat: "gis create utility convert", emoji: "🌍", title: "GeoForge — استوديو الخرائط", desc: "ارسم <strong>نقاطاً وخطوطاً ومضلعات</strong> على خريطة تفاعلية. صدّر كـ <strong>Shapefile ZIP</strong> أو GeoJSON أو KML — متوافق مع ArcGIS وQGIS. مجاني بالكامل.<span class='tool-badge-new'>جديد</span>", isUtilityCard: true },
 
           { href: "./about.html", icon: "fa-circle-info", text: "من نحن", section: "info", isUtilityCard: false },
           { href: "./contact.html", icon: "fa-envelope", text: "اتصل بنا", section: "info", isUtilityCard: false },
@@ -515,55 +472,28 @@
       const sidebarBox = document.getElementById('sidebarLinks');
       sidebarBox.innerHTML = '';
 
-      // Section 1: Home
       const homeLink = data.toolsRegistry.find(item => item.section === 'home');
       if (homeLink) {
         sidebarBox.innerHTML += `<a href="${homeLink.href}"><i class="fa-solid ${homeLink.icon}"></i> ${homeLink.text}</a>`;
       }
 
-      // Section 2: Image Utilities
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.image}</div>`;
-      data.toolsRegistry.forEach(item => {
-        if (item.section === 'image') {
-          sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
-        }
-      });
+      data.toolsRegistry.forEach(item => { if (item.section === 'image') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
 
-      // Section 3: Document Utilities
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.doc}</div>`;
-      data.toolsRegistry.forEach(item => {
-        if (item.section === 'doc') {
-          sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
-        }
-      });
+      data.toolsRegistry.forEach(item => { if (item.section === 'doc') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
 
-      // Section 4: Developer & Utility
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.utility}</div>`;
-      data.toolsRegistry.forEach(item => {
-        if (item.section === 'utility') {
-          sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
-        }
-      });
+      data.toolsRegistry.forEach(item => { if (item.section === 'utility') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
 
-      // ── [GEOFORGE ADDITION] Section 5: GIS & Mapping ──
       sidebarBox.innerHTML += `<div class="menu-section-title">${data.sidebarTitles.gis}</div>`;
-      data.toolsRegistry.forEach(item => {
-        if (item.section === 'gis') {
-          sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
-        }
-      });
-      // ── [GEOFORGE ADDITION END] ──
+      data.toolsRegistry.forEach(item => { if (item.section === 'gis') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
 
-      // Section 6: Info & Legal
       sidebarBox.innerHTML += `
         <div style="height: 1px; background: var(--border); margin: 10px 0;"></div>
         <div class="menu-section-title">${data.sidebarTitles.info}</div>
       `;
-      data.toolsRegistry.forEach(item => {
-        if (item.section === 'info') {
-          sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`;
-        }
-      });
+      data.toolsRegistry.forEach(item => { if (item.section === 'info') { sidebarBox.innerHTML += `<a href="${item.href}"><i class="fa-solid ${item.icon}"></i> ${item.text}</a>`; } });
       
       evaluateLiveSearchFilters();
     }

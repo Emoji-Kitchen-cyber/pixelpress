@@ -1,40 +1,261 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Palette Generator — PixelPress</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palette Generator – PixelPress</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
-    :root { --bg:#f5f5f7; --card:#ffffff; --border:rgba(0,0,0,0.06); --text:#1d1d1f; --accent:#ec4899; }
-    [data-theme="dark"] { --bg:#09090e; --card:#15151e; --border:rgba(255,255,255,0.08); --text:#e8e8f0; }
-    body { background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; margin:0; }
-    nav { display:flex; align-items:center; padding:0 2rem; height:64px; background:var(--card); border-bottom:1px solid var(--border); }
-    .nav-logo { font-family:'Syne'; font-weight:800; text-decoration:none; color:var(--text); }
-    .container { max-width:800px; margin:4rem auto; background:var(--card); padding:32px; border-radius:16px; border:1px solid var(--border); text-align:center; }
-    .grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin:24px 0; height:200px; }
-    .swatch { border-radius:12px; display:flex; flex-direction:column; justify-content:flex-end; padding:12px; color:white; font-family:monospace; font-weight:bold; text-shadow:0 2px 4px rgba(0,0,0,0.4); border:1px solid var(--border); }
-    .btn { background:var(--text); color:var(--bg); border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer; }
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+    :root {
+      --bg: #f5f5f7; --surface: rgba(255,255,255,0.75); --card: #ffffff;
+      --border: rgba(0,0,0,0.06); --text: #1d1d1f; --muted: #6e6e73;
+      --accent: #ec4899; --accent2: #a78bfa;
+    }
+    [data-theme="dark"] {
+      --bg: #09090e; --surface: rgba(21,21,30,0.7); --card: #15151e;
+      --border: rgba(255,255,255,0.08); --text: #e8e8f0; --muted: #86868b;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; flex-direction:column; transition:0.3s; }
+    nav { position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(1rem,5vw,3rem); height:64px; background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+    .nav-left { display:flex; align-items:center; gap:1rem; }
+    .back-btn { background:var(--card); border:1px solid var(--border); width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text); font-size:1.1rem; cursor:pointer; text-decoration:none; transition:0.2s; }
+    .back-btn:hover { border-color:var(--accent); transform:scale(1.05); }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; text-transform:uppercase; text-decoration:none; color:inherit; }
+    .nav-logo span { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .main { flex:1; max-width:900px; margin:0 auto; width:100%; padding:2rem 20px; }
+    .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:2rem; }
+    .swatch-grid { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:2rem; }
+    .swatch { flex:1; min-width:120px; height:180px; border-radius:12px; display:flex; flex-direction:column; justify-content:flex-end; padding:12px; color:white; font-family:monospace; font-weight:bold; text-shadow:0 2px 4px rgba(0,0,0,0.5); position:relative; }
+    .swatch .lock { position:absolute; top:8px; right:8px; cursor:pointer; }
+    .swatch .hex { cursor:pointer; }
+    .btn { padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font-weight:600; cursor:pointer; transition:0.2s; display:inline-flex; align-items:center; gap:6px; }
+    .btn-primary { background:var(--accent); color:white; border:none; }
+    .btn-primary:hover { background:#db2777; }
+    .saved-palettes { margin-top:2rem; }
+    footer { text-align:center; padding:2rem; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border); margin-top:auto; }
   </style>
 </head>
 <body>
-  <nav><a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a></nav>
-  <div class="container">
-    <h2 style="font-family:'Syne';">Palette Generator</h2>
-    <div class="grid" id="paletteGrid"></div>
-    <button class="btn" onclick="generateRandomPalette()">Generate Scheme</button>
+  <nav>
+    <div class="nav-left">
+      <a href="./index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+      <a href="./index.html" class="nav-logo">PIXEL<span>PRESS</span></a>
+    </div>
+    <button id="themeToggle" class="back-btn">🌓</button>
+  </nav>
+
+  <div class="main">
+    <div class="controls">
+      <input type="color" id="baseColor" value="#ec4899" />
+      <select id="modeSelect">
+        <option value="complementary">Complementary</option>
+        <option value="analogous">Analogous</option>
+        <option value="triadic">Triadic</option>
+        <option value="tetradic">Tetradic</option>
+        <option value="monochromatic">Monochromatic</option>
+        <option value="random">Random</option>
+      </select>
+      <button class="btn btn-primary" id="generateBtn">Generate</button>
+      <button class="btn" id="extractBtn"><i class="fa-solid fa-image"></i> Extract from Image</button>
+      <input type="file" id="imageInput" accept="image/*" hidden />
+    </div>
+
+    <div class="swatch-grid" id="swatchGrid"></div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn" id="copyAllBtn">Copy All HEX</button>
+      <button class="btn" id="exportCSSBtn">Export CSS</button>
+      <button class="btn" id="exportJSONBtn">Export JSON</button>
+      <button class="btn" id="savePaletteBtn">Save Palette</button>
+    </div>
+
+    <div class="saved-palettes" id="savedPalettes"></div>
   </div>
+
+  <footer>© 2026 PixelPress – Palette Generator</footer>
+
   <script>
-    document.documentElement.setAttribute('data-theme', localStorage.getItem('pixelpress-theme') || 'light');
-    function generateRandomPalette() {
-      const grid = document.getElementById('paletteGrid');
-      grid.innerHTML = '';
-      for(let i=0; i<5; i++) {
-        const randColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-        grid.innerHTML += `<div class="swatch" style="background:${randColor}">${randColor.toUpperCase()}</div>`;
+    (function() {
+      function syncTheme() {
+        const saved = localStorage.getItem('pixelpress-theme');
+        const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
       }
-    }
-    generateRandomPalette();
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme');
+        const next = curr === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pixelpress-theme', next);
+      });
+      syncTheme();
+
+      let colors = [];
+      const locks = [false, false, false, false, false];
+
+      function generateColors() {
+        const base = document.getElementById('baseColor').value;
+        const mode = document.getElementById('modeSelect').value;
+        const baseHSL = hexToHSL(base);
+        let newColors = [];
+        if (mode === 'random') {
+          for (let i=0; i<5; i++) newColors.push('#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'));
+        } else if (mode === 'complementary') {
+          newColors = [base, hslToHex((baseHSL.h+180)%360, baseHSL.s, baseHSL.l)];
+          // add tints/shades
+          for (let i=0; i<3; i++) newColors.push(hslToHex((baseHSL.h+180)%360, baseHSL.s, 20 + i*30));
+        } else if (mode === 'analogous') {
+          newColors = [base, hslToHex((baseHSL.h+30)%360, baseHSL.s, baseHSL.l), hslToHex((baseHSL.h-30+360)%360, baseHSL.s, baseHSL.l),
+                       hslToHex((baseHSL.h+60)%360, baseHSL.s, baseHSL.l), hslToHex((baseHSL.h-60+360)%360, baseHSL.s, baseHSL.l)];
+        } else if (mode === 'triadic') {
+          newColors = [base, hslToHex((baseHSL.h+120)%360, baseHSL.s, baseHSL.l), hslToHex((baseHSL.h+240)%360, baseHSL.s, baseHSL.l),
+                       hslToHex(baseHSL.h, baseHSL.s, baseHSL.l-20), hslToHex(baseHSL.h, baseHSL.s, baseHSL.l+20)];
+        } else if (mode === 'tetradic') {
+          newColors = [base, hslToHex((baseHSL.h+90)%360, baseHSL.s, baseHSL.l), hslToHex((baseHSL.h+180)%360, baseHSL.s, baseHSL.l),
+                       hslToHex((baseHSL.h+270)%360, baseHSL.s, baseHSL.l), hslToHex((baseHSL.h+45)%360, baseHSL.s, baseHSL.l)];
+        } else if (mode === 'monochromatic') {
+          for (let i=0; i<5; i++) newColors.push(hslToHex(baseHSL.h, baseHSL.s, 10 + i*20));
+        }
+        // Respect locks
+        colors = colors.length === 5 ? colors.map((c,i) => locks[i] ? c : newColors[i] || c) : newColors;
+        renderSwatches();
+      }
+
+      function hexToHSL(hex) {
+        let r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+        let max = Math.max(r,g,b), min = Math.min(r,g,b);
+        let h,s,l = (max+min)/2;
+        if (max === min) h = s = 0;
+        else {
+          let d = max-min;
+          s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+          if (max === r) h = ((g-b)/d + (g<b ? 6 : 0)) * 60;
+          else if (max === g) h = ((b-r)/d + 2) * 60;
+          else h = ((r-g)/d + 4) * 60;
+        }
+        return { h: Math.round(h), s: Math.round(s*100), l: Math.round(l*100) };
+      }
+
+      function hslToHex(h, s, l) {
+        s /= 100; l /= 100;
+        let c = (1 - Math.abs(2*l - 1)) * s, x = c * (1 - Math.abs((h/60)%2 - 1)), m = l - c/2;
+        let r,g,b;
+        if (h < 60) { r=c; g=x; b=0; }
+        else if (h < 120) { r=x; g=c; b=0; }
+        else if (h < 180) { r=0; g=c; b=x; }
+        else if (h < 240) { r=0; g=x; b=c; }
+        else if (h < 300) { r=x; g=0; b=c; }
+        else { r=c; g=0; b=x; }
+        r = Math.round((r+m)*255).toString(16).padStart(2,'0');
+        g = Math.round((g+m)*255).toString(16).padStart(2,'0');
+        b = Math.round((b+m)*255).toString(16).padStart(2,'0');
+        return `#${r}${g}${b}`;
+      }
+
+      function renderSwatches() {
+        const grid = document.getElementById('swatchGrid');
+        grid.innerHTML = colors.map((c,i) => `
+          <div class="swatch" style="background:${c}">
+            <span class="lock" onclick="toggleLock(${i})"><i class="fa${locks[i] ? '-solid' : '-regular'} fa-lock"></i></span>
+            <span class="hex" onclick="copyHex('${c}')">${c.toUpperCase()}</span>
+          </div>
+        `).join('');
+      }
+
+      window.toggleLock = (i) => {
+        locks[i] = !locks[i];
+        renderSwatches();
+      };
+
+      window.copyHex = (hex) => {
+        navigator.clipboard.writeText(hex).then(() => alert('Copied!'));
+      };
+
+      document.getElementById('generateBtn').addEventListener('click', generateColors);
+      document.getElementById('copyAllBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(colors.join(', ')).then(() => alert('All HEX copied!'));
+      });
+      document.getElementById('exportCSSBtn').addEventListener('click', () => {
+        const css = `:root {\n${colors.map((c,i) => `  --color-${i+1}: ${c};`).join('\n')}\n}`;
+        downloadFile('palette.css', css);
+      });
+      document.getElementById('exportJSONBtn').addEventListener('click', () => {
+        downloadFile('palette.json', JSON.stringify(colors, null, 2));
+      });
+      document.getElementById('savePaletteBtn').addEventListener('click', () => {
+        const name = prompt('Palette name:');
+        if (!name) return;
+        const saved = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+        saved.push({ name, colors });
+        localStorage.setItem('savedPalettes', JSON.stringify(saved));
+        renderSaved();
+      });
+
+      function renderSaved() {
+        const container = document.getElementById('savedPalettes');
+        const saved = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+        if (!saved.length) { container.innerHTML = ''; return; }
+        container.innerHTML = '<strong>Saved Palettes</strong>' + saved.map((p,i) => `
+          <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+            <span>${p.name}</span>
+            <div style="display:flex; gap:4px;">
+              ${p.colors.map(c => `<div style="width:30px; height:30px; border-radius:4px; background:${c}; border:1px solid var(--border)"></div>`).join('')}
+            </div>
+            <button class="btn btn-small" onclick="loadPalette(${i})">Load</button>
+            <button class="btn btn-small" onclick="deletePalette(${i})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `).join('');
+      }
+
+      window.loadPalette = (i) => {
+        const saved = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+        colors = saved[i].colors;
+        renderSwatches();
+      };
+      window.deletePalette = (i) => {
+        const saved = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+        saved.splice(i,1);
+        localStorage.setItem('savedPalettes', JSON.stringify(saved));
+        renderSaved();
+      };
+
+      document.getElementById('extractBtn').addEventListener('click', () => document.getElementById('imageInput').click());
+      document.getElementById('imageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = 50;
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, size, size);
+          const data = ctx.getImageData(0,0,size,size).data;
+          const colorMap = {};
+          for (let i=0; i<data.length; i+=4) {
+            const hex = '#' + [data[i], data[i+1], data[i+2]].map(c => c.toString(16).padStart(2,'0')).join('');
+            colorMap[hex] = (colorMap[hex] || 0) + 1;
+          }
+          const sorted = Object.entries(colorMap).sort((a,b) => b[1]-a[1]).slice(0,5).map(e => e[0]);
+          colors = sorted;
+          renderSwatches();
+        };
+        img.src = URL.createObjectURL(file);
+      });
+
+      function downloadFile(filename, text) {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+      }
+
+      // Initial
+      generateColors();
+      renderSaved();
+    })();
   </script>
 </body>
 </html>
